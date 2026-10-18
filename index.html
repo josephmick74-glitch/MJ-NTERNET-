@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Kuzuia Zooming kwenye simu/browser -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MJ Internet - Portal</title>
-  <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script type="text/javascript">
     (function() {
@@ -14,7 +12,6 @@
   </script>
   <style>
     :root {
-      /* Dominant Light Theme */
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --card-border: #e2e8f0;
@@ -30,7 +27,6 @@
       --shadow-color: rgba(0, 0, 0, 0.08);
     }
 
-    /* Dark Theme Toggle Option */
     body.dark-theme {
       --bg-color: #0f172a;
       --card-bg: #1e293b;
@@ -186,7 +182,6 @@
 
     .order-card { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; margin-bottom: 12px; }
 
-    /* Payment Notice Box */
     .payment-notice-box {
       background: rgba(217, 119, 6, 0.08);
       border: 1px dashed var(--accent);
@@ -207,7 +202,6 @@
   <div class="app-card">
     <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 
-    <!-- MISTARI MITATU (DRAWER MENU) -->
     <div class="sidebar-drawer" id="sidebarDrawer">
       <div>
         <div class="drawer-header">
@@ -215,7 +209,6 @@
           <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
         </div>
 
-        <!-- User Profile Box -->
         <div class="user-profile-box">
           <div class="user-avatar" id="userAvatarIcon">👤</div>
           <div class="user-info-text">
@@ -224,7 +217,6 @@
           </div>
         </div>
 
-        <!-- Navigation Links -->
         <div class="menu-item active" onclick="navigateFromDrawer('new-order')">
           <span>🛒</span> <span data-key="newOrder">New Order</span>
         </div>
@@ -232,7 +224,6 @@
           <span>📜</span> <span data-key="myOrders">My Orders</span>
         </div>
 
-        <!-- Settings: Language & Theme Inside Menu -->
         <div class="setting-group">
           <label class="setting-label" data-key="language">Language</label>
           <select class="setting-select" id="drawerLangSelect" onchange="changeLanguage(this.value)">
@@ -248,20 +239,17 @@
         </div>
       </div>
 
-      <!-- Logout Button at Bottom of Drawer -->
       <button class="btn-logout-drawer" onclick="performLogout()">
         <span>🚪</span> <span data-key="logout">Logout</span>
       </button>
     </div>
 
-    <!-- HEADER WITH MULTICOLORED LOGO AND TOP-RIGHT HAMBURGER MENU -->
     <div class="brand-header">
       <button class="menu-toggle-btn" id="menuToggleBtn" onclick="openDrawer()">☰</button>
       <div class="brand-logo">MJ INTERNET</div>
       <div class="brand-tag" data-key="brandTag">High-Speed Digital Connectivity</div>
     </div>
 
-    <!-- 1. AUTHENTICATION -->
     <div id="viewAuth" class="view-panel active">
       <div class="tabs-wrapper">
         <button class="tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login')" data-key="loginTab">Login</button>
@@ -302,7 +290,6 @@
       </div>
     </div>
 
-    <!-- 2. FORGOT PASSWORD -->
     <div id="viewForgot" class="view-panel">
       <div class="content-body">
         <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;" data-key="resetTitle">Reset Password</h3>
@@ -318,7 +305,6 @@
       </div>
     </div>
 
-    <!-- 3. OTP VERIFICATION -->
     <div id="viewOTP" class="view-panel">
       <div class="content-body">
         <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;">OTP Verification</h3>
@@ -331,7 +317,6 @@
       </div>
     </div>
 
-    <!-- 4. NEW PASSWORD VIEW -->
     <div id="viewNewPass" class="view-panel">
       <div class="content-body">
         <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;" data-key="newPassTitle">New Password</h3>
@@ -346,12 +331,10 @@
       </div>
     </div>
 
-    <!-- 5. DASHBOARD - NEW ORDER -->
     <div id="viewDashboard" class="view-panel">
       <div class="content-body">
         <div id="dashSectionOrder">
           
-          <!-- MAELEZO YA MALIPO NA HALOTEL -->
           <div class="payment-notice-box">
             <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);" data-key="paymentNoticeTitle">⚠️ MALIPO & MAELEKEZO:</div>
             <div data-key="paymentNoticeText">Tafadhali tuma pesa kabla ya ku-confirm oda. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Vifurushi hivi ni vya <strong>Halotel pekee</strong>. Hakikisha namba ya simu unayoweka hapa chini ni ya Halotel.</div>
@@ -382,7 +365,6 @@
       </div>
     </div>
 
-    <!-- 6. MY ORDERS VIEW -->
     <div id="viewMyOrders" class="view-panel">
       <div class="content-body">
         <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 16px;" data-key="myOrders">My Orders</h3>
@@ -400,7 +382,8 @@
     var authMode = ""; 
     var currentLang = "en";
 
-    // Translations Dictionary
+    var GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6gzwTaExxfjhgqYaZT9iCZt-zRtBSoKpSOFkFrx6RYe_Hrf5by_QFCRNEm5TTr68P/exec";
+
     var translations = {
       en: {
         brandTag: "High-Speed Digital Connectivity",
@@ -721,6 +704,23 @@
         message: "Oda Mpya ya Halotel Imefika!\nJina la Mteja: " + (activeUser.name || "Customer") + "\nEmail: " + activeUser.email + "\nBando: " + pkg + "\nNamba ya Simu ya Halotel: " + phone + "\nMalipo yametumwa kwenda: 0770136023 (Michael Joseph Liganya - Mix by Yas)",
         date: new Date().toLocaleString()
       };
+
+      // TUMA DATA KWENYE GOOGLE SHEETS (SERVER DATABASE)
+      try {
+        fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: activeUser.name || "Customer",
+            email: activeUser.email || "N/A",
+            package: pkg,
+            phone: phone
+          })
+        });
+      } catch(err) {
+        console.error("Sheet Fetch Error:", err);
+      }
 
       var saveOrderLocally = function() {
         var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
