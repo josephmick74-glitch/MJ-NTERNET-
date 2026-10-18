@@ -51,7 +51,7 @@
       padding: 0; 
       font-family: 'Inter', system-ui, -apple-system, sans-serif; 
       transition: background-color 0.25s, color 0.25s, border-color 0.25s;
-      user-select: none; /* Kusaidia kuzuia mambo yasiyotakiwa wakati wa touch */
+      user-select: none;
     }
 
     body { 
@@ -63,7 +63,7 @@
       min-height: 100vh; 
       padding: 15px; 
       position: relative;
-      touch-action: pan-x pan-y; /* Kuzuia pinch zoom */
+      touch-action: pan-x pan-y;
     }
 
     .app-card { 
@@ -78,7 +78,6 @@
       min-height: 500px; 
     }
     
-    /* Top Header with Hamburger Button on top right */
     .brand-header { 
       padding: 35px 25px 20px; 
       text-align: center; 
@@ -86,7 +85,6 @@
       position: relative;
     }
 
-    /* Gradient Multicolored Logo "MJ INTERNET" */
     .brand-logo { 
       font-size: 28px; 
       font-weight: 900; 
@@ -99,7 +97,6 @@
     }
     .brand-tag { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
 
-    /* Menu Toggle Button (Mistari Mitatu Juu Kulia Kabisa) */
     .menu-toggle-btn { 
       position: absolute;
       top: 15px;
@@ -119,7 +116,6 @@
     }
     .menu-toggle-btn.active { display: flex; }
 
-    /* Drawer / Side Menu */
     .sidebar-drawer { 
       position: absolute; 
       top: 0; 
@@ -167,7 +163,6 @@
 
     .btn-logout-drawer { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; }
 
-    /* Normal Tabs & Forms */
     .tabs-wrapper { display: flex; background: var(--input-bg); margin: 20px 25px 0; padding: 4px; border-radius: 12px; border: 1px solid var(--card-border); }
     .tab-btn { flex: 1; padding: 10px; border: none; background: none; color: var(--text-sub); font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; }
     .tab-btn.active { background: var(--primary); color: #ffffff; }
@@ -190,6 +185,21 @@
     .view-panel.active { display: block; }
 
     .order-card { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; margin-bottom: 12px; }
+
+    /* Payment Notice Box */
+    .payment-notice-box {
+      background: rgba(217, 119, 6, 0.08);
+      border: 1px dashed var(--accent);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 18px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-main);
+    }
+    .payment-notice-box strong {
+      color: var(--accent);
+    }
   </style>
 </head>
 <body>
@@ -340,9 +350,16 @@
     <div id="viewDashboard" class="view-panel">
       <div class="content-body">
         <div id="dashSectionOrder">
+          
+          <!-- MAELEZO YA MALIPO NA HALOTEL -->
+          <div class="payment-notice-box">
+            <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);" data-key="paymentNoticeTitle">⚠️ MALIPO & MAELEKEZO:</div>
+            <div data-key="paymentNoticeText">Tafadhali tuma pesa kabla ya ku-confirm oda. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Vifurushi hivi ni vya <strong>Halotel pekee</strong>. Hakikisha namba ya simu unayoweka hapa chini ni ya Halotel.</div>
+          </div>
+
           <form onsubmit="handlePlaceOrder(event)">
             <div class="form-group">
-              <label data-key="selectPkgLabel">Select Internet Package</label>
+              <label data-key="selectPkgLabel">Select Internet Package (Halotel Only)</label>
               <select id="selectPackage" class="input-field" required>
                 <option value="" disabled selected data-key="selectPkgPlaceholder">-- Select Package --</option>
                 <option value="GB 5 - TZS 6,500">GB 5 - TZS 6,500</option>
@@ -355,8 +372,8 @@
               </select>
             </div>
             <div class="form-group">
-              <label data-key="phoneLabel">Recipient Phone Number</label>
-              <input type="tel" id="orderPhone" class="input-field" placeholder="07XXXXXXXX" required>
+              <label data-key="phoneLabel">Halotel Recipient Phone Number</label>
+              <input type="tel" id="orderPhone" class="input-field" placeholder="062XXXXXXXX" required>
             </div>
             <button type="submit" class="btn-action" id="btnSubmitOrder" data-key="submitOrderBtn">Submit Package Order</button>
           </form>
@@ -381,7 +398,7 @@
     var currentOTP = "";
     var tempUserSession = null;
     var authMode = ""; 
-    var currentLang = "en"; // Dominant Language is English
+    var currentLang = "en";
 
     // Translations Dictionary
     var translations = {
@@ -407,9 +424,9 @@
         newPassTitle: "New Password",
         newPassLabel: "New Password",
         savePassBtn: "Save Password & Login",
-        selectPkgLabel: "Select Internet Package",
+        selectPkgLabel: "Select Internet Package (Halotel Only)",
         selectPkgPlaceholder: "-- Select Package --",
-        phoneLabel: "Recipient Phone Number",
+        phoneLabel: "Halotel Recipient Phone Number",
         submitOrderBtn: "Submit Package Order",
         menuTitle: "MENU",
         newOrder: "New Order",
@@ -418,7 +435,9 @@
         theme: "Theme",
         logout: "Logout",
         backBtn: "← Back to Order",
-        noOrders: "No previous orders found."
+        noOrders: "No previous orders found.",
+        paymentNoticeTitle: "⚠️ PAYMENT & INSTRUCTIONS:",
+        paymentNoticeText: "Please send money before confirming your order. Payment number is <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Note:</strong> These packages are for <strong>Halotel only</strong>. Ensure the phone number entered below is Halotel."
       },
       sw: {
         brandTag: "Mtandao Wenye Kasi Ya Juu",
@@ -442,9 +461,9 @@
         newPassTitle: "Nenosiri Jipya",
         newPassLabel: "Weka Nenosiri Jipya",
         savePassBtn: "Hifadhi & Ingia",
-        selectPkgLabel: "Chagua Kifurushi cha Intaneti",
+        selectPkgLabel: "Chagua Kifurushi cha Halotel",
         selectPkgPlaceholder: "-- Chagua Kifurushi --",
-        phoneLabel: "Namba ya Simu ya Kupokea",
+        phoneLabel: "Namba ya Simu ya Halotel ya Kupokea",
         submitOrderBtn: "Tuma Oda ya Kifurushi",
         menuTitle: "MENU",
         newOrder: "Oda Mpya",
@@ -453,7 +472,9 @@
         theme: "Mwonekano",
         logout: "Toka Nje",
         backBtn: "← Rudi kwenye Oda",
-        noOrders: "Hakuna oda zilizowekwa bado."
+        noOrders: "Hakuna oda zilizowekwa bado.",
+        paymentNoticeTitle: "⚠️ MALIPO & MAELEKEZO:",
+        paymentNoticeText: "Tafadhali tuma pesa kabla ya ku-confirm oda. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Vifurushi hivi ni vya <strong>Halotel pekee</strong>. Hakikisha namba ya simu unayoweka hapa chini ni ya Halotel."
       }
     };
 
@@ -465,7 +486,7 @@
       elements.forEach(function(el) {
         var key = el.getAttribute("data-key");
         if (translations[lang] && translations[lang][key]) {
-          el.innerText = translations[lang][key];
+          el.innerHTML = translations[lang][key];
         }
       });
     }
@@ -479,7 +500,6 @@
       document.getElementById("drawerThemeSelect").value = theme;
     }
 
-    /* Drawer Controls */
     function openDrawer() {
       document.getElementById("sidebarDrawer").classList.add("open");
       document.getElementById("drawerOverlay").classList.add("active");
@@ -666,10 +686,8 @@
     function launchDashboard(user) {
       switchView("viewDashboard");
 
-      // Display Top Right Hamburger Menu when logged in
       document.getElementById("menuToggleBtn").classList.add("active");
 
-      // Set Profile Details in Menu
       var displayName = user.name || user.email;
       document.getElementById("drawerUserName").innerText = displayName;
       document.getElementById("drawerUserEmail").innerText = user.email || "";
@@ -696,11 +714,11 @@
         email: activeUser.email || "Customer",
         to_name: "Admin",
         name: activeUser.name || "Customer Name",
-        desc: pkg,
+        desc: pkg + " (Halotel)",
         package: pkg,
         phone: phone,
         order_id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
-        message: "Oda Mpya Imefika!\nJina la Mteja: " + (activeUser.name || "Customer") + "\nEmail: " + activeUser.email + "\nBando: " + pkg + "\nNamba ya Simu: " + phone,
+        message: "Oda Mpya ya Halotel Imefika!\nJina la Mteja: " + (activeUser.name || "Customer") + "\nEmail: " + activeUser.email + "\nBando: " + pkg + "\nNamba ya Simu ya Halotel: " + phone + "\nMalipo yametumwa kwenda: 0770136023 (Michael Joseph Liganya - Mix by Yas)",
         date: new Date().toLocaleString()
       };
 
@@ -709,7 +727,7 @@
         orders.push({
           email: activeUser.email || "N/A",
           name: activeUser.name || "Customer",
-          desc: pkg + " | Phone: " + phone,
+          desc: pkg + " (Halotel) | Phone: " + phone,
           date: new Date().toLocaleString()
         });
         localStorage.setItem("mj_orders", JSON.stringify(orders));
@@ -726,7 +744,7 @@
           submitBtn.disabled = false;
           loadUserOrderHistory(activeUser.email);
 
-          setTimeout(function() { notice.innerText = ""; }, 3000);
+          setTimeout(function() { notice.innerText = ""; }, 4000);
         })
         .catch(function(error) {
           console.error("EmailJS Error:", error);
@@ -737,7 +755,7 @@
           submitBtn.disabled = false;
           loadUserOrderHistory(activeUser.email);
 
-          setTimeout(function() { notice.innerText = ""; }, 3000);
+          setTimeout(function() { notice.innerText = ""; }, 4000);
         });
     }
 
@@ -768,7 +786,7 @@
     }
 
     window.onload = function() {
-      changeLanguage('en'); // Set English as Dominant
+      changeLanguage('en');
       var activeUser = sessionStorage.getItem("mj_active_user");
       if (activeUser) {
         launchDashboard(JSON.parse(activeUser));
