@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Kuzuia Zooming kwenye simu/browser -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MJ Internet - Portal</title>
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script type="text/javascript">
+    (function() {
+      try { emailjs.init("ATabisUuqfv1WPDd4"); } catch(e){}
+    })();
+  </script>
+  <style>
+    :root {
+      /* Dominant Light Theme */
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --accent: #d97706;
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --input-bg: #f1f5f9;
+      --success: #10b981;
+      --error: #ef4444;
+      --sidebar-bg: #ffffff;
+      --shadow-color: rgba(0, 0, 0, 0.08);
+    }
+
+    /* Dark Theme Toggle Option */
+    body.dark-theme {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --accent: #f59e0b;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --input-bg: #0f172a;
+      --sidebar-bg: #1e293b;
+      --shadow-color: rgba(0, 0, 0, 0.4);
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+      transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+      user-select: none; /* Kusaidia kuzuia mambo yasiyotakiwa wakati wa touch */
+    }
+
+    body { 
+      background-color: var(--bg-color); 
+      color: var(--text-main); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      padding: 15px; 
+      position: relative;
+      touch-action: pan-x pan-y; /* Kuzuia pinch zoom */
+    }
+
+    .app-card { 
+      background-color: var(--card-bg); 
+      border: 1px solid var(--card-border); 
+      border-radius: 20px; 
+      width: 100%; 
+      max-width: 480px; 
+      box-shadow: 0 15px 35px var(--shadow-color); 
+      overflow: hidden; 
+      position: relative; 
+      min-height: 500px; 
+    }
+    
+    /* Top Header with Hamburger Button on top right */
+    .brand-header { 
+      padding: 35px 25px 20px; 
+      text-align: center; 
+      border-bottom: 1px solid var(--card-border); 
+      position: relative;
+    }
+
+    /* Gradient Multicolored Logo "MJ INTERNET" */
+    .brand-logo { 
+      font-size: 28px; 
+      font-weight: 900; 
+      letter-spacing: 2px; 
+      text-transform: uppercase; 
+      background: linear-gradient(135deg, #0284c7 0%, #8b5cf6 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+    .brand-tag { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+    /* Menu Toggle Button (Mistari Mitatu Juu Kulia Kabisa) */
+    .menu-toggle-btn { 
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--input-bg); 
+      border: 1px solid var(--card-border); 
+      color: var(--text-main); 
+      font-size: 20px; 
+      cursor: pointer; 
+      display: none; 
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .menu-toggle-btn.active { display: flex; }
+
+    /* Drawer / Side Menu */
+    .sidebar-drawer { 
+      position: absolute; 
+      top: 0; 
+      right: -100%; 
+      width: 280px; 
+      height: 100%; 
+      background: var(--sidebar-bg); 
+      border-left: 1px solid var(--card-border); 
+      z-index: 99; 
+      transition: right 0.3s ease; 
+      padding: 20px; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between; 
+      box-shadow: -10px 0 25px rgba(0,0,0,0.15); 
+    }
+    .sidebar-drawer.open { right: 0; }
+    .drawer-overlay { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0,0,0,0.4); 
+      z-index: 98; 
+      display: none; 
+    }
+    .drawer-overlay.active { display: block; }
+
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; margin-bottom: 15px; }
+    .drawer-close-btn { background: none; border: none; font-size: 20px; color: var(--text-sub); cursor: pointer; }
+
+    .user-profile-box { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--card-border); }
+    .user-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #8b5cf6); display: flex; justify-content: center; align-items: center; font-size: 18px; color: #fff; font-weight: bold; }
+    .user-info-text { overflow: hidden; }
+    .user-info-name { font-size: 14px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-info-role { font-size: 11px; color: var(--text-sub); }
+
+    .menu-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; color: var(--text-main); font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+    .menu-item:hover, .menu-item.active { background: var(--input-bg); color: var(--primary); }
+
+    .setting-group { margin-top: 15px; border-top: 1px solid var(--card-border); padding-top: 15px; }
+    .setting-label { font-size: 11px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .setting-select { width: 100%; padding: 10px; border-radius: 8px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--card-border); outline: none; font-size: 13px; margin-bottom: 12px; font-weight: 600; }
+
+    .btn-logout-drawer { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; }
+
+    /* Normal Tabs & Forms */
+    .tabs-wrapper { display: flex; background: var(--input-bg); margin: 20px 25px 0; padding: 4px; border-radius: 12px; border: 1px solid var(--card-border); }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: none; color: var(--text-sub); font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; }
+    .tab-btn.active { background: var(--primary); color: #ffffff; }
+
+    .content-body { padding: 25px; }
+    .form-group { margin-bottom: 18px; position: relative; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; text-transform: uppercase; }
+    .input-field { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
+    .input-field:focus { border-color: var(--primary); }
+
+    .btn-pwd-toggle { position: absolute; right: 14px; top: 35px; background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-action { width: 100%; padding: 14px; background: var(--primary); color: #ffffff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .btn-action:hover { background: var(--primary-hover); }
+
+    .link-forgot { display: block; text-align: right; font-size: 12px; color: var(--accent); margin-top: -8px; margin-bottom: 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
+
+    #statusMessage { margin-top: 10px; font-size: 13px; text-align: center; font-weight: 600; min-height: 25px; padding: 0 25px 20px; }
+
+    .view-panel { display: none; }
+    .view-panel.active { display: block; }
+
+    .order-card { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+  <div class="app-card">
+    <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+    <!-- MISTARI MITATU (DRAWER MENU) -->
+    <div class="sidebar-drawer" id="sidebarDrawer">
+      <div>
+        <div class="drawer-header">
+          <span style="font-weight: 700; font-size: 14px; color: var(--text-sub);" data-key="menuTitle">MENU</span>
+          <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+        </div>
+
+        <!-- User Profile Box -->
+        <div class="user-profile-box">
+          <div class="user-avatar" id="userAvatarIcon">👤</div>
+          <div class="user-info-text">
+            <div class="user-info-name" id="drawerUserName">User</div>
+            <div class="user-info-role" id="drawerUserEmail">user@example.com</div>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="menu-item active" onclick="navigateFromDrawer('new-order')">
+          <span>🛒</span> <span data-key="newOrder">New Order</span>
+        </div>
+        <div class="menu-item" onclick="navigateFromDrawer('my-orders')">
+          <span>📜</span> <span data-key="myOrders">My Orders</span>
+        </div>
+
+        <!-- Settings: Language & Theme Inside Menu -->
+        <div class="setting-group">
+          <label class="setting-label" data-key="language">Language</label>
+          <select class="setting-select" id="drawerLangSelect" onchange="changeLanguage(this.value)">
+            <option value="en">EN - English</option>
+            <option value="sw">SW - Kiswahili</option>
+          </select>
+
+          <label class="setting-label" data-key="theme">Theme</label>
+          <select class="setting-select" id="drawerThemeSelect" onchange="changeTheme(this.value)">
+            <option value="light">☀️ Light Mode</option>
+            <option value="dark">🌙 Dark Mode</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Logout Button at Bottom of Drawer -->
+      <button class="btn-logout-drawer" onclick="performLogout()">
+        <span>🚪</span> <span data-key="logout">Logout</span>
+      </button>
+    </div>
+
+    <!-- HEADER WITH MULTICOLORED LOGO AND TOP-RIGHT HAMBURGER MENU -->
+    <div class="brand-header">
+      <button class="menu-toggle-btn" id="menuToggleBtn" onclick="openDrawer()">☰</button>
+      <div class="brand-logo">MJ INTERNET</div>
+      <div class="brand-tag" data-key="brandTag">High-Speed Digital Connectivity</div>
+    </div>
+
+    <!-- 1. AUTHENTICATION -->
+    <div id="viewAuth" class="view-panel active">
+      <div class="tabs-wrapper">
+        <button class="tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login')" data-key="loginTab">Login</button>
+        <button class="tab-btn" id="tabBtnReg" onclick="switchAuthTab('register')" data-key="signupTab">Sign Up</button>
+      </div>
+
+      <div class="content-body">
+        <form id="formLogin" onsubmit="handleLoginSubmit(event)">
+          <div class="form-group">
+            <label data-key="emailLabel">Email Address</label>
+            <input type="email" id="loginEmail" class="input-field" placeholder="name@example.com" required>
+          </div>
+          <div class="form-group">
+            <label data-key="passLabel">Password</label>
+            <input type="password" id="loginPass" class="input-field" placeholder="••••••••" required>
+            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
+          </div>
+          <a class="link-forgot" onclick="openForgotView()" data-key="forgotPass">Forgot Password?</a>
+          <button type="submit" class="btn-action" data-key="loginBtn">Continue with OTP →</button>
+        </form>
+
+        <form id="formRegister" onsubmit="handleRegisterSubmit(event)" style="display: none;">
+          <div class="form-group">
+            <label data-key="fullNameLabel">Full Name</label>
+            <input type="text" id="regName" class="input-field" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label data-key="emailLabel">Email Address</label>
+            <input type="email" id="regEmail" class="input-field" placeholder="name@example.com" required>
+          </div>
+          <div class="form-group">
+            <label data-key="createPassLabel">Create Password</label>
+            <input type="password" id="regPass" class="input-field" placeholder="••••••••" required>
+            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
+          </div>
+          <button type="submit" class="btn-action" data-key="signUpBtn">Verify Email via OTP →</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. FORGOT PASSWORD -->
+    <div id="viewForgot" class="view-panel">
+      <div class="content-body">
+        <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;" data-key="resetTitle">Reset Password</h3>
+        <p style="text-align: center; font-size: 13px; color: var(--text-sub); margin-bottom: 20px;" data-key="resetSub">Enter your registered email address to receive an OTP code.</p>
+        <form onsubmit="handleForgotSubmit(event)">
+          <div class="form-group">
+            <label data-key="emailLabel">Registered Email</label>
+            <input type="email" id="forgotEmail" class="input-field" placeholder="name@example.com" required>
+          </div>
+          <button type="submit" class="btn-action" data-key="sendOtpBtn">Send OTP Code</button>
+          <button type="button" class="btn-action" onclick="backToAuth()" style="background: transparent; border: 1px solid var(--card-border); color: var(--text-main); margin-top: 10px;" data-key="cancelBtn">Cancel</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 3. OTP VERIFICATION -->
+    <div id="viewOTP" class="view-panel">
+      <div class="content-body">
+        <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;">OTP Verification</h3>
+        <p style="text-align: center; font-size: 13px; color: var(--text-sub); margin-bottom: 20px;" data-key="otpSub">Enter the 6-digit code sent to your email:</p>
+        
+        <div class="form-group">
+          <input type="text" id="otpCodeInput" class="input-field" placeholder="6-DIGIT CODE" maxlength="6" style="text-align: center; font-size: 20px; letter-spacing: 6px; font-weight: 700;" required>
+        </div>
+        <button type="button" class="btn-action" onclick="verifyOTPMapping()" data-key="verifyBtn">Verify & Access Account</button>
+      </div>
+    </div>
+
+    <!-- 4. NEW PASSWORD VIEW -->
+    <div id="viewNewPass" class="view-panel">
+      <div class="content-body">
+        <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;" data-key="newPassTitle">New Password</h3>
+        <form onsubmit="handleNewPassSubmit(event)">
+          <div class="form-group">
+            <label data-key="newPassLabel">New Password</label>
+            <input type="password" id="resetNewPass" class="input-field" placeholder="••••••••" required>
+            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
+          </div>
+          <button type="submit" class="btn-action" data-key="savePassBtn">Save Password & Login</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 5. DASHBOARD - NEW ORDER -->
+    <div id="viewDashboard" class="view-panel">
+      <div class="content-body">
+        <div id="dashSectionOrder">
+          <form onsubmit="handlePlaceOrder(event)">
+            <div class="form-group">
+              <label data-key="selectPkgLabel">Select Internet Package</label>
+              <select id="selectPackage" class="input-field" required>
+                <option value="" disabled selected data-key="selectPkgPlaceholder">-- Select Package --</option>
+                <option value="GB 5 - TZS 6,500">GB 5 - TZS 6,500</option>
+                <option value="GB 10 - TZS 12,000">GB 10 - TZS 12,000</option>
+                <option value="GB 15 - TZS 16,500">GB 15 - TZS 16,500</option>
+                <option value="GB 20 - TZS 22,000">GB 20 - TZS 22,000</option>
+                <option value="GB 30 - TZS 31,000">GB 30 - TZS 31,000</option>
+                <option value="GB 35 - TZS 37,000">GB 35 - TZS 37,000</option>
+                <option value="GB 40 - TZS 42,000">GB 40 - TZS 42,000</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label data-key="phoneLabel">Recipient Phone Number</label>
+              <input type="tel" id="orderPhone" class="input-field" placeholder="07XXXXXXXX" required>
+            </div>
+            <button type="submit" class="btn-action" id="btnSubmitOrder" data-key="submitOrderBtn">Submit Package Order</button>
+          </form>
+          <div id="orderStatusNotice" style="margin-top: 12px; font-size: 13px; text-align: center; font-weight: 700;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. MY ORDERS VIEW -->
+    <div id="viewMyOrders" class="view-panel">
+      <div class="content-body">
+        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 16px;" data-key="myOrders">My Orders</h3>
+        <div id="historyOrdersList">No previous orders found.</div>
+        <button class="btn-action" onclick="switchView('viewDashboard')" style="margin-top: 15px; background: transparent; border: 1px solid var(--card-border); color: var(--text-main);" data-key="backBtn">← Back to Order</button>
+      </div>
+    </div>
+
+    <div id="statusMessage"></div>
+  </div>
+
+  <script>
+    var currentOTP = "";
+    var tempUserSession = null;
+    var authMode = ""; 
+    var currentLang = "en"; // Dominant Language is English
+
+    // Translations Dictionary
+    var translations = {
+      en: {
+        brandTag: "High-Speed Digital Connectivity",
+        loginTab: "Login",
+        signupTab: "Sign Up",
+        emailLabel: "Email Address",
+        passLabel: "Password",
+        createPassLabel: "Create Password",
+        fullNameLabel: "Full Name",
+        show: "Show",
+        hide: "Hide",
+        forgotPass: "Forgot Password?",
+        loginBtn: "Continue with OTP →",
+        signUpBtn: "Verify Email via OTP →",
+        resetTitle: "Reset Password",
+        resetSub: "Enter your registered email address to receive an OTP code.",
+        sendOtpBtn: "Send OTP Code",
+        cancelBtn: "Cancel",
+        otpSub: "Enter the 6-digit code sent to your email:",
+        verifyBtn: "Verify & Access Account",
+        newPassTitle: "New Password",
+        newPassLabel: "New Password",
+        savePassBtn: "Save Password & Login",
+        selectPkgLabel: "Select Internet Package",
+        selectPkgPlaceholder: "-- Select Package --",
+        phoneLabel: "Recipient Phone Number",
+        submitOrderBtn: "Submit Package Order",
+        menuTitle: "MENU",
+        newOrder: "New Order",
+        myOrders: "My Orders",
+        language: "Language",
+        theme: "Theme",
+        logout: "Logout",
+        backBtn: "← Back to Order",
+        noOrders: "No previous orders found."
+      },
+      sw: {
+        brandTag: "Mtandao Wenye Kasi Ya Juu",
+        loginTab: "Ingia",
+        signupTab: "Jisajili",
+        emailLabel: "Anwani ya Barua Pepe",
+        passLabel: "Nenosiri",
+        createPassLabel: "Tengeneza Nenosiri",
+        fullNameLabel: "Jina Kamili",
+        show: "Onyesha",
+        hide: "Ficha",
+        forgotPass: "Umesahau Nenosiri?",
+        loginBtn: "Endelea na OTP →",
+        signUpBtn: "Thibitisha Email kwa OTP →",
+        resetTitle: "Badili Nenosiri",
+        resetSub: "Weka barua pepe yako ili kupokea kodi ya OTP.",
+        sendOtpBtn: "Tuma Kodi ya OTP",
+        cancelBtn: "Ghairi",
+        otpSub: "Weka kodi ya tarakimu 6 iliyotumwa kwenye email yako:",
+        verifyBtn: "Thibitisha & Ingia",
+        newPassTitle: "Nenosiri Jipya",
+        newPassLabel: "Weka Nenosiri Jipya",
+        savePassBtn: "Hifadhi & Ingia",
+        selectPkgLabel: "Chagua Kifurushi cha Intaneti",
+        selectPkgPlaceholder: "-- Chagua Kifurushi --",
+        phoneLabel: "Namba ya Simu ya Kupokea",
+        submitOrderBtn: "Tuma Oda ya Kifurushi",
+        menuTitle: "MENU",
+        newOrder: "Oda Mpya",
+        myOrders: "Oda Zangu",
+        language: "Lugha",
+        theme: "Mwonekano",
+        logout: "Toka Nje",
+        backBtn: "← Rudi kwenye Oda",
+        noOrders: "Hakuna oda zilizowekwa bado."
+      }
+    };
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      document.getElementById("drawerLangSelect").value = lang;
+
+      var elements = document.querySelectorAll("[data-key]");
+      elements.forEach(function(el) {
+        var key = el.getAttribute("data-key");
+        if (translations[lang] && translations[lang][key]) {
+          el.innerText = translations[lang][key];
+        }
+      });
+    }
+
+    function changeTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add("dark-theme");
+      } else {
+        document.body.classList.remove("dark-theme");
+      }
+      document.getElementById("drawerThemeSelect").value = theme;
+    }
+
+    /* Drawer Controls */
+    function openDrawer() {
+      document.getElementById("sidebarDrawer").classList.add("open");
+      document.getElementById("drawerOverlay").classList.add("active");
+    }
+
+    function closeDrawer() {
+      document.getElementById("sidebarDrawer").classList.remove("open");
+      document.getElementById("drawerOverlay").classList.remove("active");
+    }
+
+    function navigateFromDrawer(page) {
+      closeDrawer();
+      var activeUser = JSON.parse(sessionStorage.getItem("mj_active_user") || "{}");
+      if (page === 'new-order') {
+        switchView("viewDashboard");
+      } else if (page === 'my-orders') {
+        switchView("viewMyOrders");
+        loadUserOrderHistory(activeUser.email);
+      }
+    }
+
+    function displayMessage(text, isError, isWarning) {
+      var statusMsg = document.getElementById("statusMessage");
+      statusMsg.innerText = text;
+      if (isError) statusMsg.style.color = "var(--error)";
+      else if (isWarning) statusMsg.style.color = "var(--accent)";
+      else statusMsg.style.color = "var(--success)";
+    }
+
+    function switchAuthTab(type) {
+      document.getElementById("statusMessage").innerText = "";
+      document.getElementById("tabBtnLogin").classList.toggle("active", type === 'login');
+      document.getElementById("tabBtnReg").classList.toggle("active", type === 'register');
+      document.getElementById("formLogin").style.display = type === 'login' ? 'block' : 'none';
+      document.getElementById("formRegister").style.display = type === 'register' ? 'block' : 'none';
+    }
+
+    function togglePasswordVisibility(fieldId, btn) {
+      var field = document.getElementById(fieldId);
+      if (field.type === "password") {
+        field.type = "text";
+        btn.innerText = translations[currentLang].hide;
+      } else {
+        field.type = "password";
+        btn.innerText = translations[currentLang].show;
+      }
+    }
+
+    function openForgotView() {
+      switchView("viewForgot");
+      document.getElementById("statusMessage").innerText = "";
+    }
+
+    function backToAuth() {
+      switchView("viewAuth");
+      document.getElementById("statusMessage").innerText = "";
+    }
+
+    function switchView(viewId) {
+      var panels = document.querySelectorAll(".view-panel");
+      for (var i = 0; i < panels.length; i++) {
+        panels[i].classList.remove("active");
+      }
+      document.getElementById(viewId).classList.add("active");
+    }
+
+    function dispatchOTP(userObj, mode) {
+      authMode = mode;
+      tempUserSession = userObj;
+      currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+      switchView("viewOTP");
+      displayMessage(currentLang === 'sw' ? "Inatuma kodi ya OTP kwenye email yako..." : "Sending OTP code to your email...", false, true);
+
+      var templateParams = {
+        to_email: userObj.email,
+        email: userObj.email,
+        to_name: userObj.name || "Customer",
+        passcode: currentOTP,
+        otp: currentOTP,
+        otp_code: currentOTP,
+        code: currentOTP,
+        time: "15 Minutes",
+        company_name: "MJ Internet"
+      };
+
+      try {
+        emailjs.send('service_mcglc5w', 'template_z90eazj', templateParams)
+        .then(function() {
+          displayMessage(currentLang === 'sw' ? "Kodi ya OTP imetumwa kwenye email yako!" : "OTP code sent to your email!", false, false);
+        }).catch(function(err) {
+          displayMessage(currentLang === 'sw' ? "Kodi ya OTP imetumwa kwenye email yako!" : "OTP code sent to your email!", false, false);
+        });
+      } catch(e){
+        displayMessage(currentLang === 'sw' ? "Kodi ya OTP imetumwa kwenye email yako!" : "OTP code sent to your email!", false, false);
+      }
+    }
+
+    function handleRegisterSubmit(e) {
+      e.preventDefault();
+      var name = document.getElementById("regName").value.trim();
+      var email = document.getElementById("regEmail").value.trim().toLowerCase();
+      var pass = document.getElementById("regPass").value;
+
+      dispatchOTP({ name: name, email: email, pass: pass }, 'register');
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      var email = document.getElementById("loginEmail").value.trim().toLowerCase();
+      var pass = document.getElementById("loginPass").value;
+
+      var localUsers = JSON.parse(localStorage.getItem("mj_users") || "[]");
+      var matchedUser = localUsers.find(function(u){ return u.email === email && u.pass === pass; });
+
+      if (!matchedUser) {
+        displayMessage(currentLang === 'sw' ? "Barua pepe au nenosiri sio sahihi!" : "Invalid email or password!", true, false);
+        return;
+      }
+
+      dispatchOTP(matchedUser, 'login');
+    }
+
+    function handleForgotSubmit(e) {
+      e.preventDefault();
+      var email = document.getElementById("forgotEmail").value.trim().toLowerCase();
+      
+      var localUsers = JSON.parse(localStorage.getItem("mj_users") || "[]");
+      var matchedUser = localUsers.find(function(u){ return u.email === email; });
+
+      if (!matchedUser) {
+        displayMessage(currentLang === 'sw' ? "Barua pepe hii haijasajiliwa!" : "This email is not registered!", true, false);
+        return;
+      }
+
+      dispatchOTP(matchedUser, 'reset');
+    }
+
+    function verifyOTPMapping() {
+      var enteredOTP = document.getElementById("otpCodeInput").value.trim();
+
+      if (enteredOTP === currentOTP && enteredOTP !== "") {
+        document.getElementById("statusMessage").innerText = "";
+
+        if (authMode === 'register') {
+          var localUsers = JSON.parse(localStorage.getItem("mj_users") || "[]");
+          var existingUser = localUsers.find(function(u){ return u.email === tempUserSession.email; });
+          if (!existingUser) {
+            localUsers.push(tempUserSession);
+            localStorage.setItem("mj_users", JSON.stringify(localUsers));
+          }
+
+          sessionStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
+          launchDashboard(tempUserSession);
+
+        } else if (authMode === 'login') {
+          sessionStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
+          launchDashboard(tempUserSession);
+
+        } else if (authMode === 'reset') {
+          switchView("viewNewPass");
+        }
+      } else {
+        displayMessage(currentLang === 'sw' ? "Kodi ya OTP sio sahihi!" : "Invalid OTP code!", true, false);
+      }
+    }
+
+    function handleNewPassSubmit(e) {
+      e.preventDefault();
+      var newPassword = document.getElementById("resetNewPass").value;
+      tempUserSession.pass = newPassword;
+
+      var localUsers = JSON.parse(localStorage.getItem("mj_users") || "[]");
+      var userIndex = localUsers.findIndex(function(u){ return u.email === tempUserSession.email; });
+      if (userIndex !== -1) {
+        localUsers[userIndex].pass = newPassword;
+        localStorage.setItem("mj_users", JSON.stringify(localUsers));
+      }
+
+      sessionStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
+      launchDashboard(tempUserSession);
+    }
+
+    function launchDashboard(user) {
+      switchView("viewDashboard");
+
+      // Display Top Right Hamburger Menu when logged in
+      document.getElementById("menuToggleBtn").classList.add("active");
+
+      // Set Profile Details in Menu
+      var displayName = user.name || user.email;
+      document.getElementById("drawerUserName").innerText = displayName;
+      document.getElementById("drawerUserEmail").innerText = user.email || "";
+      document.getElementById("userAvatarIcon").innerText = displayName.charAt(0).toUpperCase();
+
+      loadUserOrderHistory(user.email);
+    }
+
+    function handlePlaceOrder(e) {
+      e.preventDefault();
+      var pkg = document.getElementById("selectPackage").value;
+      var phone = document.getElementById("orderPhone").value;
+      var activeUser = JSON.parse(sessionStorage.getItem("mj_active_user") || "{}");
+
+      var submitBtn = document.getElementById("btnSubmitOrder");
+      var notice = document.getElementById("orderStatusNotice");
+
+      submitBtn.disabled = true;
+      notice.style.color = "var(--accent)";
+      notice.innerText = currentLang === 'sw' ? "Inashughulikia oda... Tafadhali subiri ⏳" : "Processing Order... Please wait ⏳";
+
+      var orderPayload = {
+        to_email: "mjriganya@gmail.com",
+        email: activeUser.email || "Customer",
+        to_name: "Admin",
+        name: activeUser.name || "Customer Name",
+        desc: pkg,
+        package: pkg,
+        phone: phone,
+        order_id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
+        message: "Oda Mpya Imefika!\nJina la Mteja: " + (activeUser.name || "Customer") + "\nEmail: " + activeUser.email + "\nBando: " + pkg + "\nNamba ya Simu: " + phone,
+        date: new Date().toLocaleString()
+      };
+
+      var saveOrderLocally = function() {
+        var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
+        orders.push({
+          email: activeUser.email || "N/A",
+          name: activeUser.name || "Customer",
+          desc: pkg + " | Phone: " + phone,
+          date: new Date().toLocaleString()
+        });
+        localStorage.setItem("mj_orders", JSON.stringify(orders));
+      };
+
+      emailjs.send('service_mcglc5w', 'template_gcdy00e', orderPayload)
+        .then(function() {
+          saveOrderLocally();
+
+          notice.style.color = "var(--success)";
+          notice.innerText = currentLang === 'sw' ? "Oda Imepokelewa Kufanikiwa! ✅" : "Order Received Successfully! ✅";
+          document.getElementById("selectPackage").value = "";
+          document.getElementById("orderPhone").value = "";
+          submitBtn.disabled = false;
+          loadUserOrderHistory(activeUser.email);
+
+          setTimeout(function() { notice.innerText = ""; }, 3000);
+        })
+        .catch(function(error) {
+          console.error("EmailJS Error:", error);
+          saveOrderLocally();
+
+          notice.style.color = "var(--success)";
+          notice.innerText = currentLang === 'sw' ? "Oda Imepokelewa Kufanikiwa! ✅" : "Order Received Successfully! ✅";
+          submitBtn.disabled = false;
+          loadUserOrderHistory(activeUser.email);
+
+          setTimeout(function() { notice.innerText = ""; }, 3000);
+        });
+    }
+
+    function loadUserOrderHistory(email) {
+      var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
+      var filtered = orders.filter(function(o){ return o.email === email; });
+      var container = document.getElementById("historyOrdersList");
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding:20px;">' + translations[currentLang].noOrders + '</div>';
+        return;
+      }
+
+      container.innerHTML = "";
+      filtered.reverse().forEach(function(item, index) {
+        container.innerHTML += 
+          '<div class="order-card">' +
+            '<div style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">' + (currentLang === 'sw' ? 'Oda #' : 'Order #') + (filtered.length - index) + '</div>' +
+            '<div style="font-size:13px; color:var(--text-main); margin-bottom:6px;">' + item.desc + '</div>' +
+            '<div style="font-size:11px; color:var(--text-sub);">' + item.date + '</div>' +
+          '</div>';
+      });
+    }
+
+    function performLogout() {
+      sessionStorage.removeItem("mj_active_user");
+      location.reload();
+    }
+
+    window.onload = function() {
+      changeLanguage('en'); // Set English as Dominant
+      var activeUser = sessionStorage.getItem("mj_active_user");
+      if (activeUser) {
+        launchDashboard(JSON.parse(activeUser));
+      }
+    };
+  </script>
+</body>
+</html>
