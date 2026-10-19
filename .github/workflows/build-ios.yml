@@ -2,23 +2,54 @@ name: Build iOS App
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-latest
+  build-ios:
+    runs-on: macos-latest # Lazima itumie macOS ili kujenga iOS app
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Build Web App Artifact
-        run: |
-          mkdir -p build
-          zip -r build/app.ipa index.html
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Au toleo unalotumia
 
-      - name: Upload IPA Artifact
+      # 1. Sakinisha dependencies (kama ni React Native / Flutter / Ionic)
+      - name: Install Dependencies
+        run: npm install
+
+      # 2. Jenga (Build) folda ya iOS .app
+      - name: Build iOS Workspace
+        run: |
+          # Badilisha 'YourProjectName' na jina la project yako
+          xcodebuild -workspace ios/YourProjectName.xcworkspace \
+                     -scheme YourProjectName \
+                     -sdk iphoneos \
+                     -configuration Release \
+                     -derivedDataPath build \
+                     CODE_SIGN_IDENTITY="" \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGNING_ALLOWED=NO
+
+      # 3. Tengeneza Muundo Sahihi wa Payload & .app kwa ajili ya Diawi
+      - name: Package Payload and Create .zip/.ipa
+        run: |
+          mkdir -p build/Payload
+          # Nakili .app iliyojengwa kuingia ndani ya Payload
+          cp -r build/Build/Products/Release-iphoneos/*.app build/Payload/
+          
+          # Ingia kwenye folda na ubanishe (zip) Payload folder
+          cd build
+          zip -r ios-ipa-file.zip Payload
+
+      # 4. Pakia (Upload) Artifact yenye muundo sahihi
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa-file
-          path: build/app.ipa
+          path: build/ios-ipa-file.zip
+
