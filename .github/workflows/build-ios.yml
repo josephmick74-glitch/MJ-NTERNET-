@@ -1,0 +1,24 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Web App Artifact
+        run: |
+          mkdir -p build
+          zip -r build/app.ipa index.html
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-file
+          path: build/app.ipa
