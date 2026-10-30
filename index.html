@@ -67,7 +67,7 @@
       border: 1px solid var(--card-border); 
       border-radius: 20px; 
       width: 100%; 
-      max-width: 480px; 
+      max-width: 520px; 
       box-shadow: 0 15px 35px var(--shadow-color); 
       overflow: hidden; 
       position: relative; 
@@ -195,6 +195,18 @@
     .payment-notice-box strong {
       color: var(--accent);
     }
+
+    /* Admin Table Styling */
+    .admin-stats { display: flex; gap: 10px; margin-bottom: 15px; }
+    .stat-card { flex: 1; background: var(--input-bg); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center; }
+    .stat-num { font-size: 20px; font-weight: 800; color: var(--primary); }
+    .stat-title { font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: 600; }
+
+    .table-container { width: 100%; overflow-x: auto; margin-bottom: 20px; border-radius: 10px; border: 1px solid var(--card-border); }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+    .admin-table th { background: var(--input-bg); padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-sub); text-transform: uppercase; font-size: 10px; }
+    .admin-table td { padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-main); }
+    .admin-table tr:last-child td { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -217,11 +229,14 @@
           </div>
         </div>
 
-        <div class="menu-item active" onclick="navigateFromDrawer('new-order')">
+        <div class="menu-item active" id="menuItemNewOrder" onclick="navigateFromDrawer('new-order')">
           <span>🛒</span> <span data-key="newOrder">New Order</span>
         </div>
-        <div class="menu-item" onclick="navigateFromDrawer('my-orders')">
+        <div class="menu-item" id="menuItemMyOrders" onclick="navigateFromDrawer('my-orders')">
           <span>📜</span> <span data-key="myOrders">My Orders</span>
+        </div>
+        <div class="menu-item" id="menuItemAdmin" style="display: none;" onclick="navigateFromDrawer('admin')">
+          <span>🛡️</span> <span>Admin Panel</span>
         </div>
 
         <div class="setting-group">
@@ -268,7 +283,7 @@
             <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
           </div>
           <a class="link-forgot" onclick="openForgotView()" data-key="forgotPass">Forgot Password?</a>
-          <button type="submit" class="btn-action" data-key="loginBtn">Continue with OTP →</button>
+          <button type="submit" class="btn-action" data-key="loginBtn">Continue →</button>
         </form>
 
         <form id="formRegister" onsubmit="handleRegisterSubmit(event)" style="display: none;">
@@ -373,6 +388,59 @@
       </div>
     </div>
 
+    <!-- VIEW ADMIN PANEL -->
+    <div id="viewAdmin" class="view-panel">
+      <div class="content-body">
+        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 18px; font-weight: 800;">🛡️ Admin Control Panel</h3>
+        
+        <div class="admin-stats">
+          <div class="stat-card">
+            <div class="stat-num" id="adminTotalUsers">0</div>
+            <div class="stat-title">Users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="adminTotalOrders">0</div>
+            <div class="stat-title">Orders</div>
+          </div>
+        </div>
+
+        <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);">👥 Watumiaji Waliojisajili (Registered Users)</h4>
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Jina (Name)</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody">
+              <tr><td colspan="3" style="text-align:center;">Hakuna watumiaji bado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);">📦 Oda Zote Zilizowekwa (All Orders)</h4>
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Mteja (Customer)</th>
+                <th>Oda / Namba</th>
+                <th>Tarehe</th>
+              </tr>
+            </thead>
+            <tbody id="adminOrdersTableBody">
+              <tr><td colspan="4" style="text-align:center;">Hakuna oda zilizowekwa bado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <button class="btn-action" onclick="clearAllOrdersAdmin()" style="background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 10px;">🗑️ Futa Oda Zote (Clear Orders)</button>
+      </div>
+    </div>
+
     <div id="statusMessage"></div>
   </div>
 
@@ -381,6 +449,10 @@
     var tempUserSession = null;
     var authMode = ""; 
     var currentLang = "en";
+
+    // ADMIN CREDENTIALS
+    var ADMIN_EMAIL = "admin@mjinternet.com";
+    var ADMIN_PASS = "admin123";
 
     var GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6gzwTaExxfjhgqYaZT9iCZt-zRtBSoKpSOFkFrx6RYe_Hrf5by_QFCRNEm5TTr68P/exec";
 
@@ -396,7 +468,7 @@
         show: "Show",
         hide: "Hide",
         forgotPass: "Forgot Password?",
-        loginBtn: "Continue with OTP →",
+        loginBtn: "Continue →",
         signUpBtn: "Verify Email via OTP →",
         resetTitle: "Reset Password",
         resetSub: "Enter your registered email address to receive an OTP code.",
@@ -433,7 +505,7 @@
         show: "Onyesha",
         hide: "Ficha",
         forgotPass: "Umesahau Nenosiri?",
-        loginBtn: "Endelea na OTP →",
+        loginBtn: "Endelea →",
         signUpBtn: "Thibitisha Email kwa OTP →",
         resetTitle: "Badili Nenosiri",
         resetSub: "Weka barua pepe yako ili kupokea kodi ya OTP.",
@@ -501,6 +573,9 @@
       } else if (page === 'my-orders') {
         switchView("viewMyOrders");
         loadUserOrderHistory(activeUser.email);
+      } else if (page === 'admin') {
+        switchView("viewAdmin");
+        loadAdminDashboardData();
       }
     }
 
@@ -587,7 +662,7 @@
       var email = document.getElementById("regEmail").value.trim().toLowerCase();
       var pass = document.getElementById("regPass").value;
 
-      dispatchOTP({ name: name, email: email, pass: pass }, 'register');
+      dispatchOTP({ name: name, email: email, pass: pass, role: 'user' }, 'register');
     }
 
     function handleLoginSubmit(e) {
@@ -595,6 +670,15 @@
       var email = document.getElementById("loginEmail").value.trim().toLowerCase();
       var pass = document.getElementById("loginPass").value;
 
+      // 1. ANGALIA KAMA NI ADMIN
+      if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
+        var adminUser = { name: "System Admin", email: ADMIN_EMAIL, role: "admin" };
+        sessionStorage.setItem("mj_active_user", JSON.stringify(adminUser));
+        launchDashboard(adminUser);
+        return;
+      }
+
+      // 2. KAMA SIO ADMIN, ANGALIA WATEJA WA KAWAIDA
       var localUsers = JSON.parse(localStorage.getItem("mj_users") || "[]");
       var matchedUser = localUsers.find(function(u){ return u.email === email && u.pass === pass; });
 
@@ -667,8 +751,6 @@
     }
 
     function launchDashboard(user) {
-      switchView("viewDashboard");
-
       document.getElementById("menuToggleBtn").classList.add("active");
 
       var displayName = user.name || user.email;
@@ -676,7 +758,16 @@
       document.getElementById("drawerUserEmail").innerText = user.email || "";
       document.getElementById("userAvatarIcon").innerText = displayName.charAt(0).toUpperCase();
 
-      loadUserOrderHistory(user.email);
+      // Ikiwa mtumiaji ni Admin, fungua View Admin moja kwa moja
+      if (user.role === 'admin') {
+        document.getElementById("menuItemAdmin").style.display = "flex";
+        switchView("viewAdmin");
+        loadAdminDashboardData();
+      } else {
+        document.getElementById("menuItemAdmin").style.display = "none";
+        switchView("viewDashboard");
+        loadUserOrderHistory(user.email);
+      }
     }
 
     function handlePlaceOrder(e) {
@@ -705,7 +796,6 @@
         date: new Date().toLocaleString()
       };
 
-      // TUMA DATA KWENYE GOOGLE SHEETS (SERVER DATABASE)
       try {
         fetch(GOOGLE_SCRIPT_URL, {
           method: "POST",
@@ -778,6 +868,55 @@
             '<div style="font-size:11px; color:var(--text-sub);">' + item.date + '</div>' +
           '</div>';
       });
+    }
+
+    // FUNCTION YA KUPAKIA DATA KWENYE ADMIN DASHBOARD
+    function loadAdminDashboardData() {
+      var users = JSON.parse(localStorage.getItem("mj_users") || "[]");
+      var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
+
+      document.getElementById("adminTotalUsers").innerText = users.length;
+      document.getElementById("adminTotalOrders").innerText = orders.length;
+
+      // 1. JAZA JEDWALI LA USERS
+      var usersTbody = document.getElementById("adminUsersTableBody");
+      if (users.length === 0) {
+        usersTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Hakuna watumiaji bado.</td></tr>';
+      } else {
+        usersTbody.innerHTML = "";
+        users.forEach(function(u, idx) {
+          usersTbody.innerHTML += 
+            '<tr>' +
+              '<td>' + (idx + 1) + '</td>' +
+              '<td><b>' + (u.name || 'N/A') + '</b></td>' +
+              '<td>' + u.email + '</td>' +
+            '</tr>';
+        });
+      }
+
+      // 2. JAZA JEDWALI LA ORDERS
+      var ordersTbody = document.getElementById("adminOrdersTableBody");
+      if (orders.length === 0) {
+        ordersTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hakuna oda zilizowekwa bado.</td></tr>';
+      } else {
+        ordersTbody.innerHTML = "";
+        orders.slice().reverse().forEach(function(o, idx) {
+          ordersTbody.innerHTML += 
+            '<tr>' +
+              '<td>' + (orders.length - idx) + '</td>' +
+              '<td><b>' + (o.name || 'N/A') + '</b><br><span style="font-size:10px; color:var(--text-sub);">' + o.email + '</span></td>' +
+              '<td>' + o.desc + '</td>' +
+              '<td>' + o.date + '</td>' +
+            '</tr>';
+        });
+      }
+    }
+
+    function clearAllOrdersAdmin() {
+      if (confirm("Je, una uhakika unataka kufuta kumbukumbu za oda zote?")) {
+        localStorage.removeItem("mj_orders");
+        loadAdminDashboardData();
+      }
     }
 
     function performLogout() {
