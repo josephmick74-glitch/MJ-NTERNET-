@@ -15,7 +15,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+  <!-- The fonts themselves are loaded by the script, and skipped in lite mode. -->
   <style>
     /* Layout: a phone-first app shell. A gradient brand band on top, a content sheet that overlaps it,
        and a tab bar at the bottom. The admin desk widens to use a laptop screen. */
@@ -82,7 +82,6 @@
     :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
     .i { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .mono { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
-    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
     /* ---------- App shell ---------- */
     .app {
@@ -93,11 +92,12 @@
       display: flex;
       flex-direction: column;
       background: var(--canvas);
+      position: relative;
     }
     .app.is-wide { max-width: 1040px; }
     @media (min-width: 640px) {
       body { padding-block: 24px; }
-      .app { min-height: calc(100vh - 48px); min-height: calc(100dvh - 48px); border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
+      .app { min-height: calc(100vh - 48px); min-height: calc(100dvh - 48px); border-radius: 24px; overflow: clip; box-shadow: var(--shadow); border: 1px solid var(--line); }
     }
 
     .band {
@@ -133,6 +133,21 @@
     }
     .view { display: grid; gap: 18px; }
 
+    /* ---------- Connection banner and progress ---------- */
+    .net {
+      position: sticky; top: 0; z-index: 8;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px max(20px, env(safe-area-inset-right, 0px)) 10px max(20px, env(safe-area-inset-left, 0px));
+      font-size: 14px; font-weight: 600;
+    }
+    .net-offline { background: var(--warn-bg); color: var(--warn); }
+    .net-online { background: var(--ok-bg); color: var(--ok); }
+    .net-slow { background: var(--paper); color: var(--ink-2); border-bottom: 1px solid var(--line); }
+    .net .btn-link { margin-left: auto; white-space: nowrap; }
+    .progress { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; height: 3px; z-index: 30; overflow: hidden; }
+    .progress::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: var(--brand-grad); animation: progress 1.1s ease-in-out infinite; }
+    @keyframes progress { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+
     /* ---------- Controls ---------- */
     .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
     .stack { display: grid; gap: 14px; }
@@ -147,6 +162,11 @@
     }
     .input::placeholder { color: var(--ink-3); }
     .input:focus { outline: none; border-color: var(--brand-2); box-shadow: 0 0 0 4px var(--focus); }
+    .input[aria-invalid="true"] { border-color: var(--bad); }
+    .input[aria-invalid="true"]:focus { box-shadow: 0 0 0 4px var(--bad-bg); }
+    .field-error { display: flex; gap: 6px; align-items: flex-start; font-size: 13px; font-weight: 600; color: var(--bad); }
+    .field-error .i { width: 16px; height: 16px; margin-top: 2px; }
+    .field-error small { font-weight: 500; opacity: 0.8; margin-left: 4px; white-space: nowrap; }
     .input-wrap { position: relative; }
     .input-wrap .input { padding-right: 70px; }
     .reveal { position: absolute; right: 6px; top: 6px; height: 38px; padding: 0 10px; border: 0; background: none; color: var(--link); font-size: 13px; font-weight: 600; border-radius: 8px; }
@@ -163,6 +183,9 @@
     .btn:hover { filter: brightness(1.06); }
     .btn:active { transform: translateY(1px); }
     .btn:disabled { opacity: 0.55; cursor: default; filter: none; transform: none; }
+    .btn.is-busy { opacity: 0.85; cursor: progress; }
+    .btn.is-busy::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin 0.7s linear infinite; flex: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .btn-ghost { background: var(--paper); color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
     .btn-ghost:hover { filter: none; background: var(--field); }
     .btn-sm { height: 36px; padding: 0 14px; font-size: 14px; width: auto; border-radius: 10px; box-shadow: none; }
@@ -173,11 +196,32 @@
     .seg button { flex: 1; min-width: 0; height: 38px; border: 0; background: none; border-radius: 9px; color: var(--ink-2); font-weight: 600; font-size: 14px; }
     .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(15, 27, 45, 0.12); }
 
+    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .switch { width: 46px; height: 28px; border-radius: 999px; border: 0; padding: 0; background: var(--line); position: relative; flex: none; }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.15s; }
+    .switch[aria-checked="true"] { background: var(--brand-2); }
+    .switch[aria-checked="true"]::after { transform: translateX(18px); }
+
     .pill { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; background: var(--field); color: var(--ink-2); }
     .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
     .pill-pending { background: var(--warn-bg); color: var(--warn); }
     .pill-completed { background: var(--ok-bg); color: var(--ok); }
     .pill-rejected { background: var(--bad-bg); color: var(--bad); }
+
+    /* ---------- Loading, empty, error and blocked states ---------- */
+    .skeleton { height: 78px; border-radius: var(--radius); border: 1px solid var(--line); background: linear-gradient(90deg, var(--paper) 0%, var(--field) 50%, var(--paper) 100%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+    .state { text-align: center; padding: 28px 18px; display: grid; gap: 8px; justify-items: center; background: var(--paper); border: 1px dashed var(--line); border-radius: var(--radius); }
+    .state-icon { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--field); color: var(--ink-3); }
+    .state-error .state-icon { background: var(--bad-bg); color: var(--bad); }
+    .state-blocked .state-icon { background: var(--warn-bg); color: var(--warn); }
+    .state-error, .state-blocked { border-style: solid; }
+    .state-title { font: 700 17px/1.3 var(--font-display); color: var(--ink); text-wrap: balance; }
+    .state-why { color: var(--ink-2); font-size: 14px; max-width: 42ch; }
+    .state .btn { margin-top: 6px; }
+    .state-code { font-size: 12px; color: var(--ink-3); }
+    .suggest { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: 14px; color: var(--ink-2); }
+    .chip { height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--field); color: var(--link); font-weight: 600; font-size: 14px; }
 
     /* ---------- Auth ---------- */
     .otp-input { height: 60px; text-align: center; font: 700 26px/1 var(--font-body); letter-spacing: 0.4em; padding-left: 0.4em; }
@@ -185,6 +229,7 @@
 
     .tip { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: var(--radius); background: var(--paper); border: 1px solid var(--line); }
     .tip-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--brand-grad); color: var(--on-brand); flex: none; }
+    .tip-icon.is-warn { background: var(--warn-bg); color: var(--warn); }
     .tip-body { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-2); }
     .tip-body strong { display: block; color: var(--ink); margin-bottom: 2px; }
     .tip-close { border: 0; background: none; color: var(--ink-3); padding: 4px; border-radius: 8px; }
@@ -197,6 +242,7 @@
     .step-head .hint { margin-left: auto; white-space: nowrap; }
 
     .pkg-list { display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .pkg-list[aria-invalid="true"] { border-color: var(--bad); }
     .pkg { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; border-top: 1px solid var(--line); position: relative; }
     .pkg:first-child { border-top: 0; }
     .pkg input { position: absolute; opacity: 0; pointer-events: none; }
@@ -227,12 +273,22 @@
     .receipt-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--ok-bg); color: var(--ok); }
     .receipt-icon .i { width: 28px; height: 28px; stroke-width: 2.4; }
     .receipt h2 { font-size: 22px; }
-    .receipt p { color: var(--ink-2); max-width: 34ch; }
+    .receipt p { color: var(--ink-2); max-width: 36ch; }
     .details { display: grid; margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
     .details div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
     .details div:first-child { border-top: 0; }
     .details dt { color: var(--ink-3); font-size: 14px; }
     .details dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+    .next { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+    .next li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding-bottom: 16px; position: relative; }
+    .next li:last-child { padding-bottom: 0; }
+    .next li::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--line); }
+    .next li:last-child::before { display: none; }
+    .next-dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line); background: var(--paper); color: var(--ink-3); font-size: 12px; font-weight: 700; }
+    .next-dot .i { width: 16px; height: 16px; stroke-width: 2.6; }
+    .next li.is-done .next-dot { background: var(--ok); border-color: var(--ok); color: #ffffff; }
+    .next strong { display: block; }
+    .next span { font-size: 14px; color: var(--ink-2); }
 
     .order-list { display: grid; gap: 10px; }
     .order { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 6px; }
@@ -240,7 +296,6 @@
     .order-title { font: 700 17px/1.2 var(--font-display); }
     .order-title span { font: 600 15px/1 var(--font-body); color: var(--ink-2); margin-left: 6px; }
     .order-meta { font-size: 13px; color: var(--ink-3); overflow-wrap: anywhere; }
-    .empty { text-align: center; padding: 28px 16px; color: var(--ink-3); display: grid; gap: 14px; justify-items: center; }
 
     /* ---------- Account ---------- */
     .profile { display: flex; align-items: center; gap: 14px; }
@@ -274,7 +329,8 @@
     }
     .user-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
     .user-row:first-child { border-top: 0; }
-    .user-list { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+    .user-list { display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+    .user-list:has(.state, .skeleton) { background: none; border: 0; gap: 10px; }
     .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-3); }
     .pager .btn-sm .i { width: 16px; height: 16px; }
 
@@ -299,8 +355,10 @@
       font-size: 14px; font-weight: 500;
       box-shadow: 0 10px 30px rgba(15, 27, 45, 0.25);
     }
-    .toast.is-error { background: var(--bad); color: #fff; }
-    .toast.is-success { background: var(--ok); color: #fff; }
+    .toast.is-error { background: var(--bad); color: #ffffff; }
+    .toast.is-success { background: var(--ok); color: #ffffff; }
+    .toast-code { display: block; font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .toast-code:empty { display: none; }
 
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
@@ -321,9 +379,19 @@
     <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
     <symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 13l2.5-8h11L20 13v6H4v-6z"/><path d="M4 13h5l1 2h4l1-2h5"/></symbol>
   </svg>
 
+  <div class="progress" id="progressBar" hidden aria-hidden="true"></div>
+
   <div class="app" id="app">
+    <div class="net" id="netBanner" role="status" aria-live="polite" hidden>
+      <span id="netText"></span>
+      <button type="button" class="btn-link" id="netAction" hidden></button>
+    </div>
+
     <header class="band">
       <div class="band-top">
         <div class="brand">
@@ -359,15 +427,15 @@
           <button type="button" id="tabBtnReg" onclick="switchAuthTab('register')" aria-pressed="false" data-key="signupTab">Create account</button>
         </div>
 
-        <form id="formLogin" class="stack" onsubmit="handleLoginSubmit(event)">
+        <form id="formLogin" class="stack" onsubmit="handleLoginSubmit(event)" novalidate>
           <div class="field">
             <label for="loginEmail" data-key="emailLabel">Email</label>
-            <input type="email" id="loginEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
+            <input type="email" id="loginEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
           </div>
           <div class="field">
             <label for="loginPass" data-key="passLabel">Password</label>
             <div class="input-wrap">
-              <input type="password" id="loginPass" class="input" autocomplete="current-password" maxlength="128" required>
+              <input type="password" id="loginPass" class="input" autocomplete="current-password" maxlength="128">
               <button type="button" class="reveal" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
             </div>
           </div>
@@ -375,19 +443,19 @@
           <button type="button" class="btn-link" onclick="openForgotView()" data-key="forgotPass">Forgot password?</button>
         </form>
 
-        <form id="formRegister" class="stack" onsubmit="handleRegisterSubmit(event)" hidden>
+        <form id="formRegister" class="stack" onsubmit="handleRegisterSubmit(event)" novalidate hidden>
           <div class="field">
             <label for="regName" data-key="fullNameLabel">Full name</label>
-            <input type="text" id="regName" class="input" autocomplete="name" minlength="2" maxlength="60" required>
+            <input type="text" id="regName" class="input" autocomplete="name" maxlength="60">
           </div>
           <div class="field">
             <label for="regEmail" data-key="emailLabel">Email</label>
-            <input type="email" id="regEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
+            <input type="email" id="regEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
           </div>
           <div class="field">
             <label for="regPass" data-key="createPassLabel">Password</label>
             <div class="input-wrap">
-              <input type="password" id="regPass" class="input" autocomplete="new-password" minlength="8" maxlength="128" required>
+              <input type="password" id="regPass" class="input" autocomplete="new-password" maxlength="128">
               <button type="button" class="reveal" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
             </div>
             <span class="hint" data-key="passHint">At least 8 characters</span>
@@ -398,10 +466,10 @@
 
       <!-- ===== Forgot password ===== -->
       <section id="viewForgot" class="view" hidden>
-        <form class="stack" onsubmit="handleForgotSubmit(event)">
+        <form id="formForgot" class="stack" onsubmit="handleForgotSubmit(event)" novalidate>
           <div class="field">
             <label for="forgotEmail" data-key="emailLabel">Email</label>
-            <input type="email" id="forgotEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
+            <input type="email" id="forgotEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
           </div>
           <button type="submit" class="btn" data-key="sendOtpBtn">Send code</button>
           <button type="button" class="btn btn-ghost" onclick="backToAuth()" data-key="cancelBtn">Back to log in</button>
@@ -411,8 +479,10 @@
       <!-- ===== Email code ===== -->
       <section id="viewOTP" class="view" hidden>
         <p class="hint"><span data-key="otpSub">Enter the 6-digit code we sent to</span> <span class="otp-email" id="otpEmailText"></span></p>
-        <form class="stack" onsubmit="handleVerifyOtp(event)">
-          <input type="text" id="otpCodeInput" class="input otp-input" maxlength="6" inputmode="numeric" autocomplete="one-time-code" aria-label="6-digit code" placeholder="••••••" required>
+        <form id="formOtp" class="stack" onsubmit="handleVerifyOtp(event)" novalidate>
+          <div class="field">
+            <input type="text" id="otpCodeInput" class="input otp-input" maxlength="6" inputmode="numeric" autocomplete="one-time-code" aria-label="6-digit code" placeholder="••••••">
+          </div>
           <button type="submit" class="btn" data-key="verifyBtn">Verify</button>
         </form>
         <div class="btn-row">
@@ -423,11 +493,11 @@
 
       <!-- ===== New password ===== -->
       <section id="viewNewPass" class="view" hidden>
-        <form class="stack" onsubmit="handleNewPassSubmit(event)">
+        <form id="formNewPass" class="stack" onsubmit="handleNewPassSubmit(event)" novalidate>
           <div class="field">
             <label for="resetNewPass" data-key="newPassLabel">New password</label>
             <div class="input-wrap">
-              <input type="password" id="resetNewPass" class="input" autocomplete="new-password" minlength="8" maxlength="128" required>
+              <input type="password" id="resetNewPass" class="input" autocomplete="new-password" maxlength="128">
               <button type="button" class="reveal" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
             </div>
             <span class="hint" data-key="passHint">At least 8 characters</span>
@@ -438,7 +508,7 @@
 
       <!-- ===== Buy a bundle ===== -->
       <section id="viewBuy" class="view" hidden>
-        <form id="formOrder" class="view" onsubmit="handlePlaceOrder(event)">
+        <form id="formOrder" class="view" onsubmit="handlePlaceOrder(event)" novalidate>
           <div class="step">
             <div class="step-head">
               <span class="step-num">1</span>
@@ -446,7 +516,7 @@
               <span class="hint" data-key="halotelOnly">Halotel lines only</span>
             </div>
             <!-- Prices shown here are for display; the server decides the real price. -->
-            <div class="pkg-list" id="packageList" role="radiogroup" aria-label="Bundle"></div>
+            <div class="pkg-list" id="packageList" role="radiogroup" aria-label="Bundle" tabindex="-1"></div>
           </div>
 
           <div class="step">
@@ -475,12 +545,12 @@
             </div>
             <div class="field">
               <label for="orderPhone" data-key="phoneLabel">Halotel number to receive the bundle</label>
-              <input type="tel" id="orderPhone" class="input mono" placeholder="062X XXX XXX" inputmode="tel" autocomplete="tel" maxlength="16" required>
+              <input type="tel" id="orderPhone" class="input mono" placeholder="062X XXX XXX" inputmode="tel" autocomplete="tel" maxlength="16">
               <span class="hint" data-key="phoneHint">Starts with 061 or 062</span>
             </div>
             <div class="field">
               <label for="orderPaymentRef" data-key="paymentRefLabel">Transaction ID</label>
-              <input type="text" id="orderPaymentRef" class="input mono" placeholder="8FG21XKQ0P" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" required>
+              <input type="text" id="orderPaymentRef" class="input mono" placeholder="8FG21XKQ0P" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40">
               <span class="hint" data-key="paymentRefHint">From the Mix by Yas confirmation SMS.</span>
             </div>
             <button type="submit" class="btn" id="btnSubmitOrder">Submit order</button>
@@ -494,6 +564,10 @@
           <span class="receipt-icon"><svg class="i"><use href="#i-check"/></svg></span>
           <h2 data-key="doneTitle">Order received</h2>
           <p id="doneText"></p>
+        </div>
+        <div class="card stack">
+          <h3 style="font-size: 16px;" data-key="nextTitle">What happens next</h3>
+          <ol class="next" id="doneNext"></ol>
         </div>
         <dl class="details" id="doneDetails"></dl>
         <div class="btn-row">
@@ -516,6 +590,13 @@
             <div class="profile-email" id="drawerUserEmail"></div>
           </div>
         </div>
+        <div class="tip" id="storageTip" hidden>
+          <span class="tip-icon is-warn"><svg class="i"><use href="#i-lock"/></svg></span>
+          <div class="tip-body">
+            <strong data-key="storageTitle">Your browser is blocking saved data</strong>
+            <span data-key="storageWhy"></span>
+          </div>
+        </div>
         <div class="card stack">
           <div class="field">
             <span class="label" data-key="theme">Theme</span>
@@ -524,6 +605,13 @@
               <button type="button" id="themeLight" onclick="changeTheme('light')" aria-pressed="false" data-key="themeLight">Light</button>
               <button type="button" id="themeDark" onclick="changeTheme('dark')" aria-pressed="false" data-key="themeDark">Dark</button>
             </div>
+          </div>
+          <div class="switch-row">
+            <div>
+              <div class="label" id="liteLabel" data-key="liteLabel">Lite mode</div>
+              <div class="hint" data-key="liteHint">Uses less data: plain fonts and shorter lists. Good on slow connections.</div>
+            </div>
+            <button type="button" class="switch" id="liteToggle" role="switch" aria-checked="false" aria-labelledby="liteLabel" onclick="setLiteMode(!liteMode)"></button>
           </div>
         </div>
         <div class="stack">
@@ -534,52 +622,55 @@
 
       <!-- ===== Admin desk (data comes from the server only for admin accounts) ===== -->
       <section id="viewAdmin" class="view" hidden>
-        <div class="stats">
-          <div class="stat stat-main"><span class="stat-num" id="adminPendingOrders">0</span><span class="stat-label" data-key="statPending">Waiting</span></div>
-          <div class="stat"><span class="stat-num" id="adminTotalOrders">0</span><span class="stat-label" data-key="statOrders">All orders</span></div>
-          <div class="stat"><span class="stat-num" id="adminTotalUsers">0</span><span class="stat-label" data-key="statUsers">Customers</span></div>
-        </div>
+        <div id="deskBlocked" hidden></div>
+        <div id="deskContent" class="view">
+          <div class="stats">
+            <div class="stat stat-main"><span class="stat-num" id="adminPendingOrders">–</span><span class="stat-label" data-key="statPending">Waiting</span></div>
+            <div class="stat"><span class="stat-num" id="adminTotalOrders">–</span><span class="stat-label" data-key="statOrders">All orders</span></div>
+            <div class="stat"><span class="stat-num" id="adminTotalUsers">–</span><span class="stat-label" data-key="statUsers">Customers</span></div>
+          </div>
 
-        <div class="seg" role="group" style="max-width: 320px;">
-          <button type="button" id="deskTabOrders" onclick="showDeskTab('orders')" aria-pressed="true" data-key="deskOrders">Orders</button>
-          <button type="button" id="deskTabUsers" onclick="showDeskTab('users')" aria-pressed="false" data-key="deskUsers">Customers</button>
-        </div>
+          <div class="seg" role="group" style="max-width: 320px;">
+            <button type="button" id="deskTabOrders" onclick="showDeskTab('orders')" aria-pressed="true" data-key="deskOrders">Orders</button>
+            <button type="button" id="deskTabUsers" onclick="showDeskTab('users')" aria-pressed="false" data-key="deskUsers">Customers</button>
+          </div>
 
-        <div id="deskOrders" class="view">
-          <div class="toolbar">
-            <div class="seg" role="group" aria-label="Status" id="statusFilter">
-              <button type="button" data-status="all" aria-pressed="true" data-key="filterAll">All</button>
-              <button type="button" data-status="pending" aria-pressed="false" data-key="status_pending">Pending</button>
-              <button type="button" data-status="completed" aria-pressed="false" data-key="status_completed">Completed</button>
-              <button type="button" data-status="rejected" aria-pressed="false" data-key="status_rejected">Rejected</button>
+          <div id="deskOrders" class="view">
+            <div class="toolbar">
+              <div class="seg" role="group" aria-label="Status" id="statusFilter">
+                <button type="button" data-status="all" aria-pressed="true" data-key="filterAll">All</button>
+                <button type="button" data-status="pending" aria-pressed="false" data-key="status_pending">Pending</button>
+                <button type="button" data-status="completed" aria-pressed="false" data-key="status_completed">Completed</button>
+                <button type="button" data-status="rejected" aria-pressed="false" data-key="status_rejected">Rejected</button>
+              </div>
+              <form class="search" onsubmit="handleAdminOrderSearch(event)">
+                <svg class="i"><use href="#i-search"/></svg>
+                <input type="search" id="adminOrderSearch" class="input" maxlength="100" aria-label="Search orders" data-placeholder-key="searchOrders" placeholder="Search name, phone, order or transaction ID">
+              </form>
             </div>
-            <form class="search" onsubmit="handleAdminOrderSearch(event)">
+            <div class="desk-list" id="adminOrdersList"></div>
+            <div class="pager">
+              <button type="button" class="btn btn-ghost btn-sm" id="ordersPrev" onclick="changeAdminPage('orders', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
+              <span id="ordersPageInfo"></span>
+              <button type="button" class="btn btn-ghost btn-sm" id="ordersNext" onclick="changeAdminPage('orders', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
+            </div>
+          </div>
+
+          <div id="deskUsers" class="view" hidden>
+            <form class="search" onsubmit="handleAdminUserSearch(event)">
               <svg class="i"><use href="#i-search"/></svg>
-              <input type="search" id="adminOrderSearch" class="input" maxlength="100" aria-label="Search orders" data-placeholder-key="searchOrders" placeholder="Search name, phone, order or transaction ID">
+              <input type="search" id="adminUserSearch" class="input" maxlength="100" aria-label="Search customers" data-placeholder-key="searchUsers" placeholder="Search name or email">
             </form>
+            <div class="user-list" id="adminUsersList"></div>
+            <div class="pager">
+              <button type="button" class="btn btn-ghost btn-sm" id="usersPrev" onclick="changeAdminPage('users', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
+              <span id="usersPageInfo"></span>
+              <button type="button" class="btn btn-ghost btn-sm" id="usersNext" onclick="changeAdminPage('users', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
+            </div>
           </div>
-          <div class="desk-list" id="adminOrdersList"></div>
-          <div class="pager">
-            <button type="button" class="btn btn-ghost btn-sm" id="ordersPrev" onclick="changeAdminPage('orders', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
-            <span id="ordersPageInfo"></span>
-            <button type="button" class="btn btn-ghost btn-sm" id="ordersNext" onclick="changeAdminPage('orders', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
-          </div>
-        </div>
 
-        <div id="deskUsers" class="view" hidden>
-          <form class="search" onsubmit="handleAdminUserSearch(event)">
-            <svg class="i"><use href="#i-search"/></svg>
-            <input type="search" id="adminUserSearch" class="input" maxlength="100" aria-label="Search customers" data-placeholder-key="searchUsers" placeholder="Search name or email">
-          </form>
-          <div class="user-list" id="adminUsersList"></div>
-          <div class="pager">
-            <button type="button" class="btn btn-ghost btn-sm" id="usersPrev" onclick="changeAdminPage('users', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
-            <span id="usersPageInfo"></span>
-            <button type="button" class="btn btn-ghost btn-sm" id="usersNext" onclick="changeAdminPage('users', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
-          </div>
+          <button type="button" class="btn btn-ghost" id="btnAdminRefresh" onclick="loadAdminDashboardData()" data-key="refreshBtn">Refresh</button>
         </div>
-
-        <button type="button" class="btn btn-ghost" id="btnAdminRefresh" onclick="loadAdminDashboardData()" data-key="refreshBtn">Refresh</button>
       </section>
     </main>
 
@@ -591,15 +682,18 @@
     </nav>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastText"></span><span class="toast-code" id="toastCode"></span></div>
 
   <script>
     // Address of the Google Apps Script web app (see README.md, "Backend setup").
     var API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
-    var REQUEST_TIMEOUT_MS = 25000;
+    var REQUEST_TIMEOUT_MS = 30000;
+    var PROGRESS_DELAY_MS = 300;   // show the progress bar only when a request takes longer than this
+    var SLOW_AFTER_MS = 5000;      // after this long, say the connection is slow and offer lite mode
     var RESEND_WAIT_SECONDS = 60;
     var PAYMENT_NUMBER = "0770136023";
     var ORDER_STATUSES = ["pending", "completed", "rejected"];
+    var FONT_URL = "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap";
 
     // Shown to customers. The server has its own price list and decides the real price.
     var PACKAGES = [
@@ -612,8 +706,35 @@
       { id: "GB40", gb: 40, priceTzs: 42000 }
     ];
 
+    // A short label for every error, so a customer can quote it to support. The full list is in README.md.
+    var ERROR_LABELS = {
+      invalid_email: "MJ-101", required_email: "MJ-101",
+      invalid_name: "MJ-102", required_name: "MJ-102",
+      weak_password: "MJ-103", required_password: "MJ-103",
+      already_registered: "MJ-104", invalid_credentials: "MJ-105", locked: "MJ-106",
+      otp_invalid: "MJ-107", required_code: "MJ-107", otp_expired: "MJ-108", otp_too_many: "MJ-109",
+      resend_wait: "MJ-110", email_failed: "MJ-111", reset_expired: "MJ-112",
+      invalid_package: "MJ-201", invalid_phone: "MJ-202", required_phone: "MJ-202",
+      invalid_payment_ref: "MJ-203", required_ref: "MJ-203", duplicate_payment_ref: "MJ-204",
+      not_found: "MJ-205", invalid_status: "MJ-206",
+      network: "MJ-301", offline: "MJ-302", timeout: "MJ-303", bad_response: "MJ-304",
+      not_configured: "MJ-305", server_not_configured: "MJ-306",
+      server_error: "MJ-401", bad_request: "MJ-402", forbidden: "MJ-403", not_logged_in: "MJ-404"
+    };
+
+    // Which field each server error belongs to, per form. Errors with no field are shown as a message.
+    var FIELD_ERRORS = {
+      formLogin: { invalid_email: "loginEmail", invalid_credentials: "loginPass", locked: "loginPass" },
+      formRegister: { invalid_name: "regName", invalid_email: "regEmail", already_registered: "regEmail", weak_password: "regPass" },
+      formForgot: { invalid_email: "forgotEmail" },
+      formOtp: { otp_invalid: "otpCodeInput", otp_expired: "otpCodeInput", otp_too_many: "otpCodeInput" },
+      formNewPass: { weak_password: "resetNewPass" },
+      formOrder: { invalid_package: "packageList", invalid_phone: "orderPhone", invalid_payment_ref: "orderPaymentRef", duplicate_payment_ref: "orderPaymentRef" }
+    };
+
     var currentLang = "en";
     var currentView = "viewAuth";
+    var currentPage = null;
     var sessionToken = null;
     var currentUser = null;
     var otpEmail = "";
@@ -626,6 +747,14 @@
     var lastOrders = null;
     var lastAdminData = null;
     var lastAdminUsers = null;
+    var liteMode = false;
+    var storageWorks = true;
+    var pendingRequests = 0;
+    var progressTimer = null;
+    var slowTimer = null;
+    var netState = null;           // "offline", "online", "slow" or null
+    var retryWhenOnline = null;    // a load to repeat by itself when the connection comes back
+    var timedOutOrderRef = null;   // transaction ID of an order whose request timed out (it may have arrived)
 
     // These strings are written by us, so changeLanguage() may insert them as HTML.
     // Anything that comes from users or the server is shown with textContent only.
@@ -657,12 +786,14 @@
         resendBtn: "Resend code",
         resendIn: "Resend code in {s}s",
         backAuthBtn: "Use a different email",
-        otpSent: "Code sent. Check your inbox and spam folder.",
-        otpResent: "A new code is on its way.",
-        forgotSent: "If this email is registered, a code is on its way.",
+        otpSent: "Code sent to {email}. It can take a minute; check your spam folder too.",
+        otpResent: "A new code is on its way to {email}. Only the newest code works.",
+        forgotSent: "If {email} is registered, a code is on its way. Check your spam folder too.",
         newPassTitle: "Choose a new password",
         newPassLabel: "New password",
         savePassBtn: "Save and log in",
+        welcomeNew: "Welcome, {name}. Your account is ready. Choose a bundle to start.",
+        passwordChanged: "Password changed. You're logged in here, and logged out on your other devices.",
         heroBuyTitle: "Hello, {name}",
         heroBuySub: "Choose a bundle, pay with Mix by Yas, then send us the transaction ID.",
         step1: "Choose a bundle",
@@ -676,6 +807,7 @@
         payName: "Name",
         copyNumber: "Copy",
         copied: "Copied",
+        copyBlocked: "Your browser didn't allow copying, so we selected the number. Press and hold it, then choose Copy.",
         payNote: "Keep the confirmation SMS. You'll need its transaction ID below.",
         step3: "Send your order",
         phoneLabel: "Halotel number to receive the bundle",
@@ -685,10 +817,19 @@
         submitOrderBtn: "Submit order",
         submitOrderBtnAmount: "Submit order · {amount}",
         processingOrder: "Sending your order…",
-        chooseBundleFirst: "Choose a bundle in step 1.",
+        orderTimeout: "The connection timed out, so we can't tell if your order arrived. Tap Submit again. If it did arrive, we'll show your receipt, not a second order.",
+        orderRecovered: "Good news: your first try did arrive. Here is your receipt.",
+        draftRestored: "We kept the order you were filling in. Check it and submit.",
         doneTitle: "Order received",
         doneHeroSub: "Keep your order ID in case you need to contact us.",
-        doneText: "We'll load the bundle onto {phone} as soon as we confirm your payment.",
+        doneText: "Your order is saved, so there's no need to send it again.",
+        nextTitle: "What happens next",
+        nextReceived: "Order received",
+        nextReceivedText: "Saved at {time}.",
+        nextCheck: "We check your payment",
+        nextCheckText: "We match transaction ID {ref} with the money sent to 0770 136 023.",
+        nextLoad: "We load your bundle",
+        nextLoadText: "{bundle} goes onto {phone}. Your order then shows Completed in My orders.",
         doneOrderId: "Order ID",
         doneBundle: "Bundle",
         doneAmount: "Amount",
@@ -702,24 +843,35 @@
         tabAdmin: "Desk",
         tabAccount: "Account",
         myOrders: "My orders",
-        ordersSub: "Your 30 most recent orders.",
-        noOrders: "No orders yet.",
-        noOrdersCta: "Buy your first bundle",
-        loading: "Loading…",
+        ordersSub: "Your most recent orders and their status.",
+        noOrdersTitle: "No orders yet",
+        noOrdersWhy: "Orders you send appear here with their status, so you can follow each one.",
+        noOrdersCta: "Buy a bundle",
+        loadFailedTitle: "We couldn't load this",
+        tryAgain: "Try again",
         account: "Account",
         accountSub: "Your details and app settings.",
         theme: "Theme",
         themeSystem: "Auto",
         themeLight: "Light",
         themeDark: "Dark",
+        liteLabel: "Lite mode",
+        liteHint: "Uses less data: plain fonts and shorter lists. Good on slow connections.",
+        liteOn: "Lite mode is on. Lists are shorter and fonts are plain to save data.",
+        storageTitle: "Your browser is blocking saved data",
+        storageWhy: "We use it to keep you logged in and to save orders you haven't sent. Without it you'll log in every time. To fix it, allow site data for this page in your browser settings.",
         logout: "Log out",
         logoutHint: "Logs you out on all your devices.",
+        expiredSaved: "Your login expired. We saved your order details. Log in to continue where you left off.",
+        expiredPlain: "Your login expired. Log in again to continue.",
         phoneShort: "Number",
         paymentRefShort: "Txn",
         status_pending: "Pending",
         status_completed: "Completed",
         status_rejected: "Rejected",
-        statusSaved: "Order updated.",
+        saved_completed: "Marked completed. The customer now sees Completed in My orders.",
+        saved_rejected: "Marked rejected. The customer now sees Rejected in My orders.",
+        saved_pending: "Moved back to pending. It's in the Waiting list again.",
         adminTitle: "Orders desk",
         adminSub: "Check each payment, then complete or reject the order.",
         statPending: "Waiting",
@@ -734,41 +886,74 @@
         rejectBtn: "Reject",
         reopenBtn: "Mark pending",
         joined: "Joined {date}",
-        noUsers: "No customers found.",
-        noMatches: "No orders match.",
+        noOrdersAdminTitle: "No orders yet",
+        noOrdersAdminWhy: "No customer has sent an order yet. New orders appear here as soon as they arrive.",
+        noTitle_pending: "Nothing is waiting",
+        noWhy_pending: "Every order has been completed or rejected. New orders will appear here.",
+        noTitle_completed: "No completed orders",
+        noWhy_completed: "Orders appear here after you tap Complete on them.",
+        noTitle_rejected: "No rejected orders",
+        noWhy_rejected: "Orders appear here after you tap Reject on them.",
+        showAllOrders: "Show all orders",
+        noUsersTitle: "No customers yet",
+        noUsersWhy: "Customers appear here after they create an account.",
+        noResultsTitle: "Nothing matches “{q}”",
+        noResultsWhy_orders: "Search looks in names, emails, phone numbers, order IDs and transaction IDs.",
+        noResultsWhy_users: "Search looks in names and emails.",
+        didYouMean: "Did you mean",
+        inOtherStatuses: "Show {n} in all statuses",
+        clearSearch: "Clear search",
+        tryPhoneHint: "Tip: a phone number or transaction ID finds one order exactly.",
+        forbiddenTitle: "This page is for MJ Internet staff",
+        forbiddenWhy: "You're logged in as {email}, a customer account. Only accounts the owner adds as staff can open the orders desk.",
+        goToBuy: "Go to Buy",
         prevPage: "Previous",
         nextPage: "Next",
         pageInfoOrders: "Page {p} of {n} · {count} orders",
         pageInfoUsers: "Page {p} of {n} · {count} customers",
         refreshBtn: "Refresh",
+        netOffline: "You're offline. Check your mobile data or Wi-Fi. We'll reload as soon as you're back.",
+        netBack: "You're back online.",
+        netSlow: "Slow connection. Still working…",
+        useLite: "Use lite mode",
+        errorRef: "Error {code}",
         installTitle: "Add MJ Internet to your iPhone",
         installSteps: "Tap Share, then “Add to Home Screen”. If you don't see it, open this page in Safari first.",
         installStepsInApp: "Open this page in Safari first (menu ••• then Open in Safari). Then tap Share and “Add to Home Screen”.",
-        err_not_configured: "The app is not connected to its server yet. Please contact MJ Internet.",
-        err_server_not_configured: "The app is not connected to its server yet. Please contact MJ Internet.",
-        err_network: "Could not reach the server. Check your internet connection and try again.",
-        err_server_error: "Something went wrong on the server. Please try again.",
-        err_bad_request: "Invalid request. Please reload the page.",
-        err_invalid_email: "Enter a valid email address.",
-        err_invalid_name: "Enter your full name (2–60 characters).",
-        err_weak_password: "Password must be at least 8 characters.",
-        err_already_registered: "This email is already registered. Please log in.",
-        err_invalid_credentials: "Email or password is wrong.",
-        err_locked: "Too many failed attempts. Wait 15 minutes and try again.",
-        err_otp_invalid: "That code is wrong. Check the email and try again.",
-        err_otp_expired: "The code has expired. Tap Resend code.",
-        err_otp_too_many: "Too many wrong codes. Go back and start again.",
+        err_required_name: "Enter your full name.",
+        err_required_email: "Enter your email address.",
+        err_required_password: "Enter your password.",
+        err_required_code: "Enter the 6 digits from the email.",
+        err_required_phone: "Enter the Halotel number that should get the bundle.",
+        err_required_ref: "Enter the transaction ID from your Mix by Yas SMS.",
+        err_not_configured: "The app is not connected to its server yet. Please tell MJ Internet.",
+        err_server_not_configured: "The server isn't set up yet. Please tell MJ Internet.",
+        err_network: "We couldn't reach the server. Check your connection and try again.",
+        err_offline: "You're offline, so this wasn't sent. Connect to the internet and try again.",
+        err_timeout: "The connection is too slow and the request timed out. Try again, or turn on lite mode.",
+        err_bad_response: "The server sent an answer we couldn't read. Try again in a minute.",
+        err_server_error: "Something failed on our server. Try again in a minute.",
+        err_bad_request: "The app sent a request the server didn't understand. Reload the page and try again.",
+        err_invalid_email: "Check the email. It should look like name@example.com.",
+        err_invalid_name: "Use 2 to 60 characters for your name.",
+        err_weak_password: "Use at least 8 characters. You've typed {n}.",
+        err_already_registered: "This email already has an account. Log in instead, or reset the password.",
+        err_invalid_credentials: "The email or password is wrong. Check both, or reset your password.",
+        err_locked: "Too many wrong passwords, so the account is locked for 15 minutes to protect it. Wait, or reset your password.",
+        err_otp_invalid: "That code is wrong. Use the newest code from the email.",
+        err_otp_expired: "The code has expired. Tap Resend code to get a new one.",
+        err_otp_too_many: "Too many wrong codes, so this one is cancelled. Tap Resend code.",
         err_resend_wait: "Wait a minute before asking for another code.",
-        err_email_failed: "We could not send the email. Try again later.",
-        err_not_logged_in: "You were logged out. Please log in again.",
-        err_reset_expired: "The reset time has run out. Please start again.",
-        err_forbidden: "You do not have permission to do that.",
-        err_invalid_package: "Choose a bundle in step 1.",
-        err_invalid_phone: "Enter a Halotel number that starts with 061 or 062.",
-        err_invalid_payment_ref: "Enter the transaction ID from your payment SMS (letters and numbers).",
-        err_duplicate_payment_ref: "This transaction ID was already used for another order.",
-        err_not_found: "Order not found.",
-        err_invalid_status: "Invalid status."
+        err_email_failed: "We couldn't send the email right now. Try again later.",
+        err_not_logged_in: "Your login has expired. Log in again to continue.",
+        err_reset_expired: "The time to change your password ran out. Start again from Forgot password.",
+        err_forbidden: "This needs a staff account.",
+        err_invalid_package: "Choose a bundle from the list in step 1.",
+        err_invalid_phone: "Use a Halotel number that starts with 061 or 062, like 0621 234 567.",
+        err_invalid_payment_ref: "Use the transaction ID exactly as in the SMS: 4 to 40 letters and numbers.",
+        err_duplicate_payment_ref: "This transaction ID was already used for another order. Check the SMS for the right one.",
+        err_not_found: "That order no longer exists. Refresh the list.",
+        err_invalid_status: "That status isn't allowed. Refresh the list."
       },
       sw: {
         brandTag: "Vifurushi vya Halotel",
@@ -797,12 +982,14 @@
         resendBtn: "Tuma kodi tena",
         resendIn: "Tuma tena baada ya sekunde {s}",
         backAuthBtn: "Tumia barua pepe nyingine",
-        otpSent: "Kodi imetumwa. Angalia inbox na spam.",
-        otpResent: "Kodi mpya inakuja.",
-        forgotSent: "Kama barua pepe hii imesajiliwa, kodi inakuja.",
+        otpSent: "Kodi imetumwa kwa {email}. Inaweza kuchukua dakika moja; angalia pia spam.",
+        otpResent: "Kodi mpya inakuja kwa {email}. Kodi mpya pekee ndiyo inafanya kazi.",
+        forgotSent: "Kama {email} imesajiliwa, kodi inakuja. Angalia pia spam.",
         newPassTitle: "Chagua nenosiri jipya",
         newPassLabel: "Nenosiri jipya",
         savePassBtn: "Hifadhi na uingie",
+        welcomeNew: "Karibu, {name}. Akaunti yako iko tayari. Chagua kifurushi kuanza.",
+        passwordChanged: "Nenosiri limebadilishwa. Umeingia hapa, na umetolewa kwenye vifaa vingine.",
         heroBuyTitle: "Habari, {name}",
         heroBuySub: "Chagua kifurushi, lipa kwa Mix by Yas, kisha tutumie namba ya muamala.",
         step1: "Chagua kifurushi",
@@ -816,6 +1003,7 @@
         payName: "Jina",
         copyNumber: "Nakili",
         copied: "Imenakiliwa",
+        copyBlocked: "Kivinjari chako hakikuruhusu kunakili, kwa hiyo tumechagua namba. Ibonyeze kwa muda, kisha chagua Copy.",
         payNote: "Hifadhi SMS ya uthibitisho. Utahitaji namba ya muamala hapa chini.",
         step3: "Tuma oda yako",
         phoneLabel: "Namba ya Halotel ya kupokea kifurushi",
@@ -825,10 +1013,19 @@
         submitOrderBtn: "Tuma oda",
         submitOrderBtnAmount: "Tuma oda · {amount}",
         processingOrder: "Inatuma oda yako…",
-        chooseBundleFirst: "Chagua kifurushi kwenye hatua ya 1.",
+        orderTimeout: "Muunganisho umechelewa, hatujui kama oda yako imefika. Bonyeza Tuma tena. Kama ilifika, tutakuonyesha risiti, si oda ya pili.",
+        orderRecovered: "Habari njema: jaribio lako la kwanza lilifika. Hii hapa risiti yako.",
+        draftRestored: "Tumehifadhi oda uliyokuwa ukijaza. Ihakiki kisha uitume.",
         doneTitle: "Oda imepokelewa",
         doneHeroSub: "Hifadhi namba ya oda endapo utahitaji kuwasiliana nasi.",
-        doneText: "Tutaweka kifurushi kwenye {phone} mara tu tutakapothibitisha malipo yako.",
+        doneText: "Oda yako imehifadhiwa, hakuna haja ya kuituma tena.",
+        nextTitle: "Kinachofuata",
+        nextReceived: "Oda imepokelewa",
+        nextReceivedText: "Imehifadhiwa saa {time}.",
+        nextCheck: "Tunahakiki malipo yako",
+        nextCheckText: "Tunalinganisha namba ya muamala {ref} na pesa zilizotumwa kwa 0770 136 023.",
+        nextLoad: "Tunaweka kifurushi chako",
+        nextLoadText: "{bundle} kinawekwa kwenye {phone}. Kisha oda yako inaonyesha Imekamilika kwenye Oda zangu.",
         doneOrderId: "Namba ya oda",
         doneBundle: "Kifurushi",
         doneAmount: "Kiasi",
@@ -842,24 +1039,35 @@
         tabAdmin: "Dawati",
         tabAccount: "Akaunti",
         myOrders: "Oda zangu",
-        ordersSub: "Oda zako 30 za karibuni.",
-        noOrders: "Bado huna oda.",
-        noOrdersCta: "Nunua kifurushi chako cha kwanza",
-        loading: "Inapakia…",
+        ordersSub: "Oda zako za karibuni na hali zake.",
+        noOrdersTitle: "Bado huna oda",
+        noOrdersWhy: "Oda unazotuma zinaonekana hapa pamoja na hali yake, ili uzifuatilie moja moja.",
+        noOrdersCta: "Nunua kifurushi",
+        loadFailedTitle: "Hatukuweza kupakia hii",
+        tryAgain: "Jaribu tena",
         account: "Akaunti",
         accountSub: "Taarifa zako na mipangilio ya programu.",
         theme: "Mwonekano",
         themeSystem: "Otomatiki",
         themeLight: "Mwanga",
         themeDark: "Giza",
+        liteLabel: "Hali nyepesi",
+        liteHint: "Inatumia data kidogo: herufi za kawaida na orodha fupi. Nzuri kwa mtandao wa polepole.",
+        liteOn: "Hali nyepesi imewashwa. Orodha ni fupi na herufi ni za kawaida ili kuokoa data.",
+        storageTitle: "Kivinjari chako kinazuia kuhifadhi taarifa",
+        storageWhy: "Tunazitumia kukuweka ndani ya akaunti na kuhifadhi oda ambazo hujatuma. Bila hivyo utaingia kila mara. Ili kurekebisha, ruhusu site data kwa ukurasa huu kwenye mipangilio ya kivinjari.",
         logout: "Toka",
         logoutHint: "Inakutoa kwenye vifaa vyako vyote.",
+        expiredSaved: "Muda wako wa kuingia umeisha. Tumehifadhi taarifa za oda yako. Ingia uendelee ulipoishia.",
+        expiredPlain: "Muda wako wa kuingia umeisha. Ingia tena kuendelea.",
         phoneShort: "Namba",
         paymentRefShort: "Muamala",
         status_pending: "Inasubiri",
         status_completed: "Imekamilika",
         status_rejected: "Imekataliwa",
-        statusSaved: "Oda imesasishwa.",
+        saved_completed: "Imekamilishwa. Mteja sasa anaona Imekamilika kwenye Oda zake.",
+        saved_rejected: "Imekataliwa. Mteja sasa anaona Imekataliwa kwenye Oda zake.",
+        saved_pending: "Imerudishwa kusubiri. Iko tena kwenye orodha ya Zinasubiri.",
         adminTitle: "Dawati la oda",
         adminSub: "Hakiki kila malipo, kisha kamilisha au kataa oda.",
         statPending: "Zinasubiri",
@@ -874,41 +1082,74 @@
         rejectBtn: "Kataa",
         reopenBtn: "Rudisha kusubiri",
         joined: "Alijiunga {date}",
-        noUsers: "Hakuna wateja.",
-        noMatches: "Hakuna oda zinazolingana.",
+        noOrdersAdminTitle: "Bado hakuna oda",
+        noOrdersAdminWhy: "Hakuna mteja aliyetuma oda bado. Oda mpya zinaonekana hapa mara zinapofika.",
+        noTitle_pending: "Hakuna oda zinazosubiri",
+        noWhy_pending: "Oda zote zimekamilishwa au kukataliwa. Oda mpya zitaonekana hapa.",
+        noTitle_completed: "Hakuna oda zilizokamilika",
+        noWhy_completed: "Oda zinaonekana hapa baada ya kubonyeza Kamilisha.",
+        noTitle_rejected: "Hakuna oda zilizokataliwa",
+        noWhy_rejected: "Oda zinaonekana hapa baada ya kubonyeza Kataa.",
+        showAllOrders: "Onyesha oda zote",
+        noUsersTitle: "Bado hakuna wateja",
+        noUsersWhy: "Wateja wanaonekana hapa baada ya kufungua akaunti.",
+        noResultsTitle: "Hakuna kinacholingana na “{q}”",
+        noResultsWhy_orders: "Utafutaji unaangalia majina, barua pepe, namba za simu, namba za oda na namba za muamala.",
+        noResultsWhy_users: "Utafutaji unaangalia majina na barua pepe.",
+        didYouMean: "Ulimaanisha",
+        inOtherStatuses: "Onyesha {n} kwenye hali zote",
+        clearSearch: "Futa utafutaji",
+        tryPhoneHint: "Dokezo: namba ya simu au ya muamala inapata oda moja moja kwa moja.",
+        forbiddenTitle: "Ukurasa huu ni wa wafanyakazi wa MJ Internet",
+        forbiddenWhy: "Umeingia kama {email}, akaunti ya mteja. Ni akaunti zilizoongezwa na mmiliki kama wafanyakazi tu zinazofungua dawati la oda.",
+        goToBuy: "Nenda kununua",
         prevPage: "Iliyopita",
         nextPage: "Inayofuata",
         pageInfoOrders: "Ukurasa {p} kati ya {n} · oda {count}",
         pageInfoUsers: "Ukurasa {p} kati ya {n} · wateja {count}",
         refreshBtn: "Onyesha upya",
+        netOffline: "Huna mtandao. Angalia data au Wi-Fi yako. Tutapakia upya mara mtandao ukirudi.",
+        netBack: "Mtandao umerudi.",
+        netSlow: "Mtandao uko polepole. Bado tunashughulikia…",
+        useLite: "Tumia hali nyepesi",
+        errorRef: "Hitilafu {code}",
         installTitle: "Weka MJ Internet kwenye iPhone yako",
         installSteps: "Bonyeza Share, kisha “Add to Home Screen”. Kama huioni, fungua ukurasa huu kwenye Safari kwanza.",
         installStepsInApp: "Fungua ukurasa huu kwenye Safari kwanza (menyu ••• kisha Open in Safari). Kisha bonyeza Share na “Add to Home Screen”.",
-        err_not_configured: "Programu bado haijaunganishwa na seva. Tafadhali wasiliana na MJ Internet.",
-        err_server_not_configured: "Programu bado haijaunganishwa na seva. Tafadhali wasiliana na MJ Internet.",
-        err_network: "Imeshindwa kufikia seva. Angalia mtandao wako kisha ujaribu tena.",
-        err_server_error: "Kuna hitilafu kwenye seva. Tafadhali jaribu tena.",
-        err_bad_request: "Ombi si sahihi. Tafadhali pakia upya ukurasa.",
-        err_invalid_email: "Weka barua pepe sahihi.",
-        err_invalid_name: "Weka jina lako kamili (herufi 2–60).",
-        err_weak_password: "Nenosiri liwe na angalau herufi 8.",
-        err_already_registered: "Barua pepe hii tayari imesajiliwa. Tafadhali ingia.",
-        err_invalid_credentials: "Barua pepe au nenosiri si sahihi.",
-        err_locked: "Majaribio mengi yameshindwa. Subiri dakika 15 kisha ujaribu tena.",
-        err_otp_invalid: "Kodi si sahihi. Angalia barua pepe kisha ujaribu tena.",
-        err_otp_expired: "Kodi imeisha muda. Bonyeza Tuma kodi tena.",
-        err_otp_too_many: "Umekosea kodi mara nyingi. Rudi nyuma uanze upya.",
+        err_required_name: "Weka jina lako kamili.",
+        err_required_email: "Weka barua pepe yako.",
+        err_required_password: "Weka nenosiri lako.",
+        err_required_code: "Weka tarakimu 6 kutoka kwenye barua pepe.",
+        err_required_phone: "Weka namba ya Halotel itakayopokea kifurushi.",
+        err_required_ref: "Weka namba ya muamala kutoka kwenye SMS ya Mix by Yas.",
+        err_not_configured: "Programu bado haijaunganishwa na seva. Tafadhali iambie MJ Internet.",
+        err_server_not_configured: "Seva bado haijaandaliwa. Tafadhali iambie MJ Internet.",
+        err_network: "Hatukuweza kufikia seva. Angalia mtandao wako kisha ujaribu tena.",
+        err_offline: "Huna mtandao, kwa hiyo hii haikutumwa. Unganisha intaneti kisha ujaribu tena.",
+        err_timeout: "Mtandao uko polepole sana na ombi limechelewa. Jaribu tena, au washa hali nyepesi.",
+        err_bad_response: "Seva imetuma jibu tusiloweza kusoma. Jaribu tena baada ya dakika moja.",
+        err_server_error: "Kuna hitilafu kwenye seva yetu. Jaribu tena baada ya dakika moja.",
+        err_bad_request: "Programu imetuma ombi ambalo seva haikulielewa. Pakia upya ukurasa kisha ujaribu tena.",
+        err_invalid_email: "Hakiki barua pepe. Inapaswa kuwa kama jina@mfano.com.",
+        err_invalid_name: "Tumia herufi 2 hadi 60 kwa jina lako.",
+        err_weak_password: "Tumia angalau herufi 8. Umeandika {n}.",
+        err_already_registered: "Barua pepe hii tayari ina akaunti. Ingia, au badilisha nenosiri.",
+        err_invalid_credentials: "Barua pepe au nenosiri si sahihi. Hakiki vyote viwili, au badilisha nenosiri.",
+        err_locked: "Nenosiri limekosewa mara nyingi, kwa hiyo akaunti imefungwa kwa dakika 15 kwa usalama. Subiri, au badilisha nenosiri.",
+        err_otp_invalid: "Kodi si sahihi. Tumia kodi mpya zaidi kutoka kwenye barua pepe.",
+        err_otp_expired: "Kodi imeisha muda. Bonyeza Tuma kodi tena upate mpya.",
+        err_otp_too_many: "Umekosea kodi mara nyingi, kwa hiyo imefutwa. Bonyeza Tuma kodi tena.",
         err_resend_wait: "Subiri dakika moja kabla ya kuomba kodi nyingine.",
-        err_email_failed: "Imeshindwa kutuma barua pepe. Jaribu tena baadaye.",
-        err_not_logged_in: "Umetolewa kwenye akaunti. Tafadhali ingia tena.",
-        err_reset_expired: "Muda wa kubadili nenosiri umeisha. Tafadhali anza upya.",
-        err_forbidden: "Huna ruhusa ya kufanya hivyo.",
-        err_invalid_package: "Chagua kifurushi kwenye hatua ya 1.",
-        err_invalid_phone: "Weka namba ya Halotel inayoanza na 061 au 062.",
-        err_invalid_payment_ref: "Weka namba ya muamala kutoka kwenye SMS ya malipo (herufi na namba).",
-        err_duplicate_payment_ref: "Namba hii ya muamala imeshatumika kwenye oda nyingine.",
-        err_not_found: "Oda haijapatikana.",
-        err_invalid_status: "Hali si sahihi."
+        err_email_failed: "Hatukuweza kutuma barua pepe sasa hivi. Jaribu tena baadaye.",
+        err_not_logged_in: "Muda wako wa kuingia umeisha. Ingia tena kuendelea.",
+        err_reset_expired: "Muda wa kubadili nenosiri umeisha. Anza tena kwenye Umesahau nenosiri.",
+        err_forbidden: "Hii inahitaji akaunti ya mfanyakazi.",
+        err_invalid_package: "Chagua kifurushi kwenye orodha ya hatua ya 1.",
+        err_invalid_phone: "Tumia namba ya Halotel inayoanza na 061 au 062, kama 0621 234 567.",
+        err_invalid_payment_ref: "Tumia namba ya muamala kama ilivyo kwenye SMS: herufi na namba 4 hadi 40.",
+        err_duplicate_payment_ref: "Namba hii ya muamala imeshatumika kwenye oda nyingine. Hakiki SMS upate namba sahihi.",
+        err_not_found: "Oda hiyo haipo tena. Onyesha upya orodha.",
+        err_invalid_status: "Hali hiyo hairuhusiwi. Onyesha upya orodha."
       }
     };
 
@@ -927,16 +1168,28 @@
 
     // ---------- Small helpers ----------
 
-    function t(key) {
-      return translations[currentLang][key] || translations.en[key] || key;
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    /** A translated string, with {name} placeholders filled from vars. */
+    function t(key, vars) {
+      var text = translations[currentLang][key] || translations.en[key] || key;
+      Object.keys(vars || {}).forEach(function (name) { text = text.split("{" + name + "}").join(String(vars[name])); });
+      return text;
     }
 
     function errorCode(err) {
       return err && err.code ? err.code : "server_error";
     }
 
-    function errorText(code) {
-      return translations[currentLang]["err_" + code] || translations.en["err_" + code] || t("err_server_error");
+    function errorText(code, vars) {
+      var key = "err_" + code;
+      return translations[currentLang][key] || translations.en[key] ? t(key, vars) : t("err_server_error");
+    }
+
+    function errorLabel(code) {
+      return t("errorRef", { code: ERROR_LABELS[code] || ERROR_LABELS.server_error });
     }
 
     // Browser storage can be blocked (private mode, settings); the app must still work without it.
@@ -949,6 +1202,20 @@
         if (value === null) window[storeName].removeItem(key);
         else window[storeName].setItem(key, value);
       } catch (e) {}
+    }
+
+    function readJson(text) {
+      try { return text ? JSON.parse(text) : null; } catch (e) { return null; }
+    }
+
+    function storageAvailable() {
+      try {
+        window.localStorage.setItem("mj_check", "1");
+        window.localStorage.removeItem("mj_check");
+        return true;
+      } catch (e) {
+        return false;
+      }
     }
 
     /** Creates an element whose text is set safely with textContent. */
@@ -968,15 +1235,17 @@
       return svg;
     }
 
-    /** Shows a short message above the tab bar. Errors stay until the next message; others fade. */
-    function notify(text, kind) {
-      var toast = document.getElementById("toast");
+    /** Shows a message above the tab bar, with an error label when given. Errors stay until the next message. */
+    function notify(text, kind, label) {
+      var toast = $("toast");
       clearTimeout(toastTimer);
-      toast.textContent = text || "";
+      $("toastText").textContent = text || "";
+      $("toastCode").textContent = label || "";
       toast.className = "toast" + (kind === "error" ? " is-error" : kind === "success" ? " is-success" : "");
+      toast.setAttribute("role", kind === "error" ? "alert" : "status");
       toast.hidden = !text;
       if (text && kind !== "error") {
-        toastTimer = setTimeout(function () { toast.hidden = true; }, 4000);
+        toastTimer = setTimeout(function () { toast.hidden = true; }, 5000);
       }
     }
 
@@ -984,21 +1253,27 @@
       notify("");
     }
 
-    function showRequestError(err) {
-      notify(errorText(errorCode(err)), "error");
+    function notifyError(err) {
+      var code = errorCode(err);
+      if (code === "not_logged_in") return;  // sessionExpired() has already explained it
+      notify(errorText(code), "error", errorLabel(code));
     }
 
     function submitButton(event) {
       return event.target.querySelector('button[type="submit"]');
     }
 
-    /** Disables the button while the request runs, so it cannot be sent twice. */
+    /** Disables the button and shows a spinner while the request runs, so it cannot be sent twice. */
     function withBusy(button, task) {
       button.disabled = true;
-      return task().then(
-        function () { button.disabled = false; },
-        function (err) { button.disabled = false; throw err; }
-      );
+      button.classList.add("is-busy");
+      button.setAttribute("aria-busy", "true");
+      var done = function () {
+        button.disabled = false;
+        button.classList.remove("is-busy");
+        button.removeAttribute("aria-busy");
+      };
+      return task().then(done, function (err) { done(); throw err; });
     }
 
     function groupDigits(n) {
@@ -1016,38 +1291,272 @@
         { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     }
 
-    /** Same rule as the server: 061/062 numbers, written as 06..., 2556... or +2556... */
-    function isHalotelNumber(value) {
-      var phone = String(value).replace(/[\s-]/g, "").replace(/^\+?255/, "0");
-      return /^06[12]\d{7}$/.test(phone);
+    function formatTime(isoText) {
+      var date = new Date(isoText);
+      if (isNaN(date.getTime())) return String(isoText);
+      return date.toLocaleTimeString(currentLang === "sw" ? "sw-TZ" : "en-GB", { hour: "2-digit", minute: "2-digit" });
     }
 
     function findPackage(id) {
       return PACKAGES.filter(function (p) { return p.id === id; })[0] || null;
     }
 
+    // ---------- Form checks (the same rules the server uses) ----------
+
+    function checkRequired(id, code) {
+      return $(id).value.trim() ? null : { field: id, code: code };
+    }
+
+    function checkName(id) {
+      var value = $(id).value.trim();
+      if (!value) return { field: id, code: "required_name" };
+      return value.length < 2 || value.length > 60 ? { field: id, code: "invalid_name" } : null;
+    }
+
+    function checkEmail(id) {
+      var value = $(id).value.trim();
+      if (!value) return { field: id, code: "required_email" };
+      return /^[^\s@|]+@[^\s@|]+\.[^\s@|]+$/.test(value) ? null : { field: id, code: "invalid_email" };
+    }
+
+    function checkPassword(id) {
+      var value = $(id).value;
+      if (!value) return { field: id, code: "required_password" };
+      return value.length < 8 ? { field: id, code: "weak_password", vars: { n: value.length } } : null;
+    }
+
+    function checkCode(id) {
+      var value = $(id).value.trim();
+      if (!value) return { field: id, code: "required_code" };
+      return /^\d{6}$/.test(value) ? null : { field: id, code: "otp_invalid" };
+    }
+
+    /** Halotel numbers start with 061 or 062, written as 06..., 2556... or +2556... */
+    function checkPhone(id) {
+      var value = $(id).value.trim();
+      if (!value) return { field: id, code: "required_phone" };
+      var phone = value.replace(/[\s-]/g, "").replace(/^\+?255/, "0");
+      return /^06[12]\d{7}$/.test(phone) ? null : { field: id, code: "invalid_phone" };
+    }
+
+    function checkPaymentRef(id) {
+      var value = $(id).value.trim();
+      if (!value) return { field: id, code: "required_ref" };
+      return /^[A-Za-z0-9.\-]{4,40}$/.test(value) ? null : { field: id, code: "invalid_payment_ref" };
+    }
+
+    function checkPackage() {
+      return selectedPackageId ? null : { field: "packageList", code: "invalid_package" };
+    }
+
+    var FORM_CHECKS = {
+      formLogin: function () { return [checkEmail("loginEmail"), checkRequired("loginPass", "required_password")]; },
+      formRegister: function () { return [checkName("regName"), checkEmail("regEmail"), checkPassword("regPass")]; },
+      formForgot: function () { return [checkEmail("forgotEmail")]; },
+      formOtp: function () { return [checkCode("otpCodeInput")]; },
+      formNewPass: function () { return [checkPassword("resetNewPass")]; },
+      formOrder: function () { return [checkPackage(), checkPhone("orderPhone"), checkPaymentRef("orderPaymentRef")]; }
+    };
+
+    // Checked when the user leaves a field they have typed in, so mistakes show early.
+    var FIELD_CHECKS = {
+      regName: checkName, regEmail: checkEmail, loginEmail: checkEmail, forgotEmail: checkEmail,
+      regPass: checkPassword, resetNewPass: checkPassword, orderPhone: checkPhone, orderPaymentRef: checkPaymentRef
+    };
+
+    /** Shows the message under the exact field, marks it invalid for screen readers, and returns the field. */
+    function showFieldError(fieldId, code, vars) {
+      var field = $(fieldId);
+      clearFieldError(fieldId);
+      var holder = field.closest(".field") || field.closest(".step");
+      var message = el("p", "field-error");
+      message.id = fieldId + "Error";
+      message.appendChild(icon("alert"));
+      var text = el("span", null, errorText(code, vars));
+      text.appendChild(el("small", null, ERROR_LABELS[code] || ""));
+      message.appendChild(text);
+      holder.appendChild(message);
+      field.setAttribute("aria-invalid", "true");
+      field.setAttribute("aria-describedby", message.id);
+      return field;
+    }
+
+    function clearFieldError(fieldId) {
+      var field = $(fieldId);
+      var message = $(fieldId + "Error");
+      if (message) message.remove();
+      field.removeAttribute("aria-invalid");
+      field.removeAttribute("aria-describedby");
+    }
+
+    function clearFormErrors(formId) {
+      $(formId).querySelectorAll('[aria-invalid="true"]').forEach(function (field) { clearFieldError(field.id); });
+    }
+
+    /** Checks every field of the form; flags each problem and moves focus to the first. */
+    function validateForm(formId) {
+      clearFormErrors(formId);
+      var problems = FORM_CHECKS[formId]().filter(Boolean);
+      problems.forEach(function (p) { showFieldError(p.field, p.code, p.vars); });
+      if (problems.length) $(problems[0].field).focus();
+      return problems.length === 0;
+    }
+
+    /** Puts a server error on the field it belongs to, or shows it as a message. */
+    function handleFormError(formId, err) {
+      var code = errorCode(err);
+      var fieldId = (FIELD_ERRORS[formId] || {})[code];
+      if (fieldId) {
+        var vars = code === "weak_password" ? { n: $(fieldId).value.length } : undefined;
+        showFieldError(fieldId, code, vars).focus();
+      } else {
+        notifyError(err);
+      }
+    }
+
+    function setupFieldChecks() {
+      document.querySelectorAll("form[novalidate]").forEach(function (form) {
+        form.addEventListener("input", function (e) {
+          if (e.target.id && $(e.target.id + "Error")) clearFieldError(e.target.id);
+        });
+        form.addEventListener("focusout", function (e) {
+          var check = FIELD_CHECKS[e.target.id];
+          if (!check || !e.target.value.trim()) return;
+          var problem = check(e.target.id);
+          if (problem) showFieldError(problem.field, problem.code, problem.vars);
+          else clearFieldError(e.target.id);
+        });
+      });
+    }
+
     // ---------- Talking to the server ----------
+
+    function isOnline() {
+      return navigator.onLine !== false;
+    }
 
     /** Sends { action, ...data } to the backend. Resolves with the reply, or rejects with { code }. */
     function api(action, data) {
       if (API_URL.indexOf("https://script.google.com/") !== 0) {
         return Promise.reject({ code: "not_configured" });
       }
+      // Fail at once when offline, instead of leaving the user waiting for a timeout.
+      if (!isOnline()) {
+        showOffline();
+        return Promise.reject({ code: "offline" });
+      }
       var body = Object.assign({ action: action }, data);
       var controller = new AbortController();
-      var timer = setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS);
+      var timedOut = false;
+      var timer = setTimeout(function () { timedOut = true; controller.abort(); }, REQUEST_TIMEOUT_MS);
+      requestStarted();
 
       // No custom headers: the browser then sends text/plain, which Apps Script accepts without a CORS preflight.
       return fetch(API_URL, { method: "POST", body: JSON.stringify(body), signal: controller.signal })
-        .then(function (res) { return res.json(); })
-        .then(null, function () { return { ok: false, error: "network" }; })
+        .then(function (res) {
+          return res.json().then(null, function () { return { ok: false, error: "bad_response" }; });
+        }, function () {
+          return { ok: false, error: timedOut ? "timeout" : (isOnline() ? "network" : "offline") };
+        })
         .then(function (result) {
           clearTimeout(timer);
-          if (result && result.ok) return result;
-          var code = (result && result.error) || "server_error";
-          if (code === "not_logged_in" && sessionToken) endSession("err_not_logged_in");
-          throw { code: code };
+          requestFinished();
+          return handleReply(result);
         });
+    }
+
+    /** Shared by api() and the design preview: turns a reply into a result or a { code } error. */
+    function handleReply(result) {
+      if (result && result.ok) return result;
+      var code = (result && result.error) || "server_error";
+      if (code === "offline") showOffline();
+      if (code === "not_logged_in" && sessionToken) sessionExpired();
+      throw { code: code };
+    }
+
+    function requestStarted() {
+      pendingRequests += 1;
+      if (pendingRequests > 1) return;
+      progressTimer = setTimeout(function () { $("progressBar").hidden = false; }, PROGRESS_DELAY_MS);
+      slowTimer = setTimeout(showSlow, SLOW_AFTER_MS);
+    }
+
+    function requestFinished() {
+      pendingRequests = Math.max(0, pendingRequests - 1);
+      if (pendingRequests > 0) return;
+      clearTimeout(progressTimer);
+      clearTimeout(slowTimer);
+      $("progressBar").hidden = true;
+      if (netState === "slow") hideNetBanner();
+    }
+
+    // ---------- Connection banner ----------
+
+    function setNetBanner(state, text, actionLabel, action) {
+      netState = state;
+      var banner = $("netBanner");
+      banner.className = "net net-" + state;
+      $("netText").textContent = text;
+      var button = $("netAction");
+      button.hidden = !actionLabel;
+      button.textContent = actionLabel || "";
+      button.onclick = action || null;
+      banner.hidden = false;
+    }
+
+    function hideNetBanner() {
+      netState = null;
+      $("netBanner").hidden = true;
+    }
+
+    function showOffline() {
+      setNetBanner("offline", t("netOffline"));
+    }
+
+    function showSlow() {
+      if (netState === "offline") return;
+      setNetBanner("slow", t("netSlow"), liteMode ? null : t("useLite"), function () {
+        setLiteMode(true);
+        hideNetBanner();
+      });
+    }
+
+    function handleBackOnline() {
+      setNetBanner("online", t("netBack"));
+      setTimeout(function () { if (netState === "online") hideNetBanner(); }, 3000);
+      if (retryWhenOnline) {
+        var retry = retryWhenOnline;
+        retryWhenOnline = null;
+        retry();
+      }
+    }
+
+    // ---------- Lite mode ----------
+
+    function connectionIsSlow() {
+      var c = navigator.connection;
+      return !!(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || "")));
+    }
+
+    function loadFonts() {
+      if ($("fontLink")) return;
+      var link = document.createElement("link");
+      link.id = "fontLink";
+      link.rel = "stylesheet";
+      link.href = FONT_URL;
+      document.head.appendChild(link);
+    }
+
+    function setLiteMode(on) {
+      liteMode = !!on;
+      writeStore("localStorage", "mj_lite", liteMode ? "1" : "0");
+      $("liteToggle").setAttribute("aria-checked", String(liteMode));
+      if (!liteMode) loadFonts();
+      else notify(t("liteOn"));
+    }
+
+    function pageSize() {
+      return liteMode ? 10 : 25;
     }
 
     // ---------- Screens, language, theme ----------
@@ -1056,7 +1565,7 @@
       var views = document.querySelectorAll(".sheet > .view");
       for (var i = 0; i < views.length; i++) views[i].hidden = views[i].id !== viewId;
       currentView = viewId;
-      document.getElementById("app").classList.toggle("is-wide", viewId === "viewAdmin");
+      $("app").classList.toggle("is-wide", viewId === "viewAdmin");
       updateHero();
       window.scrollTo(0, 0);
     }
@@ -1064,16 +1573,16 @@
     function updateHero() {
       var keys = HERO[currentView];
       var firstName = currentUser ? String(currentUser.name || currentUser.email).split(" ")[0] : "";
-      document.getElementById("heroTitle").textContent = t(keys[0]).replace("{name}", firstName);
-      document.getElementById("heroSub").textContent = keys[1] ? t(keys[1]) : "";
+      $("heroTitle").textContent = t(keys[0], { name: firstName });
+      $("heroSub").textContent = keys[1] ? t(keys[1]) : "";
     }
 
     function changeLanguage(lang) {
       currentLang = translations[lang] ? lang : "en";
       writeStore("localStorage", "mj_lang", currentLang);
       document.documentElement.lang = currentLang;
-      document.getElementById("langEn").setAttribute("aria-pressed", String(currentLang === "en"));
-      document.getElementById("langSw").setAttribute("aria-pressed", String(currentLang === "sw"));
+      $("langEn").setAttribute("aria-pressed", String(currentLang === "en"));
+      $("langSw").setAttribute("aria-pressed", String(currentLang === "sw"));
 
       document.querySelectorAll("[data-key]").forEach(function (node) {
         var key = node.getAttribute("data-key");
@@ -1083,7 +1592,7 @@
         node.setAttribute("placeholder", t(node.getAttribute("data-placeholder-key")));
       });
 
-      var resendButton = document.getElementById("btnResendOtp");
+      var resendButton = $("btnResendOtp");
       if (!resendButton.disabled) resendButton.textContent = t("resendBtn");
       updateHero();
       renderPackages();
@@ -1098,7 +1607,7 @@
       if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
       else document.documentElement.removeAttribute("data-theme");
       ["system", "light", "dark"].forEach(function (name) {
-        var button = document.getElementById("theme" + name.charAt(0).toUpperCase() + name.slice(1));
+        var button = $("theme" + name.charAt(0).toUpperCase() + name.slice(1));
         button.setAttribute("aria-pressed", String(name === (theme || "system")));
       });
     }
@@ -1110,10 +1619,11 @@
 
     function navigate(page) {
       clearMessage();
+      currentPage = page;
       var views = { buy: "viewBuy", orders: "viewOrders", admin: "viewAdmin", account: "viewAccount" };
       var tabs = { buy: "tabBuy", orders: "tabOrders", admin: "tabAdmin", account: "tabAccount" };
       Object.keys(tabs).forEach(function (name) {
-        var tab = document.getElementById(tabs[name]);
+        var tab = $(tabs[name]);
         if (name === page) tab.setAttribute("aria-current", "page");
         else tab.removeAttribute("aria-current");
       });
@@ -1124,20 +1634,22 @@
 
     function switchAuthTab(type) {
       clearMessage();
-      document.getElementById("tabBtnLogin").setAttribute("aria-pressed", String(type === "login"));
-      document.getElementById("tabBtnReg").setAttribute("aria-pressed", String(type === "register"));
-      document.getElementById("formLogin").hidden = type !== "login";
-      document.getElementById("formRegister").hidden = type !== "register";
+      $("tabBtnLogin").setAttribute("aria-pressed", String(type === "login"));
+      $("tabBtnReg").setAttribute("aria-pressed", String(type === "register"));
+      $("formLogin").hidden = type !== "login";
+      $("formRegister").hidden = type !== "register";
     }
 
     function togglePasswordVisibility(fieldId, btn) {
-      var field = document.getElementById(fieldId);
+      var field = $(fieldId);
       var showing = field.type === "password";
       field.type = showing ? "text" : "password";
       btn.textContent = t(showing ? "hide" : "show");
     }
 
     function openForgotView() {
+      var email = $("loginEmail").value.trim();
+      if (email && !$("forgotEmail").value) $("forgotEmail").value = email;
       switchView("viewForgot");
       clearMessage();
     }
@@ -1147,7 +1659,7 @@
       clearMessage();
     }
 
-    /** Copies the payment number; if the browser refuses, selects it so the user can copy by hand. */
+    /** Copies the payment number; if the browser refuses, selects it and explains how to copy by hand. */
     function copyPaymentNumber(button) {
       var label = button.querySelector("span");
       var done = function () {
@@ -1156,10 +1668,11 @@
       };
       var selectNumber = function () {
         var range = document.createRange();
-        range.selectNodeContents(document.getElementById("payNumberText"));
+        range.selectNodeContents($("payNumberText"));
         var selection = window.getSelection();
         selection.removeAllRanges();
         selection.addRange(range);
+        notify(t("copyBlocked"));
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(PAYMENT_NUMBER).then(done, selectNumber);
@@ -1188,12 +1701,12 @@
 
     function setupInstallTip() {
       if (!isIos() || isStandalone() || readStore("localStorage", "mj_install_tip_hidden") === "1") return;
-      document.getElementById("iosInstallSteps").setAttribute("data-key", isInAppBrowser() ? "installStepsInApp" : "installSteps");
-      document.getElementById("iosInstallTip").hidden = false;
+      $("iosInstallSteps").setAttribute("data-key", isInAppBrowser() ? "installStepsInApp" : "installSteps");
+      $("iosInstallTip").hidden = false;
     }
 
     function dismissInstallTip() {
-      document.getElementById("iosInstallTip").hidden = true;
+      $("iosInstallTip").hidden = true;
       writeStore("localStorage", "mj_install_tip_hidden", "1");
     }
 
@@ -1201,58 +1714,62 @@
 
     function handleRegisterSubmit(e) {
       e.preventDefault();
-      var name = document.getElementById("regName").value.trim();
-      var email = document.getElementById("regEmail").value.trim().toLowerCase();
-      var password = document.getElementById("regPass").value;
       clearMessage();
+      if (!validateForm("formRegister")) return;
+      var name = $("regName").value.trim();
+      var email = $("regEmail").value.trim().toLowerCase();
+      var password = $("regPass").value;
 
       withBusy(submitButton(e), function () {
         return api("register", { name: name, email: email, password: password }).then(function () {
-          openOtpView(email, "register", t("otpSent"));
+          openOtpView(email, "register", t("otpSent", { email: email }));
         });
-      }).catch(showRequestError);
+      }).catch(function (err) { handleFormError("formRegister", err); });
     }
 
     function handleLoginSubmit(e) {
       e.preventDefault();
-      var email = document.getElementById("loginEmail").value.trim().toLowerCase();
-      var password = document.getElementById("loginPass").value;
       clearMessage();
+      if (!validateForm("formLogin")) return;
+      var email = $("loginEmail").value.trim().toLowerCase();
+      var password = $("loginPass").value;
 
       withBusy(submitButton(e), function () {
         return api("login", { email: email, password: password }).then(function (result) {
           // The server sends a token straight away unless it is set to also ask for an emailed code.
           if (result.token) startSession(result);
-          else openOtpView(email, "login", t("otpSent"));
+          else openOtpView(email, "login", t("otpSent", { email: email }));
         });
-      }).catch(showRequestError);
+      }).catch(function (err) { handleFormError("formLogin", err); });
     }
 
     function handleForgotSubmit(e) {
       e.preventDefault();
-      var email = document.getElementById("forgotEmail").value.trim().toLowerCase();
       clearMessage();
+      if (!validateForm("formForgot")) return;
+      var email = $("forgotEmail").value.trim().toLowerCase();
 
       withBusy(submitButton(e), function () {
         return api("forgot", { email: email }).then(function () {
-          openOtpView(email, "reset", t("forgotSent"));
+          openOtpView(email, "reset", t("forgotSent", { email: email }));
         });
-      }).catch(showRequestError);
+      }).catch(function (err) { handleFormError("formForgot", err); });
     }
 
     function openOtpView(email, purpose, message) {
       otpEmail = email;
       otpPurpose = purpose;
-      document.getElementById("otpCodeInput").value = "";
-      document.getElementById("otpEmailText").textContent = email;
+      $("otpCodeInput").value = "";
+      clearFormErrors("formOtp");
+      $("otpEmailText").textContent = email;
       switchView("viewOTP");
       notify(message, "success");
       startResendCountdown();
-      document.getElementById("otpCodeInput").focus();
+      $("otpCodeInput").focus();
     }
 
     function startResendCountdown() {
-      var button = document.getElementById("btnResendOtp");
+      var button = $("btnResendOtp");
       var secondsLeft = RESEND_WAIT_SECONDS;
       clearInterval(resendTimer);
       button.disabled = true;
@@ -1263,7 +1780,7 @@
           button.textContent = t("resendBtn");
           return;
         }
-        button.textContent = t("resendIn").replace("{s}", secondsLeft);
+        button.textContent = t("resendIn", { s: secondsLeft });
         secondsLeft -= 1;
       };
       tick();
@@ -1271,26 +1788,24 @@
     }
 
     function handleResendOtp() {
-      var button = document.getElementById("btnResendOtp");
+      var button = $("btnResendOtp");
       button.disabled = true;
       api("resendOtp", { email: otpEmail, purpose: otpPurpose })
         .then(function () {
-          notify(t("otpResent"), "success");
+          clearFormErrors("formOtp");
+          notify(t("otpResent", { email: otpEmail }), "success");
           startResendCountdown();
         })
         .catch(function (err) {
           button.disabled = false;
-          showRequestError(err);
+          notifyError(err);
         });
     }
 
     function handleVerifyOtp(e) {
       e.preventDefault();
-      var code = document.getElementById("otpCodeInput").value.trim();
-      if (!/^\d{6}$/.test(code)) {
-        notify(errorText("otp_invalid"), "error");
-        return;
-      }
+      if (!validateForm("formOtp")) return;
+      var code = $("otpCodeInput").value.trim();
 
       withBusy(submitButton(e), function () {
         return api("verifyOtp", { email: otpEmail, purpose: otpPurpose, code: code }).then(function (result) {
@@ -1300,10 +1815,10 @@
             resetToken = result.resetToken;
             switchView("viewNewPass");
           } else {
-            startSession(result);
+            startSession(result, otpPurpose === "register" ? t("welcomeNew", { name: result.user.name.split(" ")[0] }) : null);
           }
         });
-      }).catch(showRequestError);
+      }).catch(function (err) { handleFormError("formOtp", err); });
     }
 
     function cancelOtp() {
@@ -1315,28 +1830,29 @@
 
     function handleNewPassSubmit(e) {
       e.preventDefault();
-      var newPassword = document.getElementById("resetNewPass").value;
+      if (!validateForm("formNewPass")) return;
+      var newPassword = $("resetNewPass").value;
 
       withBusy(submitButton(e), function () {
         return api("resetPassword", { resetToken: resetToken, password: newPassword }).then(function (result) {
           resetToken = null;
-          startSession(result);
+          startSession(result, t("passwordChanged"));
         });
-      }).catch(showRequestError);
+      }).catch(function (err) { handleFormError("formNewPass", err); });
     }
 
-    // ---------- Session ----------
+    // ---------- Session, saved work ----------
 
     // The token is kept in localStorage so a home-screen app stays logged in after it is closed
     // (iPhone clears sessionStorage then). The server still ends every session after 7 days.
-    function startSession(result) {
+    function startSession(result, welcome) {
       sessionToken = result.token;
       writeStore("localStorage", "mj_token", sessionToken);
-      launchDashboard(result.user);
+      launchDashboard(result.user, welcome);
     }
 
-    /** Forgets the session in this browser and returns to the login screen. */
-    function endSession(messageKey) {
+    /** Forgets the session in this browser and returns to the login screen. Saved drafts are kept. */
+    function endSession() {
       sessionToken = null;
       currentUser = null;
       lastOrders = null;
@@ -1346,37 +1862,104 @@
       adminOrderQuery = { page: 0, status: "all", search: "" };
       adminUserQuery = { page: 0, search: "" };
       writeStore("localStorage", "mj_token", null);
-      document.getElementById("tabbar").hidden = true;
-      document.getElementById("tabAdmin").hidden = true;
+      $("tabbar").hidden = true;
+      $("tabAdmin").hidden = true;
       switchView("viewAuth");
-      if (messageKey) notify(t(messageKey), "error");
     }
 
-    function launchDashboard(user) {
+    /**
+     * The login ran out while the user was working. Their order draft is already saved as they type;
+     * remember where they were, sign them out, and make logging back in quick.
+     */
+    function sessionExpired() {
+      var email = currentUser ? currentUser.email : "";
+      if (email) writeStore("localStorage", "mj_resume", JSON.stringify({ email: email, page: currentPage }));
+      var hadDraft = !!savedDraftFor(email);
+      endSession();
+      switchAuthTab("login");
+      $("loginEmail").value = email;
+      $("loginPass").value = "";
+      notify(t(hadDraft ? "expiredSaved" : "expiredPlain"), "error", errorLabel("not_logged_in"));
+      if (email) $("loginPass").focus();
+    }
+
+    function launchDashboard(user, welcome) {
       currentUser = user;
       var displayName = user.name || user.email;
-      document.getElementById("drawerUserName").textContent = displayName;
-      document.getElementById("drawerUserEmail").textContent = user.email || "";
-      document.getElementById("userAvatarIcon").textContent = displayName.charAt(0).toUpperCase();
+      $("drawerUserName").textContent = displayName;
+      $("drawerUserEmail").textContent = user.email || "";
+      $("userAvatarIcon").textContent = displayName.charAt(0).toUpperCase();
 
       // Showing the Desk tab is only cosmetic: the server checks admin rights on every admin request.
-      document.getElementById("tabAdmin").hidden = !user.isAdmin;
-      document.getElementById("tabbar").hidden = false;
-      navigate(user.isAdmin ? "admin" : "buy");
+      $("tabAdmin").hidden = !user.isAdmin;
+      $("tabbar").hidden = false;
+
+      var restored = restoreOrderDraft(user);
+      restoreDeskState(user);
+      var resume = readJson(readStore("localStorage", "mj_resume"));
+      writeStore("localStorage", "mj_resume", null);
+      var page = user.isAdmin ? "admin" : "buy";
+      if (resume && resume.email === user.email && resume.page && (resume.page !== "admin" || user.isAdmin)) page = resume.page;
+      if (restored) page = "buy";
+      navigate(page);
+      if (welcome) notify(welcome, "success");
+      else if (restored) notify(t("draftRestored"));
     }
 
     function performLogout() {
       var token = sessionToken;
-      endSession(null);
+      // Logging out on purpose also forgets unsent work, so nothing is left on a shared phone.
+      clearOrderDraft();
+      writeStore("localStorage", "mj_desk", null);
+      endSession();
       if (token) api("logout", { token: token }).catch(function () {});
+    }
+
+    function savedDraftFor(email) {
+      var draft = readJson(readStore("localStorage", "mj_draft_order"));
+      return draft && email && draft.email === email ? draft : null;
+    }
+
+    /** Saves the order form as the user fills it in, so a lost login or a closed app loses nothing. */
+    function saveOrderDraft() {
+      if (!currentUser) return;
+      var draft = { email: currentUser.email, packageId: selectedPackageId, phone: $("orderPhone").value, paymentRef: $("orderPaymentRef").value };
+      if (!draft.packageId && !draft.phone.trim() && !draft.paymentRef.trim()) clearOrderDraft();
+      else writeStore("localStorage", "mj_draft_order", JSON.stringify(draft));
+    }
+
+    function clearOrderDraft() {
+      writeStore("localStorage", "mj_draft_order", null);
+    }
+
+    function restoreOrderDraft(user) {
+      var draft = savedDraftFor(user.email);
+      if (!draft) return false;
+      selectedPackageId = findPackage(draft.packageId) ? draft.packageId : null;
+      renderPackages();
+      $("orderPhone").value = draft.phone || "";
+      $("orderPaymentRef").value = draft.paymentRef || "";
+      return true;
+    }
+
+    function saveDeskState() {
+      if (currentUser) writeStore("localStorage", "mj_desk", JSON.stringify({ email: currentUser.email, query: adminOrderQuery }));
+    }
+
+    function restoreDeskState(user) {
+      var saved = readJson(readStore("localStorage", "mj_desk"));
+      if (!saved || saved.email !== user.email || !saved.query) return;
+      adminOrderQuery = { page: saved.query.page || 0, status: saved.query.status || "all", search: saved.query.search || "" };
+      $("adminOrderSearch").value = adminOrderQuery.search;
+      markStatusFilter(adminOrderQuery.status);
     }
 
     // ---------- Buying ----------
 
     function renderPackages() {
-      var list = document.getElementById("packageList");
+      var list = $("packageList");
       var best = PACKAGES.reduce(function (a, b) { return b.priceTzs / b.gb < a.priceTzs / a.gb ? b : a; });
-      list.textContent = "";
+      list.querySelectorAll(".pkg").forEach(function (row) { row.remove(); });
       PACKAGES.forEach(function (pkg) {
         var row = el("label", "pkg" + (pkg.id === selectedPackageId ? " is-selected" : ""));
         var input = el("input");
@@ -1389,7 +1972,7 @@
         row.appendChild(el("span", "pkg-radio"));
         var left = el("span", "pkg-left");
         left.appendChild(el("span", "pkg-size", pkg.gb + " GB"));
-        left.appendChild(el("span", "pkg-meta", t("perGb").replace("{p}", groupDigits(Math.round(pkg.priceTzs / pkg.gb)))));
+        left.appendChild(el("span", "pkg-meta", t("perGb", { p: groupDigits(Math.round(pkg.priceTzs / pkg.gb)) })));
         if (pkg === best) left.appendChild(el("span", "pkg-tag", t("bestValue")));
         row.appendChild(left);
         row.appendChild(el("span", "pkg-price", formatTzs(pkg.priceTzs)));
@@ -1404,46 +1987,65 @@
       for (var i = 0; i < rows.length; i++) {
         rows[i].classList.toggle("is-selected", rows[i].querySelector("input").value === id);
       }
+      clearFieldError("packageList");
       updatePaySummary();
+      saveOrderDraft();
     }
 
     function updatePaySummary() {
       var pkg = findPackage(selectedPackageId);
-      var amount = document.getElementById("payAmount");
+      var amount = $("payAmount");
       amount.textContent = pkg ? formatTzs(pkg.priceTzs) : t("payChooseFirst");
       amount.classList.toggle("is-empty", !pkg);
-      document.getElementById("btnSubmitOrder").textContent =
-        pkg ? t("submitOrderBtnAmount").replace("{amount}", formatTzs(pkg.priceTzs)) : t("submitOrderBtn");
+      $("btnSubmitOrder").textContent =
+        pkg ? t("submitOrderBtnAmount", { amount: formatTzs(pkg.priceTzs) }) : t("submitOrderBtn");
     }
 
     function handlePlaceOrder(e) {
       e.preventDefault();
-      var form = e.target;
-      var phone = document.getElementById("orderPhone").value;
-      var paymentRef = document.getElementById("orderPaymentRef").value.trim();
-
-      if (!selectedPackageId) {
-        notify(t("chooseBundleFirst"), "error");
-        return;
-      }
-      if (!isHalotelNumber(phone)) {
-        notify(errorText("invalid_phone"), "error");
-        return;
-      }
-      notify(t("processingOrder"));
+      clearMessage();
+      if (!validateForm("formOrder")) return;
+      saveOrderDraft();  // kept if the login has expired and the order is refused
+      var phone = $("orderPhone").value;
+      var paymentRef = $("orderPaymentRef").value.trim();
+      var upperRef = paymentRef.toUpperCase();
 
       withBusy(submitButton(e), function () {
         return api("placeOrder", { token: sessionToken, packageId: selectedPackageId, phone: phone, paymentRef: paymentRef })
-          .then(function (result) {
-            form.reset();
-            selectedPackageId = null;
-            renderPackages();
-            lastPlacedOrder = result.order;
-            renderReceipt();
-            clearMessage();
-            switchView("viewDone");
-          });
-      }).catch(showRequestError);
+          .then(function (result) { orderPlaced(result.order); });
+      }).catch(function (err) {
+        var code = errorCode(err);
+        if (code === "timeout") {
+          timedOutOrderRef = upperRef;
+          notify(t("orderTimeout"), "error", errorLabel("timeout"));
+        } else if (code === "duplicate_payment_ref" && timedOutOrderRef === upperRef) {
+          recoverTimedOutOrder(upperRef);
+        } else {
+          handleFormError("formOrder", err);
+        }
+      });
+    }
+
+    /** After a timeout the order may have arrived: if it is in the customer's orders, show its receipt. */
+    function recoverTimedOutOrder(ref) {
+      api("myOrders", { token: sessionToken, limit: 30 }).then(function (result) {
+        var mine = result.orders.filter(function (o) { return o.paymentRef === ref; })[0];
+        if (!mine) return handleFormError("formOrder", { code: "duplicate_payment_ref" });
+        orderPlaced(mine);
+        notify(t("orderRecovered"), "success");
+      }).catch(notifyError);
+    }
+
+    function orderPlaced(order) {
+      timedOutOrderRef = null;
+      $("formOrder").reset();
+      selectedPackageId = null;
+      clearOrderDraft();
+      renderPackages();
+      lastPlacedOrder = order;
+      lastOrders = null;
+      renderReceipt();
+      switchView("viewDone");
     }
 
     function statusPill(status) {
@@ -1461,10 +2063,30 @@
       return row;
     }
 
+    function nextStep(done, number, title, text) {
+      var item = el("li", done ? "is-done" : "");
+      var dot = el("span", "next-dot");
+      if (done) dot.appendChild(icon("check"));
+      else dot.textContent = number;
+      item.appendChild(dot);
+      var body = el("div");
+      body.appendChild(el("strong", null, title));
+      body.appendChild(el("span", null, text));
+      item.appendChild(body);
+      return item;
+    }
+
+    /** Confirms the order, reassures that it is saved, and shows what happens next. */
     function renderReceipt() {
       var o = lastPlacedOrder;
-      document.getElementById("doneText").textContent = t("doneText").replace("{phone}", o.phone);
-      var details = document.getElementById("doneDetails");
+      $("doneText").textContent = t("doneText");
+      var next = $("doneNext");
+      next.textContent = "";
+      next.appendChild(nextStep(true, 1, t("nextReceived"), t("nextReceivedText", { time: formatTime(o.createdAt) })));
+      next.appendChild(nextStep(false, 2, t("nextCheck"), t("nextCheckText", { ref: o.paymentRef })));
+      next.appendChild(nextStep(false, 3, t("nextLoad"), t("nextLoadText", { bundle: o.package, phone: o.phone })));
+
+      var details = $("doneDetails");
       details.textContent = "";
       details.appendChild(detailRow(t("doneOrderId"), o.orderId));
       details.appendChild(detailRow(t("doneBundle"), o.package));
@@ -1474,41 +2096,83 @@
       details.appendChild(detailRow(t("doneStatus"), statusPill(o.status)));
     }
 
-    // ---------- My orders ----------
+    // ---------- Loading, empty, error and blocked states ----------
 
-    function showEmpty(container, text, withCta) {
+    /** Grey placeholder rows shown while a list loads, so the screen keeps its shape. */
+    function showSkeleton(container, rows) {
       container.textContent = "";
-      var box = el("div", "empty");
-      box.appendChild(el("p", null, text));
-      if (withCta) {
-        var cta = el("button", "btn btn-sm", t("noOrdersCta"));
-        cta.type = "button";
-        cta.onclick = function () { navigate("buy"); };
-        box.appendChild(cta);
+      container.setAttribute("aria-busy", "true");
+      for (var i = 0; i < rows; i++) {
+        var row = el("div", "skeleton");
+        row.setAttribute("aria-hidden", "true");
+        container.appendChild(row);
       }
+    }
+
+    /**
+     * A message for an empty list, a failed load or a blocked page: what happened, why,
+     * and one next step. kind is "empty", "error" or "blocked".
+     */
+    function showState(container, opts) {
+      container.textContent = "";
+      container.removeAttribute("aria-busy");
+      var box = el("div", "state state-" + opts.kind);
+      var badge = el("span", "state-icon");
+      badge.appendChild(icon(opts.kind === "error" ? "alert" : opts.kind === "blocked" ? "lock" : "inbox"));
+      box.appendChild(badge);
+      box.appendChild(el("p", "state-title", opts.title));
+      if (opts.why) box.appendChild(el("p", "state-why", opts.why));
+      if (opts.extra) box.appendChild(opts.extra);
+      if (opts.actionLabel) {
+        var button = el("button", "btn btn-sm", opts.actionLabel);
+        button.type = "button";
+        button.onclick = opts.action;
+        box.appendChild(button);
+      }
+      if (opts.label) box.appendChild(el("p", "state-code", opts.label));
       container.appendChild(box);
     }
 
+    function showLoadError(container, err, retry) {
+      var code = errorCode(err);
+      if (code === "not_logged_in") return;
+      if (code === "forbidden") return showForbidden();
+      if (code === "offline") retryWhenOnline = retry;
+      showState(container, {
+        kind: "error", title: t("loadFailedTitle"), why: errorText(code),
+        actionLabel: t("tryAgain"), action: retry, label: errorLabel(code)
+      });
+    }
+
+    // ---------- My orders ----------
+
     function loadUserOrderHistory() {
-      var container = document.getElementById("historyOrdersList");
-      showEmpty(container, t("loading"));
-      api("myOrders", { token: sessionToken })
+      var container = $("historyOrdersList");
+      // Show what we already have at once, and refresh it in the background.
+      if (lastOrders) renderUserOrders();
+      else showSkeleton(container, 3);
+      api("myOrders", { token: sessionToken, limit: liteMode ? 10 : 30 })
         .then(function (result) {
           lastOrders = result.orders;
           renderUserOrders();
         })
         .catch(function (err) {
-          showEmpty(container, errorText(errorCode(err)));
+          if (lastOrders) notifyError(err);
+          else showLoadError(container, err, loadUserOrderHistory);
         });
     }
 
     function renderUserOrders() {
-      var container = document.getElementById("historyOrdersList");
+      var container = $("historyOrdersList");
       if (!lastOrders || lastOrders.length === 0) {
-        showEmpty(container, t("noOrders"), true);
+        showState(container, {
+          kind: "empty", title: t("noOrdersTitle"), why: t("noOrdersWhy"),
+          actionLabel: t("noOrdersCta"), action: function () { navigate("buy"); }
+        });
         return;
       }
       container.textContent = "";
+      container.removeAttribute("aria-busy");
       lastOrders.forEach(function (order) {
         var card = el("article", "order");
         var top = el("div", "order-top");
@@ -1530,97 +2194,197 @@
     var adminUserQuery = { page: 0, search: "" };
 
     function loadAdminDashboardData() {
-      var button = document.getElementById("btnAdminRefresh");
+      var button = $("btnAdminRefresh");
       withBusy(button, function () {
-        return Promise.all([loadAdminOrders(), loadAdminUsers()]);
-      }).catch(showRequestError);
+        // Customers load only when their tab is open, which keeps the first view light.
+        return Promise.all([loadAdminOrders(), $("deskUsers").hidden ? null : loadAdminUsers()]);
+      }).catch(function () {});
     }
 
     function loadAdminOrders() {
+      var list = $("adminOrdersList");
+      if (!lastAdminData) showSkeleton(list, 4);
+      saveDeskState();
       return api("adminData", {
-        token: sessionToken, page: adminOrderQuery.page, status: adminOrderQuery.status, search: adminOrderQuery.search
+        token: sessionToken, page: adminOrderQuery.page, pageSize: pageSize(),
+        status: adminOrderQuery.status, search: adminOrderQuery.search
       }).then(function (result) {
         lastAdminData = result;
+        $("deskBlocked").hidden = true;
+        $("deskContent").hidden = false;
         renderAdminOrders();
+      }, function (err) {
+        if (lastAdminData && errorCode(err) !== "forbidden") notifyError(err);
+        else showLoadError(list, err, loadAdminOrders);
       });
     }
 
     function loadAdminUsers() {
-      return api("adminUsers", { token: sessionToken, page: adminUserQuery.page, search: adminUserQuery.search })
+      var list = $("adminUsersList");
+      if (!lastAdminUsers) showSkeleton(list, 3);
+      return api("adminUsers", { token: sessionToken, page: adminUserQuery.page, pageSize: pageSize(), search: adminUserQuery.search })
         .then(function (result) {
           lastAdminUsers = result;
           renderAdminUsers();
+        }, function (err) {
+          if (lastAdminUsers && errorCode(err) !== "forbidden") notifyError(err);
+          else showLoadError(list, err, loadAdminUsers);
         });
     }
 
+    /** A customer account opened the desk: explain why it is closed and give a way back. */
+    function showForbidden() {
+      $("tabAdmin").hidden = true;
+      $("deskContent").hidden = true;
+      var blocked = $("deskBlocked");
+      blocked.hidden = false;
+      showState(blocked, {
+        kind: "blocked", title: t("forbiddenTitle"),
+        why: t("forbiddenWhy", { email: currentUser ? currentUser.email : "" }),
+        actionLabel: t("goToBuy"), action: function () { navigate("buy"); }, label: errorLabel("forbidden")
+      });
+    }
+
     function showDeskTab(tab) {
-      document.getElementById("deskTabOrders").setAttribute("aria-pressed", String(tab === "orders"));
-      document.getElementById("deskTabUsers").setAttribute("aria-pressed", String(tab === "users"));
-      document.getElementById("deskOrders").hidden = tab !== "orders";
-      document.getElementById("deskUsers").hidden = tab !== "users";
+      $("deskTabOrders").setAttribute("aria-pressed", String(tab === "orders"));
+      $("deskTabUsers").setAttribute("aria-pressed", String(tab === "users"));
+      $("deskOrders").hidden = tab !== "orders";
+      $("deskUsers").hidden = tab !== "users";
+      if (tab === "users") loadAdminUsers();
+    }
+
+    function markStatusFilter(status) {
+      document.querySelectorAll("#statusFilter button").forEach(function (button) {
+        button.setAttribute("aria-pressed", String(button.getAttribute("data-status") === status));
+      });
     }
 
     function setStatusFilter(status) {
       adminOrderQuery.status = status;
       adminOrderQuery.page = 0;
-      document.querySelectorAll("#statusFilter button").forEach(function (button) {
-        button.setAttribute("aria-pressed", String(button.getAttribute("data-status") === status));
-      });
-      loadAdminOrders().catch(showRequestError);
+      markStatusFilter(status);
+      loadAdminOrders();
+    }
+
+    function runSearch(kind, text) {
+      if (kind === "orders") {
+        $("adminOrderSearch").value = text;
+        adminOrderQuery.search = text;
+        adminOrderQuery.page = 0;
+        loadAdminOrders();
+      } else {
+        $("adminUserSearch").value = text;
+        adminUserQuery = { page: 0, search: text };
+        loadAdminUsers();
+      }
     }
 
     function handleAdminOrderSearch(e) {
       e.preventDefault();
-      adminOrderQuery.search = document.getElementById("adminOrderSearch").value.trim();
-      adminOrderQuery.page = 0;
-      loadAdminOrders().catch(showRequestError);
+      runSearch("orders", $("adminOrderSearch").value.trim());
     }
 
     function handleAdminUserSearch(e) {
       e.preventDefault();
-      adminUserQuery = { page: 0, search: document.getElementById("adminUserSearch").value.trim() };
-      loadAdminUsers().catch(showRequestError);
+      runSearch("users", $("adminUserSearch").value.trim());
     }
 
     function changeAdminPage(list, step) {
       var query = list === "orders" ? adminOrderQuery : adminUserQuery;
       query.page = Math.max(0, query.page + step);
-      (list === "orders" ? loadAdminOrders() : loadAdminUsers()).catch(showRequestError);
+      if (list === "orders") loadAdminOrders();
+      else loadAdminUsers();
     }
 
-    function updatePager(prefix, page, pageSize, count, infoKey) {
-      var pages = Math.max(1, Math.ceil(count / pageSize));
-      document.getElementById(prefix + "PageInfo").textContent =
-        t(infoKey).replace("{p}", page + 1).replace("{n}", pages).replace("{count}", groupDigits(count));
-      document.getElementById(prefix + "Prev").disabled = page <= 0;
-      document.getElementById(prefix + "Next").disabled = page + 1 >= pages;
+    function updatePager(prefix, page, size, count, infoKey) {
+      var pages = Math.max(1, Math.ceil(count / size));
+      $(prefix + "PageInfo").textContent = t(infoKey, { p: page + 1, n: pages, count: groupDigits(count) });
+      $(prefix + "Prev").disabled = page <= 0;
+      $(prefix + "Next").disabled = page + 1 >= pages;
     }
 
-    function setOrderStatus(order, status, button) {
-      withBusy(button, function () {
-        return api("adminSetStatus", { token: sessionToken, orderId: order.orderId, status: status }).then(function () {
-          notify(t("statusSaved"), "success");
-          return loadAdminOrders();  // refreshes the waiting count and the filtered list
+    /** A search found nothing: suggest close spellings and one next search. */
+    function showNoResults(container, kind, query, data) {
+      var extra = el("div", "stack");
+      if (data.suggestions && data.suggestions.length) {
+        var line = el("p", "suggest", t("didYouMean"));
+        data.suggestions.forEach(function (word) {
+          var chip = el("button", "chip", word);
+          chip.type = "button";
+          chip.onclick = function () { runSearch(kind, word); };
+          line.appendChild(chip);
         });
-      }).catch(showRequestError);
+        extra.appendChild(line);
+      } else if (kind === "orders" && !data.otherStatusMatches) {
+        extra.appendChild(el("p", "hint", t("tryPhoneHint")));
+      }
+      var inOtherStatus = kind === "orders" && data.otherStatusMatches > 0;
+      showState(container, {
+        kind: "empty",
+        title: t("noResultsTitle", { q: query }),
+        why: t("noResultsWhy_" + kind),
+        extra: extra,
+        actionLabel: inOtherStatus ? t("inOtherStatuses", { n: data.otherStatusMatches }) : t("clearSearch"),
+        action: inOtherStatus ? function () { setStatusFilter("all"); } : function () { runSearch(kind, ""); }
+      });
+    }
+
+    /**
+     * Changes an order's status on screen at once, then saves it. If saving fails,
+     * the order goes back to how it was and the error is shown.
+     */
+    function setOrderStatus(order, status) {
+      var previous = order.status;
+      var pendingChange = (status === "pending" ? 1 : 0) - (previous === "pending" ? 1 : 0);
+      order.status = status;
+      lastAdminData.pendingOrders += pendingChange;
+      renderAdminOrders();
+      api("adminSetStatus", { token: sessionToken, orderId: order.orderId, status: status })
+        .then(function () {
+          notify(t("saved_" + status), "success");
+          loadAdminOrders();
+        })
+        .catch(function (err) {
+          order.status = previous;
+          lastAdminData.pendingOrders -= pendingChange;
+          renderAdminOrders();
+          notifyError(err);
+        });
     }
 
     function actionButton(text, className, order, status) {
       var button = el("button", className, text);
       button.type = "button";
-      button.onclick = function () { setOrderStatus(order, status, button); };
+      button.onclick = function () { setOrderStatus(order, status); };
       return button;
     }
 
     function renderAdminOrders() {
       var data = lastAdminData;
-      document.getElementById("adminPendingOrders").textContent = groupDigits(data.pendingOrders);
-      document.getElementById("adminTotalOrders").textContent = groupDigits(data.totalOrders);
-      document.getElementById("adminTotalUsers").textContent = groupDigits(data.totalUsers);
+      $("adminPendingOrders").textContent = groupDigits(data.pendingOrders);
+      $("adminTotalOrders").textContent = groupDigits(data.totalOrders);
+      $("adminTotalUsers").textContent = groupDigits(data.totalUsers);
 
-      var list = document.getElementById("adminOrdersList");
+      var list = $("adminOrdersList");
       list.textContent = "";
-      if (data.orders.length === 0) showEmpty(list, t("noMatches"));
+      list.removeAttribute("aria-busy");
+      updatePager("orders", data.page, data.pageSize, data.matchingOrders, "pageInfoOrders");
+      if (data.orders.length === 0) {
+        if (adminOrderQuery.search) {
+          showNoResults(list, "orders", adminOrderQuery.search, data);
+        } else if (adminOrderQuery.status !== "all") {
+          showState(list, {
+            kind: "empty", title: t("noTitle_" + adminOrderQuery.status), why: t("noWhy_" + adminOrderQuery.status),
+            actionLabel: t("showAllOrders"), action: function () { setStatusFilter("all"); }
+          });
+        } else {
+          showState(list, {
+            kind: "empty", title: t("noOrdersAdminTitle"), why: t("noOrdersAdminWhy"),
+            actionLabel: t("refreshBtn"), action: loadAdminDashboardData
+          });
+        }
+        return;
+      }
       data.orders.forEach(function (o) {
         var row = el("article", "desk-row");
         var main = el("div", "desk-main");
@@ -1643,24 +2407,28 @@
         row.appendChild(actions);
         list.appendChild(row);
       });
-      updatePager("orders", data.page, data.pageSize, data.matchingOrders, "pageInfoOrders");
     }
 
     function renderAdminUsers() {
       var data = lastAdminUsers;
-      var list = document.getElementById("adminUsersList");
+      var list = $("adminUsersList");
       list.textContent = "";
-      if (data.users.length === 0) showEmpty(list, t("noUsers"));
+      list.removeAttribute("aria-busy");
+      updatePager("users", data.page, data.pageSize, data.matchingUsers, "pageInfoUsers");
+      if (data.users.length === 0) {
+        if (adminUserQuery.search) showNoResults(list, "users", adminUserQuery.search, data);
+        else showState(list, { kind: "empty", title: t("noUsersTitle"), why: t("noUsersWhy"), actionLabel: t("refreshBtn"), action: loadAdminUsers });
+        return;
+      }
       data.users.forEach(function (u) {
         var row = el("div", "user-row");
         var who = el("div", "desk-main");
         who.appendChild(el("strong", null, u.name || "N/A"));
         who.appendChild(el("span", "desk-meta", u.email));
         row.appendChild(who);
-        row.appendChild(el("span", "desk-meta muted", t("joined").replace("{date}", formatDate(u.createdAt).split(",")[0])));
+        row.appendChild(el("span", "desk-meta muted", t("joined", { date: formatDate(u.createdAt).split(",")[0] })));
         list.appendChild(row);
       });
-      updatePager("users", data.page, data.pageSize, data.matchingUsers, "pageInfoUsers");
     }
 
     // ---------- Start ----------
@@ -1671,27 +2439,34 @@
       writeStore("localStorage", "mj_orders", null);
       writeStore("sessionStorage", "mj_active_user", null);
 
+      storageWorks = storageAvailable();
+      $("storageTip").hidden = storageWorks;
+      var savedLite = readStore("localStorage", "mj_lite");
+      liteMode = savedLite === "1" || (savedLite === null && connectionIsSlow());
+      $("liteToggle").setAttribute("aria-checked", String(liteMode));
+      if (!liteMode) loadFonts();
+
       document.querySelectorAll("#statusFilter button").forEach(function (button) {
         button.onclick = function () { setStatusFilter(button.getAttribute("data-status")); };
       });
+      $("orderPhone").addEventListener("input", saveOrderDraft);
+      $("orderPaymentRef").addEventListener("input", saveOrderDraft);
+      setupFieldChecks();
+      window.addEventListener("offline", showOffline);
+      window.addEventListener("online", handleBackOnline);
 
       applyTheme(readStore("localStorage", "mj_theme") || "system");
       setupInstallTip();
       var browserLang = (navigator.language || "").toLowerCase().indexOf("sw") === 0 ? "sw" : "en";
       changeLanguage(readStore("localStorage", "mj_lang") || browserLang);
       switchView("viewAuth");
+      if (!isOnline()) showOffline();
 
       sessionToken = readStore("localStorage", "mj_token");
       if (sessionToken) {
-        notify(t("loading"));
         api("me", { token: sessionToken })
-          .then(function (result) {
-            clearMessage();
-            launchDashboard(result.user);
-          })
-          .catch(function (err) {
-            if (errorCode(err) !== "not_logged_in") showRequestError(err);
-          });
+          .then(function (result) { launchDashboard(result.user); })
+          .catch(function (err) { if (errorCode(err) !== "not_logged_in") notifyError(err); });
       }
     };
   </script>

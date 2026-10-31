@@ -69,3 +69,51 @@ Files for this: `manifest.webmanifest` and `icons/`.
 The old version kept accounts and orders only inside each visitor's browser, so they cannot be moved.
 Customers sign up again once. The new page deletes the old browser data (it held plain-text passwords).
 The old Google Sheet and Apps Script are not touched; keep them for your records.
+
+## Error codes
+
+Every error the app shows carries a label such as **MJ-202**, so a customer can read it out to support.
+
+| Code | Meaning | What the customer is told to do |
+|---|---|---|
+| MJ-101 | Email missing or not valid | Type an email like name@example.com |
+| MJ-102 | Name missing or too long/short | Use 2 to 60 characters |
+| MJ-103 | Password missing or under 8 characters | Use at least 8 characters |
+| MJ-104 | Email already has an account | Log in, or reset the password |
+| MJ-105 | Wrong email or password | Check both, or reset the password |
+| MJ-106 | Account locked after 5 wrong passwords | Wait 15 minutes, or reset the password |
+| MJ-107 | Wrong or missing email code | Use the newest code from the email |
+| MJ-108 | Email code expired (15 minutes) | Tap Resend code |
+| MJ-109 | 5 wrong codes, code cancelled | Tap Resend code |
+| MJ-110 | Asked for a new code too soon | Wait a minute |
+| MJ-111 | The email could not be sent (daily limit) | Try again later |
+| MJ-112 | Password-reset time ran out | Start again from Forgot password |
+| MJ-201 | No bundle chosen | Choose a bundle in step 1 |
+| MJ-202 | Not a Halotel number | Use a number starting 061 or 062 |
+| MJ-203 | Transaction ID missing or malformed | Copy it exactly from the SMS |
+| MJ-204 | Transaction ID already used | Check the SMS for the right ID |
+| MJ-205 | Order no longer exists (admin) | Refresh the list |
+| MJ-206 | Status not allowed (admin) | Refresh the list |
+| MJ-301 | Could not reach the server | Check the connection, try again |
+| MJ-302 | Phone is offline | Connect; the page reloads by itself |
+| MJ-303 | Request timed out (slow network) | Try again or use lite mode; a resent order is not duplicated |
+| MJ-304 | Server answer could not be read | Try again in a minute |
+| MJ-305 | `API_URL` not set in index.html | Owner: finish the setup steps |
+| MJ-306 | `setup` not run in Apps Script | Owner: run `setup` |
+| MJ-401 | Server error | Try again; owner: check Apps Script → Executions |
+| MJ-402 | Request not understood | Reload the page |
+| MJ-403 | Customer account opened the desk | Staff accounts are set in `ADMIN_EMAILS` |
+| MJ-404 | Login expired (after 7 days) | Log in again; unsent order details are kept |
+
+## How the app handles problems
+
+- **Empty lists** say why they are empty and offer one next step.
+- **Loading** shows placeholder rows and a thin progress bar; lists already seen show at once while they refresh.
+- **Form mistakes** are flagged under the exact field, with how to fix them, before anything is sent.
+- **No internet**: a banner appears at once, nothing waits for a timeout, and data reloads when the phone is back online.
+- **Slow network**: after 5 seconds a banner offers **lite mode** (plain fonts, 10 items per list). It is also on by
+  default when the phone asks to save data. If an order times out, pressing Submit again shows the receipt if the
+  first try had arrived, instead of a duplicate.
+- **Searches with no results** (desk) suggest close spellings and the next search to try.
+- **Expired login**: the order being filled in is saved as the customer types; after logging in again they return to it.
+  Logging out on purpose clears it.

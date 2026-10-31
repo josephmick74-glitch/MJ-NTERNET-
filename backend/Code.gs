@@ -260,21 +260,25 @@ function placeOrder_(req) {
   return { order: publicOrder_(order) };
 }
 
-/** The customer's most recent orders, newest first. Orders are appended in time order. */
+/** The customer's most recent orders, newest first (`limit`, default 30). Orders are appended in time order. */
 function myOrders_(req) {
   var user = requireUser_(req.token);
   var sheet = sheet_(ORDERS_SHEET, ORDERS_HEADERS);
-  var rows = findRows_(sheet, ORDERS_HEADERS.indexOf("email") + 1, user.email).slice(-MY_ORDERS_LIMIT).reverse();
+  var limit = cleanPageSize_(req.limit, MY_ORDERS_LIMIT);
+  var rows = findRows_(sheet, ORDERS_HEADERS.indexOf("email") + 1, user.email).slice(-limit).reverse();
   return { orders: rows.map(function (row) { return publicOrder_(readRow_(sheet, ORDERS_HEADERS, row)); }) };
 }
 
 /**
  * One page of orders for the admin, newest first, with optional status filter and search
  * (name, email, phone, order ID or transaction ID). Also returns the totals for the summary.
+ * When a search finds nothing it adds `suggestions` (close spellings) and `otherStatusMatches`
+ * (how many orders match the search under a different status filter).
  */
 function adminData_(req) {
   requireAdmin_(req.token);
   var page = cleanPage_(req.page);
+  var pageSize = cleanPageSize_(req.pageSize, ADMIN_PAGE_SIZE);
   var status = String(req.status || "all");
   if (status !== "all" && ORDER_STATUSES.indexOf(status) === -1) fail_("invalid_status");
   var search = cleanSearch_(req.search);
@@ -283,27 +287,37 @@ function adminData_(req) {
   var lastRow = sheet.getLastRow();
   var totalOrders = Math.max(0, lastRow - 1);
   var orders, matching;
+  var suggestions = [];
+  var otherStatusMatches = 0;
 
   if (status === "all" && !search) {
     // The usual view: read only the rows on this page, counting back from the newest (bottom) row.
-    var pageEnd = lastRow - page * ADMIN_PAGE_SIZE;
-    var pageStart = Math.max(2, pageEnd - ADMIN_PAGE_SIZE + 1);
+    var pageEnd = lastRow - page * pageSize;
+    var pageStart = Math.max(2, pageEnd - pageSize + 1);
     orders = pageEnd >= 2 ? readRows_(sheet, ORDERS_HEADERS, pageStart, pageEnd - pageStart + 1).reverse() : [];
     matching = totalOrders;
   } else {
-    var found = readRows_(sheet, ORDERS_HEADERS).filter(function (o) {
-      return (status === "all" || String(o.status) === status) &&
-        (!search || matchesSearch_([o.name, o.email, o.phone, o.orderId, o.paymentRef], search));
-    }).reverse();
+    var searchFields = ["name", "email", "phone", "orderId", "paymentRef"];
+    var all = readRows_(sheet, ORDERS_HEADERS);
+    var searched = all.filter(function (o) {
+      return !search || matchesSearch_(searchFields.map(function (f) { return o[f]; }), search);
+    });
+    var found = searched.filter(function (o) { return status === "all" || String(o.status) === status; }).reverse();
     matching = found.length;
-    orders = found.slice(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE);
+    orders = found.slice(page * pageSize, (page + 1) * pageSize);
+    if (search && matching === 0) {
+      otherStatusMatches = searched.length;
+      if (searched.length === 0) suggestions = suggestTerms_(all, searchFields, search);
+    }
   }
 
   return {
     orders: orders.map(publicOrder_),
     page: page,
-    pageSize: ADMIN_PAGE_SIZE,
+    pageSize: pageSize,
     matchingOrders: matching,
+    suggestions: suggestions,
+    otherStatusMatches: otherStatusMatches,
     totalOrders: totalOrders,
     pendingOrders: findRows_(sheet, ORDERS_HEADERS.indexOf("status") + 1, "pending").length,
     totalUsers: Math.max(0, sheet_(USERS_SHEET, USERS_HEADERS).getLastRow() - 1)
@@ -314,18 +328,63 @@ function adminData_(req) {
 function adminUsers_(req) {
   requireAdmin_(req.token);
   var page = cleanPage_(req.page);
+  var pageSize = cleanPageSize_(req.pageSize, ADMIN_PAGE_SIZE);
   var search = cleanSearch_(req.search);
-  var users = readRows_(sheet_(USERS_SHEET, USERS_HEADERS), USERS_HEADERS).filter(function (u) {
+  var all = readRows_(sheet_(USERS_SHEET, USERS_HEADERS), USERS_HEADERS);
+  var users = all.filter(function (u) {
     return !search || matchesSearch_([u.name, u.email], search);
   }).reverse();
   return {
-    users: users.slice(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE).map(function (u) {
+    users: users.slice(page * pageSize, (page + 1) * pageSize).map(function (u) {
       return { name: String(u.name), email: String(u.email), createdAt: String(u.createdAt) };
     }),
     page: page,
-    pageSize: ADMIN_PAGE_SIZE,
-    matchingUsers: users.length
+    pageSize: pageSize,
+    matchingUsers: users.length,
+    suggestions: search && users.length === 0 ? suggestTerms_(all, ["name", "email"], search) : []
   };
+}
+
+/**
+ * Up to 3 words from the given fields that are one or two letters away from the search,
+ * so the desk can ask "Did you mean ...?" after a typo.
+ */
+function suggestTerms_(rows, fields, search) {
+  if (search.length < 3) return [];
+  var maxDistance = search.length > 5 ? 2 : 1;
+  var seen = {};
+  var close = [];
+  rows.forEach(function (row) {
+    fields.forEach(function (field) {
+      String(row[field]).toLowerCase().split(/[\s@._\-]+/).forEach(function (word) {
+        if (word.length < 3 || has_(seen, word)) return;
+        seen[word] = true;
+        var distance = editDistance_(search, word, maxDistance);
+        if (distance > 0 && distance <= maxDistance) close.push({ word: word, distance: distance });
+      });
+    });
+  });
+  return close.sort(function (a, b) { return a.distance - b.distance || a.word.localeCompare(b.word); })
+    .slice(0, 3).map(function (c) { return c.word; });
+}
+
+/** Letters to add, remove or change to turn a into b; stops early once it is more than `max`. */
+function editDistance_(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  var previous = [];
+  for (var j = 0; j <= b.length; j++) previous.push(j);
+  for (var i = 1; i <= a.length; i++) {
+    var current = [i];
+    var rowMin = i;
+    for (j = 1; j <= b.length; j++) {
+      var cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+      current.push(Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost));
+      rowMin = Math.min(rowMin, current[j]);
+    }
+    if (rowMin > max) return max + 1;
+    previous = current;
+  }
+  return previous[b.length];
 }
 
 function adminSetStatus_(req) {
@@ -496,6 +555,12 @@ function cleanPurpose_(value) {
 
 function cleanPage_(value) {
   return Math.min(100000, Math.max(0, Math.floor(Number(value) || 0)));
+}
+
+/** A page size between 5 and `max` (lite mode asks for smaller pages); default `max`. */
+function cleanPageSize_(value, max) {
+  var size = Math.floor(Number(value));
+  return size ? Math.min(max, Math.max(5, size)) : max;
 }
 
 function cleanSearch_(value) {
