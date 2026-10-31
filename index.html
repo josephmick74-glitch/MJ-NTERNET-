@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MJ Internet - Portal</title>
+  <!-- Lets phones add the portal to the home screen as an app (iPhone: Share > Add to Home Screen). -->
+  <meta name="theme-color" content="#0284c7">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MJ Internet">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <style>
     :root {
       --bg-color: #f8fafc;
@@ -221,6 +230,16 @@
     .cell-main { font-weight: 700; }
     .cell-sub { font-size: 10px; color: var(--text-sub); }
     .status-select { padding: 4px 6px; border-radius: 6px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 12px; }
+
+    .install-tip { display: flex; gap: 10px; align-items: flex-start; margin: 15px 25px 0; padding: 12px; border-radius: 12px; background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.3); font-size: 12px; line-height: 1.5; }
+    .install-tip-text { flex: 1; }
+    .install-tip-text strong { display: block; color: var(--primary); margin-bottom: 2px; }
+    .install-tip-close { background: none; border: none; color: var(--text-sub); font-size: 16px; cursor: pointer; }
+
+    /* iPhone Safari zooms the page when a field's text is smaller than 16px; keep fields at 16px there. */
+    @supports (-webkit-touch-callout: none) {
+      .input-field, .setting-select, .status-select { font-size: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -277,6 +296,15 @@
       <button class="menu-toggle-btn" id="menuToggleBtn" onclick="openDrawer()" aria-label="Open menu">☰</button>
       <div class="brand-logo">MJ INTERNET</div>
       <div class="brand-tag" data-key="brandTag">High-Speed Digital Connectivity</div>
+    </div>
+
+    <!-- Shown only on iPhone/iPad when the portal is not yet on the home screen. -->
+    <div class="install-tip" id="iosInstallTip" style="display: none;">
+      <div class="install-tip-text">
+        <strong data-key="installTitle">📱 Install on iPhone</strong>
+        <span id="iosInstallSteps" data-key="installSteps"></span>
+      </div>
+      <button type="button" class="install-tip-close" onclick="dismissInstallTip()" aria-label="Close">✕</button>
     </div>
 
     <div id="viewAuth" class="view-panel active">
@@ -565,6 +593,9 @@
         colStatus: "Status",
         noUsers: "No users yet.",
         refreshBtn: "🔄 Refresh",
+        installTitle: "📱 Install on iPhone",
+        installSteps: "Tap the Share button ⬆️, then choose “Add to Home Screen”. (If you don't see it, open this page in Safari first.)",
+        installStepsInApp: "Open this page in Safari first (menu ••• → Open in Safari). Then tap Share ⬆️ → “Add to Home Screen”.",
         paymentNoticeTitle: "⚠️ PAYMENT & INSTRUCTIONS:",
         paymentNoticeText: "Please send the money first. Payment number is <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>). Then enter the transaction ID from your payment SMS below.<br><br>🚨 <strong>Note:</strong> These packages are for <strong>Halotel only</strong>. Ensure the phone number entered below is Halotel.",
         err_not_configured: "The app is not connected to its server yet. Please contact MJ Internet.",
@@ -663,6 +694,9 @@
         colStatus: "Hali",
         noUsers: "Hakuna watumiaji bado.",
         refreshBtn: "🔄 Onyesha upya",
+        installTitle: "📱 Weka kwenye iPhone",
+        installSteps: "Bonyeza kitufe cha Share ⬆️, kisha chagua “Add to Home Screen”. (Kama huioni, fungua ukurasa huu kwenye Safari kwanza.)",
+        installStepsInApp: "Fungua ukurasa huu kwenye Safari kwanza (menyu ••• → Open in Safari). Kisha bonyeza Share ⬆️ → “Add to Home Screen”.",
         paymentNoticeTitle: "⚠️ MALIPO & MAELEKEZO:",
         paymentNoticeText: "Tafadhali tuma pesa kwanza. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>). Kisha weka namba ya muamala (transaction ID) kutoka kwenye SMS ya malipo hapa chini.<br><br>🚨 <strong>Kumbuka:</strong> Vifurushi hivi ni vya <strong>Halotel pekee</strong>. Hakikisha namba ya simu unayoweka hapa chini ni ya Halotel.",
         err_not_configured: "Programu bado haijaunganishwa na seva. Tafadhali wasiliana na MJ Internet.",
@@ -896,6 +930,35 @@
       document.getElementById(viewId).classList.add("active");
     }
 
+    // ---------- iPhone "Add to Home Screen" tip ----------
+
+    function isIos() {
+      // iPads with iPadOS 13+ report themselves as a Mac, but have a touch screen.
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    function isStandalone() {
+      return window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    }
+
+    /** Facebook, Instagram, TikTok etc. open links in their own browser, which cannot add to the home screen. */
+    function isInAppBrowser() {
+      return /FBAN|FBAV|Instagram|TikTok|Snapchat|Twitter|Line\//.test(navigator.userAgent);
+    }
+
+    function setupInstallTip() {
+      if (!isIos() || isStandalone() || readStore("localStorage", "mj_install_tip_hidden") === "1") return;
+      document.getElementById("iosInstallSteps").setAttribute("data-key", isInAppBrowser() ? "installStepsInApp" : "installSteps");
+      document.getElementById("iosInstallTip").style.display = "flex";
+    }
+
+    function dismissInstallTip() {
+      document.getElementById("iosInstallTip").style.display = "none";
+      writeStore("localStorage", "mj_install_tip_hidden", "1");
+    }
+
     function copyPaymentNumber(button) {
       var done = function () {
         button.textContent = t("copied");
@@ -1037,9 +1100,11 @@
 
     // ---------- Session ----------
 
+    // The token is kept in localStorage so a home-screen app stays logged in after it is closed
+    // (iPhone clears sessionStorage then). The server still ends every session after 6 hours.
     function startSession(result) {
       sessionToken = result.token;
-      writeStore("sessionStorage", "mj_token", sessionToken);
+      writeStore("localStorage", "mj_token", sessionToken);
       launchDashboard(result.user);
     }
 
@@ -1049,7 +1114,7 @@
       currentUser = null;
       lastOrders = null;
       lastAdminData = null;
-      writeStore("sessionStorage", "mj_token", null);
+      writeStore("localStorage", "mj_token", null);
       closeDrawer();
       document.getElementById("menuToggleBtn").classList.remove("active");
       document.getElementById("menuItemAdmin").style.display = "none";
@@ -1259,10 +1324,11 @@
 
       var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
       applyTheme(readStore("localStorage", "mj_theme") || (prefersDark ? "dark" : "light"));
+      setupInstallTip();
       var browserLang = (navigator.language || "").toLowerCase().indexOf("sw") === 0 ? "sw" : "en";
       changeLanguage(readStore("localStorage", "mj_lang") || browserLang);
 
-      sessionToken = readStore("sessionStorage", "mj_token");
+      sessionToken = readStore("localStorage", "mj_token");
       if (sessionToken) {
         displayMessage(t("loading"), "warning");
         api("me", { token: sessionToken })

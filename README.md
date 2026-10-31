@@ -36,6 +36,18 @@ Do this with the Google account that should send the emails (for example the sho
 Paste the new code, save, then **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**.
 The URL stays the same, so `index.html` does not need to change.
 
+## Installing on a phone
+
+There is no App Store app. iPhones cannot install the Android APK, and a real App Store app needs a paid
+Apple Developer account and Apple's review. Instead the portal is a web app that installs from the browser:
+
+- **iPhone / iPad:** open the portal in **Safari**, tap **Share ⬆️ → Add to Home Screen**. It then opens
+  full-screen with the MJ icon, like an app. The portal shows these steps to iPhone users automatically.
+  Links opened inside Instagram/Facebook/TikTok must be opened in Safari first.
+- **Android:** Chrome menu **⋮ → Add to Home screen / Install app** (or use the APK).
+
+Files for this: `manifest.webmanifest` and `icons/`.
+
 ## Limits to know
 
 - A normal Gmail account can send about **100 emails per day** from Apps Script. Every sign-up, login code,
