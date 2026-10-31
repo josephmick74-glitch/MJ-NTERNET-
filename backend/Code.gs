@@ -446,7 +446,10 @@ function cell_(value) {
 }
 
 function newestFirst_(rows) {
-  return rows.slice().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
+  // Rows with the same time keep sheet order reversed (the later row is newer).
+  return rows.slice().sort(function (a, b) {
+    return String(b.createdAt).localeCompare(String(a.createdAt)) || b.row - a.row;
+  });
 }
 
 
