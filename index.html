@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MJ Internet - Portal</title>
+  <title>MJ Internet</title>
   <!-- Lets phones add the portal to the home screen as an app (iPhone: Share > Add to Home Screen). -->
-  <meta name="theme-color" content="#0284c7">
+  <meta name="theme-color" content="#0b3b8c">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -13,525 +13,585 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MJ Internet">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
   <style>
+    /* Layout: a phone-first app shell. A gradient brand band on top, a content sheet that overlaps it,
+       and a tab bar at the bottom. The admin desk widens to use a laptop screen. */
     :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --card-border: #e2e8f0;
-      --primary: #0284c7;
-      --primary-hover: #0369a1;
-      --accent: #d97706;
-      --text-main: #0f172a;
-      --text-sub: #64748b;
-      --input-bg: #f1f5f9;
-      --success: #10b981;
-      --error: #ef4444;
-      --sidebar-bg: #ffffff;
-      --shadow-color: rgba(0, 0, 0, 0.08);
+      --brand-1: #0b3b8c;
+      --brand-2: #0a7fc2;
+      --brand-3: #12a39b;
+      --brand-grad: linear-gradient(135deg, var(--brand-1) 0%, var(--brand-2) 60%, var(--brand-3) 100%);
+      --on-brand: #ffffff;
+      --on-brand-soft: rgba(255, 255, 255, 0.78);
+
+      --ink: #0f1b2d;
+      --ink-2: #46566c;
+      --ink-3: #75849a;
+      --canvas: #edf2f7;
+      --paper: #ffffff;
+      --field: #f6f9fc;
+      --line: #d9e2ec;
+      --link: #0a6fb0;
+      --focus: rgba(10, 127, 194, 0.35);
+
+      --ok: #12804d;      --ok-bg: #e3f5eb;
+      --warn: #a46100;    --warn-bg: #fff2dc;
+      --bad: #bf3029;     --bad-bg: #fde8e6;
+
+      --shadow: 0 1px 2px rgba(15, 27, 45, 0.06), 0 6px 20px rgba(15, 27, 45, 0.06);
+      --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+      --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --ink: #e7edf5; --ink-2: #a7b5c7; --ink-3: #7b8ba0;
+        --canvas: #0a111c; --paper: #111b2a; --field: #0d1624; --line: #223249;
+        --link: #5db7ef; --focus: rgba(93, 183, 239, 0.4);
+        --ok: #45cf8e; --ok-bg: #10291e; --warn: #f2b34c; --warn-bg: #2b2111; --bad: #ff7d74; --bad-bg: #2e1513;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --ink: #e7edf5; --ink-2: #a7b5c7; --ink-3: #7b8ba0;
+      --canvas: #0a111c; --paper: #111b2a; --field: #0d1624; --line: #223249;
+      --link: #5db7ef; --focus: rgba(93, 183, 239, 0.4);
+      --ok: #45cf8e; --ok-bg: #10291e; --warn: #f2b34c; --warn-bg: #2b2111; --bad: #ff7d74; --bad-bg: #2e1513;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+      color-scheme: dark;
     }
 
-    body.dark-theme {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --primary: #0284c7;
-      --primary-hover: #0369a1;
-      --accent: #f59e0b;
-      --text-main: #f8fafc;
-      --text-sub: #94a3b8;
-      --input-bg: #0f172a;
-      --sidebar-bg: #1e293b;
-      --shadow-color: rgba(0, 0, 0, 0.4);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      transition: background-color 0.25s, color 0.25s, border-color 0.25s;
-    }
-
-    /* Only controls are unselectable; text such as the payment number can be copied. */
-    button, select, .menu-item, .tab-btn { user-select: none; }
-
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; }
     body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 15px/1.5 var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+    p { margin: 0; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .i { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .mono { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* ---------- App shell ---------- */
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
       min-height: 100vh;
-      padding: 15px;
-      position: relative;
-    }
-
-    .app-card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      width: 100%;
-      max-width: 520px;
-      box-shadow: 0 15px 35px var(--shadow-color);
-      overflow: hidden;
-      position: relative;
-      min-height: 500px;
-    }
-
-    .brand-header {
-      padding: 35px 25px 20px;
-      text-align: center;
-      border-bottom: 1px solid var(--card-border);
-      position: relative;
-    }
-
-    .brand-logo {
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      background: linear-gradient(135deg, #0284c7 0%, #8b5cf6 50%, #ec4899 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      display: inline-block;
-    }
-    .brand-tag { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
-
-    .menu-toggle-btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: var(--input-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      font-size: 20px;
-      cursor: pointer;
-      display: none;
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-    .menu-toggle-btn.active { display: flex; }
-
-    .sidebar-drawer {
-      position: absolute;
-      top: 0;
-      right: -100%;
-      width: 280px;
-      height: 100%;
-      background: var(--sidebar-bg);
-      border-left: 1px solid var(--card-border);
-      z-index: 99;
-      transition: right 0.3s ease;
-      padding: 20px;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      box-shadow: -10px 0 25px rgba(0,0,0,0.15);
+      background: var(--canvas);
     }
-    .sidebar-drawer.open { right: 0; }
-    .drawer-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.4);
-      z-index: 98;
-      display: none;
+    .app.is-wide { max-width: 1040px; }
+    @media (min-width: 640px) {
+      body { padding-block: 24px; }
+      .app { min-height: calc(100vh - 48px); min-height: calc(100dvh - 48px); border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
     }
-    .drawer-overlay.active { display: block; }
 
-    .drawer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; margin-bottom: 15px; }
-    .drawer-close-btn { background: none; border: none; font-size: 20px; color: var(--text-sub); cursor: pointer; }
-
-    .user-profile-box { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--card-border); }
-    .user-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #8b5cf6); display: flex; justify-content: center; align-items: center; font-size: 18px; color: #fff; font-weight: bold; }
-    .user-info-text { overflow: hidden; }
-    .user-info-name { font-size: 14px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-info-role { font-size: 11px; color: var(--text-sub); }
-
-    .menu-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; color: var(--text-main); font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
-    .menu-item:hover, .menu-item.active { background: var(--input-bg); color: var(--primary); }
-
-    .setting-group { margin-top: 15px; border-top: 1px solid var(--card-border); padding-top: 15px; }
-    .setting-label { font-size: 11px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-bottom: 8px; display: block; }
-    .setting-select { width: 100%; padding: 10px; border-radius: 8px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--card-border); outline: none; font-size: 13px; margin-bottom: 12px; font-weight: 600; }
-
-    .btn-logout-drawer { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; }
-
-    .tabs-wrapper { display: flex; background: var(--input-bg); margin: 20px 25px 0; padding: 4px; border-radius: 12px; border: 1px solid var(--card-border); }
-    .tab-btn { flex: 1; padding: 10px; border: none; background: none; color: var(--text-sub); font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; }
-    .tab-btn.active { background: var(--primary); color: #ffffff; }
-
-    .content-body { padding: 25px; }
-    .form-group { margin-bottom: 18px; position: relative; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; text-transform: uppercase; }
-    .form-hint { font-size: 11px; color: var(--text-sub); margin-top: 5px; }
-    .input-field { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
-    .input-field:focus { border-color: var(--primary); }
-
-    .btn-pwd-toggle { position: absolute; right: 14px; top: 35px; background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; }
-    .btn-action { width: 100%; padding: 14px; background: var(--primary); color: #ffffff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
-    .btn-action:hover { background: var(--primary-hover); }
-    .btn-action:disabled { opacity: 0.6; cursor: wait; }
-    .btn-secondary { background: transparent; border: 1px solid var(--card-border); color: var(--text-main); margin-top: 10px; }
-    .btn-secondary:hover { background: var(--input-bg); }
-    .btn-secondary:disabled { cursor: default; }
-
-    .link-forgot { display: block; width: 100%; text-align: right; background: none; border: none; font-size: 12px; color: var(--accent); margin-top: -8px; margin-bottom: 16px; font-weight: 600; cursor: pointer; }
-
-    #statusMessage { margin-top: 10px; font-size: 13px; text-align: center; font-weight: 600; min-height: 25px; padding: 0 25px 20px; }
-
-    .view-panel { display: none; }
-    .view-panel.active { display: block; }
-
-    .order-card { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; margin-bottom: 12px; }
-    .order-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .order-id { font-weight: 700; color: var(--primary); font-size: 14px; }
-    .order-desc { font-size: 13px; color: var(--text-main); margin-bottom: 4px; }
-    .order-meta { font-size: 11px; color: var(--text-sub); }
-    .placeholder { text-align: center; color: var(--text-sub); padding: 20px; font-size: 13px; }
-
-    .status-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
-    .status-pending { background: rgba(217, 119, 6, 0.15); color: var(--accent); }
-    .status-completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-    .status-rejected { background: rgba(239, 68, 68, 0.12); color: var(--error); }
-
-    .payment-notice-box {
-      background: rgba(217, 119, 6, 0.08);
-      border: 1px dashed var(--accent);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 18px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--text-main);
+    .band {
+      background: radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.16), transparent 55%), var(--brand-grad);
+      color: var(--on-brand);
+      padding: 18px max(20px, env(safe-area-inset-right, 0px)) 40px max(20px, env(safe-area-inset-left, 0px));
     }
-    .payment-notice-box strong {
-      color: var(--accent);
+    .band-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: grid; place-items: center;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      font: 700 15px/1 var(--font-display); letter-spacing: 0.02em;
     }
-    .btn-copy { margin-top: 10px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .brand-name { font: 700 17px/1.1 var(--font-display); }
+    .brand-name small { display: block; font: 500 12px/1.3 var(--font-body); color: var(--on-brand-soft); letter-spacing: 0.02em; }
+    .lang-switch { display: flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.22); }
+    .lang-switch button { border: 0; background: none; color: var(--on-brand-soft); font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; letter-spacing: 0.04em; }
+    .lang-switch button[aria-pressed="true"] { background: var(--on-brand); color: var(--brand-1); }
+    .hero { margin-top: 22px; display: grid; gap: 6px; }
+    .hero h1 { font-size: 26px; line-height: 1.15; }
+    .hero p { color: var(--on-brand-soft); max-width: 36ch; }
 
-    /* Admin Table Styling */
-    .admin-stats { display: flex; gap: 10px; margin-bottom: 15px; }
-    .stat-card { flex: 1; background: var(--input-bg); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center; }
-    .stat-num { font-size: 20px; font-weight: 800; color: var(--primary); }
-    .stat-title { font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: 600; }
+    .sheet {
+      flex: 1;
+      margin-top: -20px;
+      background: var(--canvas);
+      border-radius: 20px 20px 0 0;
+      padding: 22px max(20px, env(safe-area-inset-right, 0px)) 28px max(20px, env(safe-area-inset-left, 0px));
+      position: relative;
+    }
+    .view { display: grid; gap: 18px; }
 
-    .table-container { width: 100%; overflow-x: auto; margin-bottom: 20px; border-radius: 10px; border: 1px solid var(--card-border); }
-    .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
-    .admin-table th { background: var(--input-bg); padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-sub); text-transform: uppercase; font-size: 10px; }
-    .admin-table td { padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-main); vertical-align: top; }
-    .admin-table tr:last-child td { border-bottom: none; }
-    .cell-main { font-weight: 700; }
-    .cell-sub { font-size: 10px; color: var(--text-sub); }
-    .status-select { padding: 4px 6px; border-radius: 6px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 12px; }
+    /* ---------- Controls ---------- */
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+    .stack { display: grid; gap: 14px; }
+    .field { display: grid; gap: 6px; position: relative; }
+    .field label, .label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+    .hint { font-size: 13px; color: var(--ink-3); }
+    .input {
+      width: 100%; height: 50px; padding: 0 14px;
+      border-radius: 12px; border: 1px solid var(--line);
+      background: var(--paper); font-size: 16px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input::placeholder { color: var(--ink-3); }
+    .input:focus { outline: none; border-color: var(--brand-2); box-shadow: 0 0 0 4px var(--focus); }
+    .input-wrap { position: relative; }
+    .input-wrap .input { padding-right: 70px; }
+    .reveal { position: absolute; right: 6px; top: 6px; height: 38px; padding: 0 10px; border: 0; background: none; color: var(--link); font-size: 13px; font-weight: 600; border-radius: 8px; }
 
-    .admin-filters { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
-    .admin-search { flex: 1; min-width: 160px; padding: 8px 12px; }
-    .admin-filters .btn-copy { margin-top: 0; }
-    .pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: -10px 0 20px; font-size: 12px; color: var(--text-sub); }
-    .pager .btn-copy { margin-top: 0; }
-    .pager .btn-copy:disabled { opacity: 0.35; cursor: default; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      height: 50px; padding: 0 20px; width: 100%;
+      border: 0; border-radius: 12px;
+      background: var(--brand-grad); color: var(--on-brand);
+      font-weight: 600; font-size: 16px;
+      box-shadow: 0 6px 16px rgba(11, 59, 140, 0.22);
+      transition: filter 0.15s, transform 0.05s;
+    }
+    .btn:hover { filter: brightness(1.06); }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.55; cursor: default; filter: none; transform: none; }
+    .btn-ghost { background: var(--paper); color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+    .btn-ghost:hover { filter: none; background: var(--field); }
+    .btn-sm { height: 36px; padding: 0 14px; font-size: 14px; width: auto; border-radius: 10px; box-shadow: none; }
+    .btn-link { border: 0; background: none; padding: 4px 0; color: var(--link); font-weight: 600; font-size: 14px; justify-self: start; }
+    .btn-row { display: grid; gap: 10px; }
 
-    .install-tip { display: flex; gap: 10px; align-items: flex-start; margin: 15px 25px 0; padding: 12px; border-radius: 12px; background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.3); font-size: 12px; line-height: 1.5; }
-    .install-tip-text { flex: 1; }
-    .install-tip-text strong { display: block; color: var(--primary); margin-bottom: 2px; }
-    .install-tip-close { background: none; border: none; color: var(--text-sub); font-size: 16px; cursor: pointer; }
+    .seg { display: flex; padding: 4px; gap: 4px; background: var(--field); border: 1px solid var(--line); border-radius: 12px; }
+    .seg button { flex: 1; min-width: 0; height: 38px; border: 0; background: none; border-radius: 9px; color: var(--ink-2); font-weight: 600; font-size: 14px; }
+    .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(15, 27, 45, 0.12); }
 
-    /* iPhone Safari zooms the page when a field's text is smaller than 16px; keep fields at 16px there. */
-    @supports (-webkit-touch-callout: none) {
-      .input-field, .setting-select, .status-select { font-size: 16px; }
+    .pill { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; background: var(--field); color: var(--ink-2); }
+    .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .pill-pending { background: var(--warn-bg); color: var(--warn); }
+    .pill-completed { background: var(--ok-bg); color: var(--ok); }
+    .pill-rejected { background: var(--bad-bg); color: var(--bad); }
+
+    /* ---------- Auth ---------- */
+    .otp-input { height: 60px; text-align: center; font: 700 26px/1 var(--font-body); letter-spacing: 0.4em; padding-left: 0.4em; }
+    .otp-email { font-weight: 700; color: var(--ink); word-break: break-all; }
+
+    .tip { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: var(--radius); background: var(--paper); border: 1px solid var(--line); }
+    .tip-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--brand-grad); color: var(--on-brand); flex: none; }
+    .tip-body { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-2); }
+    .tip-body strong { display: block; color: var(--ink); margin-bottom: 2px; }
+    .tip-close { border: 0; background: none; color: var(--ink-3); padding: 4px; border-radius: 8px; }
+
+    /* ---------- Buy ---------- */
+    .step { display: grid; gap: 12px; }
+    .step-head { display: flex; align-items: center; gap: 10px; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-grad); color: var(--on-brand); font: 700 13px/1 var(--font-body); flex: none; }
+    .step-head h2 { font-size: 18px; }
+    .step-head .hint { margin-left: auto; white-space: nowrap; }
+
+    .pkg-list { display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .pkg { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; border-top: 1px solid var(--line); position: relative; }
+    .pkg:first-child { border-top: 0; }
+    .pkg input { position: absolute; opacity: 0; pointer-events: none; }
+    .pkg-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; }
+    .pkg.is-selected { background: var(--field); }
+    .pkg.is-selected .pkg-radio { border-color: var(--brand-2); }
+    .pkg.is-selected .pkg-radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--brand-grad); }
+    .pkg:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: -3px; }
+    .pkg-left { flex: 1; min-width: 0; display: grid; }
+    .pkg-size { font: 700 17px/1.2 var(--font-display); }
+    .pkg-meta { font-size: 13px; color: var(--ink-3); }
+    .pkg-tag { justify-self: start; margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ok); }
+    .pkg-price { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .pay { display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+    .pay-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-top: 1px solid var(--line); }
+    .pay-row:first-child { border-top: 0; }
+    .pay-row > span { color: var(--ink-3); font-size: 14px; }
+    .pay-row strong { text-align: right; }
+    .pay-amount { font: 700 20px/1.2 var(--font-display); }
+    .pay-amount.is-empty { font: 500 14px/1.4 var(--font-body); color: var(--ink-3); }
+    .pay-number { display: flex; align-items: center; gap: 8px; }
+    .copy-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); color: var(--link); font-size: 13px; font-weight: 600; }
+    .copy-btn .i { width: 16px; height: 16px; }
+
+    /* ---------- Receipt and orders ---------- */
+    .receipt { text-align: center; display: grid; gap: 10px; justify-items: center; padding-top: 6px; }
+    .receipt-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--ok-bg); color: var(--ok); }
+    .receipt-icon .i { width: 28px; height: 28px; stroke-width: 2.4; }
+    .receipt h2 { font-size: 22px; }
+    .receipt p { color: var(--ink-2); max-width: 34ch; }
+    .details { display: grid; margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+    .details div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+    .details div:first-child { border-top: 0; }
+    .details dt { color: var(--ink-3); font-size: 14px; }
+    .details dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+
+    .order-list { display: grid; gap: 10px; }
+    .order { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 6px; }
+    .order-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .order-title { font: 700 17px/1.2 var(--font-display); }
+    .order-title span { font: 600 15px/1 var(--font-body); color: var(--ink-2); margin-left: 6px; }
+    .order-meta { font-size: 13px; color: var(--ink-3); overflow-wrap: anywhere; }
+    .empty { text-align: center; padding: 28px 16px; color: var(--ink-3); display: grid; gap: 14px; justify-items: center; }
+
+    /* ---------- Account ---------- */
+    .profile { display: flex; align-items: center; gap: 14px; }
+    .avatar { width: 52px; height: 52px; border-radius: 16px; background: var(--brand-grad); color: var(--on-brand); display: grid; place-items: center; font: 700 20px/1 var(--font-display); flex: none; }
+    .profile-text { min-width: 0; }
+    .profile-name { font-weight: 700; font-size: 17px; overflow-wrap: anywhere; }
+    .profile-email { color: var(--ink-3); font-size: 14px; overflow-wrap: anywhere; }
+
+    /* ---------- Admin desk ---------- */
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .stat { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 2px; }
+    .stat-num { font: 700 24px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+    .stat-main { background: var(--brand-grad); border-color: transparent; color: var(--on-brand); }
+    .stat-main .stat-label { color: var(--on-brand-soft); }
+    .toolbar { display: grid; gap: 10px; }
+    .search { position: relative; }
+    .search .i { position: absolute; left: 14px; top: 15px; color: var(--ink-3); }
+    .search .input { padding-left: 42px; }
+    .desk-list { display: grid; gap: 10px; }
+    .desk-row { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 12px; }
+    .desk-main { display: grid; gap: 4px; min-width: 0; }
+    .desk-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .desk-title strong { font: 700 16px/1.2 var(--font-display); }
+    .desk-meta { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+    .desk-meta.muted { color: var(--ink-3); }
+    .desk-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    @media (min-width: 720px) {
+      .desk-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+      .toolbar { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+    }
+    .user-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+    .user-row:first-child { border-top: 0; }
+    .user-list { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+    .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-3); }
+    .pager .btn-sm .i { width: 16px; height: 16px; }
+
+    /* ---------- Tab bar and messages ---------- */
+    .tabbar {
+      position: sticky; bottom: 0; z-index: 5;
+      display: flex; justify-content: space-around;
+      background: var(--paper); border-top: 1px solid var(--line);
+      padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+    }
+    .tab { flex: 1; max-width: 120px; display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border: 0; background: none; color: var(--ink-3); font-size: 12px; font-weight: 600; border-radius: 10px; }
+    .tab .i { width: 22px; height: 22px; }
+    .tab[aria-current="page"] { color: var(--brand-2); }
+
+    .toast {
+      position: fixed; z-index: 20;
+      left: 50%; transform: translateX(-50%);
+      bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      width: min(440px, calc(100% - 32px));
+      padding: 12px 16px; border-radius: 12px;
+      background: var(--ink); color: var(--canvas);
+      font-size: 14px; font-weight: 500;
+      box-shadow: 0 10px 30px rgba(15, 27, 45, 0.25);
+    }
+    .toast.is-error { background: var(--bad); color: #fff; }
+    .toast.is-success { background: var(--ok); color: #fff; }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
     }
   </style>
 </head>
 <body>
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+    <symbol id="i-desk" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></symbol>
+  </svg>
 
-  <div class="app-card">
-    <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="app" id="app">
+    <header class="band">
+      <div class="band-top">
+        <div class="brand">
+          <span class="mark" aria-hidden="true">MJ</span>
+          <span class="brand-name">MJ Internet<small data-key="brandTag">Halotel bundles</small></span>
+        </div>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" id="langEn" onclick="changeLanguage('en')" aria-pressed="true">EN</button>
+          <button type="button" id="langSw" onclick="changeLanguage('sw')" aria-pressed="false">SW</button>
+        </div>
+      </div>
+      <div class="hero">
+        <h1 id="heroTitle"></h1>
+        <p id="heroSub"></p>
+      </div>
+    </header>
 
-    <div class="sidebar-drawer" id="sidebarDrawer">
-      <div>
-        <div class="drawer-header">
-          <span style="font-weight: 700; font-size: 14px; color: var(--text-sub);" data-key="menuTitle">MENU</span>
-          <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Close menu">✕</button>
+    <main class="sheet">
+      <!-- Shown only on iPhone/iPad when the portal is not yet on the home screen. -->
+      <div class="tip" id="iosInstallTip" hidden style="margin-bottom: 18px;">
+        <span class="tip-icon"><svg class="i"><use href="#i-share"/></svg></span>
+        <div class="tip-body">
+          <strong data-key="installTitle">Add MJ Internet to your iPhone</strong>
+          <span id="iosInstallSteps" data-key="installSteps"></span>
+        </div>
+        <button type="button" class="tip-close" onclick="dismissInstallTip()" aria-label="Close"><svg class="i"><use href="#i-close"/></svg></button>
+      </div>
+
+      <!-- ===== Log in / create account ===== -->
+      <section id="viewAuth" class="view">
+        <div class="seg" role="group">
+          <button type="button" id="tabBtnLogin" onclick="switchAuthTab('login')" aria-pressed="true" data-key="loginTab">Log in</button>
+          <button type="button" id="tabBtnReg" onclick="switchAuthTab('register')" aria-pressed="false" data-key="signupTab">Create account</button>
         </div>
 
-        <div class="user-profile-box">
-          <div class="user-avatar" id="userAvatarIcon">👤</div>
-          <div class="user-info-text">
-            <div class="user-info-name" id="drawerUserName">User</div>
-            <div class="user-info-role" id="drawerUserEmail">user@example.com</div>
+        <form id="formLogin" class="stack" onsubmit="handleLoginSubmit(event)">
+          <div class="field">
+            <label for="loginEmail" data-key="emailLabel">Email</label>
+            <input type="email" id="loginEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
           </div>
-        </div>
-
-        <div class="menu-item active" id="menuItemNewOrder" onclick="navigateFromDrawer('new-order')">
-          <span>🛒</span> <span data-key="newOrder">New Order</span>
-        </div>
-        <div class="menu-item" id="menuItemMyOrders" onclick="navigateFromDrawer('my-orders')">
-          <span>📜</span> <span data-key="myOrders">My Orders</span>
-        </div>
-        <div class="menu-item" id="menuItemAdmin" style="display: none;" onclick="navigateFromDrawer('admin')">
-          <span>🛡️</span> <span data-key="adminMenu">Admin Panel</span>
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label" for="drawerLangSelect" data-key="language">Language</label>
-          <select class="setting-select" id="drawerLangSelect" onchange="changeLanguage(this.value)">
-            <option value="en">EN - English</option>
-            <option value="sw">SW - Kiswahili</option>
-          </select>
-
-          <label class="setting-label" for="drawerThemeSelect" data-key="theme">Theme</label>
-          <select class="setting-select" id="drawerThemeSelect" onchange="changeTheme(this.value)">
-            <option value="light">☀️ Light Mode</option>
-            <option value="dark">🌙 Dark Mode</option>
-          </select>
-        </div>
-      </div>
-
-      <button class="btn-logout-drawer" onclick="performLogout()">
-        <span>🚪</span> <span data-key="logout">Logout</span>
-      </button>
-    </div>
-
-    <div class="brand-header">
-      <button class="menu-toggle-btn" id="menuToggleBtn" onclick="openDrawer()" aria-label="Open menu">☰</button>
-      <div class="brand-logo">MJ INTERNET</div>
-      <div class="brand-tag" data-key="brandTag">High-Speed Digital Connectivity</div>
-    </div>
-
-    <!-- Shown only on iPhone/iPad when the portal is not yet on the home screen. -->
-    <div class="install-tip" id="iosInstallTip" style="display: none;">
-      <div class="install-tip-text">
-        <strong data-key="installTitle">📱 Install on iPhone</strong>
-        <span id="iosInstallSteps" data-key="installSteps"></span>
-      </div>
-      <button type="button" class="install-tip-close" onclick="dismissInstallTip()" aria-label="Close">✕</button>
-    </div>
-
-    <div id="viewAuth" class="view-panel active">
-      <div class="tabs-wrapper">
-        <button class="tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login')" data-key="loginTab">Login</button>
-        <button class="tab-btn" id="tabBtnReg" onclick="switchAuthTab('register')" data-key="signupTab">Sign Up</button>
-      </div>
-
-      <div class="content-body">
-        <form id="formLogin" onsubmit="handleLoginSubmit(event)">
-          <div class="form-group">
-            <label for="loginEmail" data-key="emailLabel">Email Address</label>
-            <input type="email" id="loginEmail" class="input-field" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
-          </div>
-          <div class="form-group">
+          <div class="field">
             <label for="loginPass" data-key="passLabel">Password</label>
-            <input type="password" id="loginPass" class="input-field" placeholder="••••••••" autocomplete="current-password" maxlength="128" required>
-            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
-          </div>
-          <button type="button" class="link-forgot" onclick="openForgotView()" data-key="forgotPass">Forgot Password?</button>
-          <button type="submit" class="btn-action" data-key="loginBtn">Continue →</button>
-        </form>
-
-        <form id="formRegister" onsubmit="handleRegisterSubmit(event)" style="display: none;">
-          <div class="form-group">
-            <label for="regName" data-key="fullNameLabel">Full Name</label>
-            <input type="text" id="regName" class="input-field" placeholder="John Doe" autocomplete="name" minlength="2" maxlength="60" required>
-          </div>
-          <div class="form-group">
-            <label for="regEmail" data-key="emailLabel">Email Address</label>
-            <input type="email" id="regEmail" class="input-field" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
-          </div>
-          <div class="form-group">
-            <label for="regPass" data-key="createPassLabel">Create Password</label>
-            <input type="password" id="regPass" class="input-field" placeholder="••••••••" autocomplete="new-password" minlength="8" maxlength="128" required>
-            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
-            <div class="form-hint" data-key="passHint">At least 8 characters</div>
-          </div>
-          <button type="submit" class="btn-action" data-key="signUpBtn">Verify Email via OTP →</button>
-        </form>
-      </div>
-    </div>
-
-    <div id="viewForgot" class="view-panel">
-      <div class="content-body">
-        <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;" data-key="resetTitle">Reset Password</h3>
-        <p style="text-align: center; font-size: 13px; color: var(--text-sub); margin-bottom: 20px;" data-key="resetSub">Enter your registered email address to receive an OTP code.</p>
-        <form onsubmit="handleForgotSubmit(event)">
-          <div class="form-group">
-            <label for="forgotEmail" data-key="emailLabel">Registered Email</label>
-            <input type="email" id="forgotEmail" class="input-field" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
-          </div>
-          <button type="submit" class="btn-action" data-key="sendOtpBtn">Send OTP Code</button>
-          <button type="button" class="btn-action btn-secondary" onclick="backToAuth()" data-key="cancelBtn">Cancel</button>
-        </form>
-      </div>
-    </div>
-
-    <div id="viewOTP" class="view-panel">
-      <div class="content-body">
-        <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;" data-key="otpTitle">OTP Verification</h3>
-        <p style="text-align: center; font-size: 13px; color: var(--text-sub);" data-key="otpSub">Enter the 6-digit code sent to:</p>
-        <p style="text-align: center; font-size: 13px; font-weight: 700; margin-bottom: 20px; word-break: break-all;" id="otpEmailText"></p>
-
-        <form onsubmit="handleVerifyOtp(event)">
-          <div class="form-group">
-            <input type="text" id="otpCodeInput" class="input-field" placeholder="6-DIGIT CODE" maxlength="6" inputmode="numeric" autocomplete="one-time-code" aria-label="OTP code" style="text-align: center; font-size: 20px; letter-spacing: 6px; font-weight: 700;" required>
-          </div>
-          <button type="submit" class="btn-action" data-key="verifyBtn">Verify & Access Account</button>
-        </form>
-        <button type="button" class="btn-action btn-secondary" id="btnResendOtp" onclick="handleResendOtp()">Resend code</button>
-        <button type="button" class="btn-action btn-secondary" onclick="cancelOtp()" data-key="backAuthBtn">← Back</button>
-      </div>
-    </div>
-
-    <div id="viewNewPass" class="view-panel">
-      <div class="content-body">
-        <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;" data-key="newPassTitle">New Password</h3>
-        <form onsubmit="handleNewPassSubmit(event)">
-          <div class="form-group">
-            <label for="resetNewPass" data-key="newPassLabel">New Password</label>
-            <input type="password" id="resetNewPass" class="input-field" placeholder="••••••••" autocomplete="new-password" minlength="8" maxlength="128" required>
-            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
-            <div class="form-hint" data-key="passHint">At least 8 characters</div>
-          </div>
-          <button type="submit" class="btn-action" data-key="savePassBtn">Save Password & Login</button>
-        </form>
-      </div>
-    </div>
-
-    <div id="viewDashboard" class="view-panel">
-      <div class="content-body">
-        <div id="dashSectionOrder">
-
-          <div class="payment-notice-box">
-            <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);" data-key="paymentNoticeTitle">⚠️ PAYMENT & INSTRUCTIONS:</div>
-            <div data-key="paymentNoticeText"></div>
-            <button type="button" class="btn-copy" onclick="copyPaymentNumber(this)" data-key="copyNumber">📋 Copy number</button>
-          </div>
-
-          <form id="formOrder" onsubmit="handlePlaceOrder(event)">
-            <div class="form-group">
-              <label for="selectPackage" data-key="selectPkgLabel">Select Internet Package (Halotel Only)</label>
-              <!-- The values are package IDs; the price is decided by the server. -->
-              <select id="selectPackage" class="input-field" required>
-                <option value="" disabled selected data-key="selectPkgPlaceholder">-- Select Package --</option>
-                <option value="GB5">GB 5 - TZS 6,500</option>
-                <option value="GB10">GB 10 - TZS 12,000</option>
-                <option value="GB15">GB 15 - TZS 16,500</option>
-                <option value="GB20">GB 20 - TZS 22,000</option>
-                <option value="GB30">GB 30 - TZS 31,000</option>
-                <option value="GB35">GB 35 - TZS 37,000</option>
-                <option value="GB40">GB 40 - TZS 42,000</option>
-              </select>
+            <div class="input-wrap">
+              <input type="password" id="loginPass" class="input" autocomplete="current-password" maxlength="128" required>
+              <button type="button" class="reveal" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
             </div>
-            <div class="form-group">
-              <label for="orderPhone" data-key="phoneLabel">Halotel Recipient Phone Number</label>
-              <input type="tel" id="orderPhone" class="input-field" placeholder="062XXXXXXX" inputmode="tel" autocomplete="tel" maxlength="16" required>
-              <div class="form-hint" data-key="phoneHint">Starts with 061 or 062</div>
+          </div>
+          <button type="submit" class="btn" data-key="loginBtn">Log in</button>
+          <button type="button" class="btn-link" onclick="openForgotView()" data-key="forgotPass">Forgot password?</button>
+        </form>
+
+        <form id="formRegister" class="stack" onsubmit="handleRegisterSubmit(event)" hidden>
+          <div class="field">
+            <label for="regName" data-key="fullNameLabel">Full name</label>
+            <input type="text" id="regName" class="input" autocomplete="name" minlength="2" maxlength="60" required>
+          </div>
+          <div class="field">
+            <label for="regEmail" data-key="emailLabel">Email</label>
+            <input type="email" id="regEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
+          </div>
+          <div class="field">
+            <label for="regPass" data-key="createPassLabel">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="regPass" class="input" autocomplete="new-password" minlength="8" maxlength="128" required>
+              <button type="button" class="reveal" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
             </div>
-            <div class="form-group">
-              <label for="orderPaymentRef" data-key="paymentRefLabel">Payment Transaction ID</label>
-              <input type="text" id="orderPaymentRef" class="input-field" placeholder="e.g. 8FG21XKQ0P" autocomplete="off" autocapitalize="characters" maxlength="40" required>
-              <div class="form-hint" data-key="paymentRefHint">Copy it from the confirmation SMS you received after paying.</div>
+            <span class="hint" data-key="passHint">At least 8 characters</span>
+          </div>
+          <button type="submit" class="btn" data-key="signUpBtn">Create account</button>
+        </form>
+      </section>
+
+      <!-- ===== Forgot password ===== -->
+      <section id="viewForgot" class="view" hidden>
+        <form class="stack" onsubmit="handleForgotSubmit(event)">
+          <div class="field">
+            <label for="forgotEmail" data-key="emailLabel">Email</label>
+            <input type="email" id="forgotEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254" required>
+          </div>
+          <button type="submit" class="btn" data-key="sendOtpBtn">Send code</button>
+          <button type="button" class="btn btn-ghost" onclick="backToAuth()" data-key="cancelBtn">Back to log in</button>
+        </form>
+      </section>
+
+      <!-- ===== Email code ===== -->
+      <section id="viewOTP" class="view" hidden>
+        <p class="hint"><span data-key="otpSub">Enter the 6-digit code we sent to</span> <span class="otp-email" id="otpEmailText"></span></p>
+        <form class="stack" onsubmit="handleVerifyOtp(event)">
+          <input type="text" id="otpCodeInput" class="input otp-input" maxlength="6" inputmode="numeric" autocomplete="one-time-code" aria-label="6-digit code" placeholder="••••••" required>
+          <button type="submit" class="btn" data-key="verifyBtn">Verify</button>
+        </form>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="btnResendOtp" onclick="handleResendOtp()">Resend code</button>
+          <button type="button" class="btn-link" onclick="cancelOtp()" data-key="backAuthBtn">Use a different email</button>
+        </div>
+      </section>
+
+      <!-- ===== New password ===== -->
+      <section id="viewNewPass" class="view" hidden>
+        <form class="stack" onsubmit="handleNewPassSubmit(event)">
+          <div class="field">
+            <label for="resetNewPass" data-key="newPassLabel">New password</label>
+            <div class="input-wrap">
+              <input type="password" id="resetNewPass" class="input" autocomplete="new-password" minlength="8" maxlength="128" required>
+              <button type="button" class="reveal" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
             </div>
-            <button type="submit" class="btn-action" id="btnSubmitOrder" data-key="submitOrderBtn">Submit Package Order</button>
+            <span class="hint" data-key="passHint">At least 8 characters</span>
+          </div>
+          <button type="submit" class="btn" data-key="savePassBtn">Save and log in</button>
+        </form>
+      </section>
+
+      <!-- ===== Buy a bundle ===== -->
+      <section id="viewBuy" class="view" hidden>
+        <form id="formOrder" class="view" onsubmit="handlePlaceOrder(event)">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-num">1</span>
+              <h2 data-key="step1">Choose a bundle</h2>
+              <span class="hint" data-key="halotelOnly">Halotel lines only</span>
+            </div>
+            <!-- Prices shown here are for display; the server decides the real price. -->
+            <div class="pkg-list" id="packageList" role="radiogroup" aria-label="Bundle"></div>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-num">2</span>
+              <h2 data-key="step2">Pay with Mix by Yas</h2>
+            </div>
+            <div class="pay">
+              <div class="pay-row"><span data-key="payAmount">Amount</span><strong class="pay-amount is-empty" id="payAmount"></strong></div>
+              <div class="pay-row">
+                <span data-key="payNumber">Send to</span>
+                <span class="pay-number">
+                  <strong class="mono" id="payNumberText">0770 136 023</strong>
+                  <button type="button" class="copy-btn" onclick="copyPaymentNumber(this)"><svg class="i"><use href="#i-copy"/></svg><span data-key="copyNumber">Copy</span></button>
+                </span>
+              </div>
+              <div class="pay-row"><span data-key="payName">Name</span><strong>Michael Joseph Liganya</strong></div>
+            </div>
+            <p class="hint" data-key="payNote">Keep the confirmation SMS. You'll need its transaction ID below.</p>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-num">3</span>
+              <h2 data-key="step3">Send your order</h2>
+            </div>
+            <div class="field">
+              <label for="orderPhone" data-key="phoneLabel">Halotel number to receive the bundle</label>
+              <input type="tel" id="orderPhone" class="input mono" placeholder="062X XXX XXX" inputmode="tel" autocomplete="tel" maxlength="16" required>
+              <span class="hint" data-key="phoneHint">Starts with 061 or 062</span>
+            </div>
+            <div class="field">
+              <label for="orderPaymentRef" data-key="paymentRefLabel">Transaction ID</label>
+              <input type="text" id="orderPaymentRef" class="input mono" placeholder="8FG21XKQ0P" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" required>
+              <span class="hint" data-key="paymentRefHint">From the Mix by Yas confirmation SMS.</span>
+            </div>
+            <button type="submit" class="btn" id="btnSubmitOrder">Submit order</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ===== Order received ===== -->
+      <section id="viewDone" class="view" hidden>
+        <div class="receipt">
+          <span class="receipt-icon"><svg class="i"><use href="#i-check"/></svg></span>
+          <h2 data-key="doneTitle">Order received</h2>
+          <p id="doneText"></p>
+        </div>
+        <dl class="details" id="doneDetails"></dl>
+        <div class="btn-row">
+          <button type="button" class="btn" onclick="navigate('orders')" data-key="viewOrdersBtn">View my orders</button>
+          <button type="button" class="btn btn-ghost" onclick="navigate('buy')" data-key="buyAnotherBtn">Buy another bundle</button>
+        </div>
+      </section>
+
+      <!-- ===== My orders ===== -->
+      <section id="viewOrders" class="view" hidden>
+        <div class="order-list" id="historyOrdersList"></div>
+      </section>
+
+      <!-- ===== Account ===== -->
+      <section id="viewAccount" class="view" hidden>
+        <div class="card profile">
+          <span class="avatar" id="userAvatarIcon"></span>
+          <div class="profile-text">
+            <div class="profile-name" id="drawerUserName"></div>
+            <div class="profile-email" id="drawerUserEmail"></div>
+          </div>
+        </div>
+        <div class="card stack">
+          <div class="field">
+            <span class="label" data-key="theme">Theme</span>
+            <div class="seg" role="group" aria-label="Theme">
+              <button type="button" id="themeSystem" onclick="changeTheme('system')" aria-pressed="true" data-key="themeSystem">Auto</button>
+              <button type="button" id="themeLight" onclick="changeTheme('light')" aria-pressed="false" data-key="themeLight">Light</button>
+              <button type="button" id="themeDark" onclick="changeTheme('dark')" aria-pressed="false" data-key="themeDark">Dark</button>
+            </div>
+          </div>
+        </div>
+        <div class="stack">
+          <button type="button" class="btn btn-ghost" onclick="performLogout()"><svg class="i"><use href="#i-logout"/></svg><span data-key="logout">Log out</span></button>
+          <p class="hint" style="text-align: center;" data-key="logoutHint">Logs you out on all your devices.</p>
+        </div>
+      </section>
+
+      <!-- ===== Admin desk (data comes from the server only for admin accounts) ===== -->
+      <section id="viewAdmin" class="view" hidden>
+        <div class="stats">
+          <div class="stat stat-main"><span class="stat-num" id="adminPendingOrders">0</span><span class="stat-label" data-key="statPending">Waiting</span></div>
+          <div class="stat"><span class="stat-num" id="adminTotalOrders">0</span><span class="stat-label" data-key="statOrders">All orders</span></div>
+          <div class="stat"><span class="stat-num" id="adminTotalUsers">0</span><span class="stat-label" data-key="statUsers">Customers</span></div>
+        </div>
+
+        <div class="seg" role="group" style="max-width: 320px;">
+          <button type="button" id="deskTabOrders" onclick="showDeskTab('orders')" aria-pressed="true" data-key="deskOrders">Orders</button>
+          <button type="button" id="deskTabUsers" onclick="showDeskTab('users')" aria-pressed="false" data-key="deskUsers">Customers</button>
+        </div>
+
+        <div id="deskOrders" class="view">
+          <div class="toolbar">
+            <div class="seg" role="group" aria-label="Status" id="statusFilter">
+              <button type="button" data-status="all" aria-pressed="true" data-key="filterAll">All</button>
+              <button type="button" data-status="pending" aria-pressed="false" data-key="status_pending">Pending</button>
+              <button type="button" data-status="completed" aria-pressed="false" data-key="status_completed">Completed</button>
+              <button type="button" data-status="rejected" aria-pressed="false" data-key="status_rejected">Rejected</button>
+            </div>
+            <form class="search" onsubmit="handleAdminOrderSearch(event)">
+              <svg class="i"><use href="#i-search"/></svg>
+              <input type="search" id="adminOrderSearch" class="input" maxlength="100" aria-label="Search orders" data-placeholder-key="searchOrders" placeholder="Search name, phone, order or transaction ID">
+            </form>
+          </div>
+          <div class="desk-list" id="adminOrdersList"></div>
+          <div class="pager">
+            <button type="button" class="btn btn-ghost btn-sm" id="ordersPrev" onclick="changeAdminPage('orders', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
+            <span id="ordersPageInfo"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="ordersNext" onclick="changeAdminPage('orders', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
+          </div>
+        </div>
+
+        <div id="deskUsers" class="view" hidden>
+          <form class="search" onsubmit="handleAdminUserSearch(event)">
+            <svg class="i"><use href="#i-search"/></svg>
+            <input type="search" id="adminUserSearch" class="input" maxlength="100" aria-label="Search customers" data-placeholder-key="searchUsers" placeholder="Search name or email">
           </form>
-          <div id="orderStatusNotice" role="status" style="margin-top: 12px; font-size: 13px; text-align: center; font-weight: 700;"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="viewMyOrders" class="view-panel">
-      <div class="content-body">
-        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 16px;" data-key="myOrders">My Orders</h3>
-        <div id="historyOrdersList"></div>
-        <button class="btn-action btn-secondary" onclick="navigateFromDrawer('new-order')" style="margin-top: 15px;" data-key="backBtn">← Back to Order</button>
-      </div>
-    </div>
-
-    <!-- VIEW ADMIN PANEL -->
-    <div id="viewAdmin" class="view-panel">
-      <div class="content-body">
-        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 18px; font-weight: 800;" data-key="adminTitle">🛡️ Admin Control Panel</h3>
-
-        <div class="admin-stats">
-          <div class="stat-card">
-            <div class="stat-num" id="adminTotalUsers">0</div>
-            <div class="stat-title" data-key="statUsers">Users</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" id="adminTotalOrders">0</div>
-            <div class="stat-title" data-key="statOrders">Orders</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" id="adminPendingOrders">0</div>
-            <div class="stat-title" data-key="status_pending">Pending</div>
+          <div class="user-list" id="adminUsersList"></div>
+          <div class="pager">
+            <button type="button" class="btn btn-ghost btn-sm" id="usersPrev" onclick="changeAdminPage('users', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
+            <span id="usersPageInfo"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="usersNext" onclick="changeAdminPage('users', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
           </div>
         </div>
 
-        <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);" data-key="ordersHeading">📦 All Orders</h4>
-        <form class="admin-filters" onsubmit="handleAdminOrderSearch(event)">
-          <select id="adminStatusFilter" class="status-select" onchange="handleAdminOrderSearch(event)" aria-label="Status">
-            <option value="all" data-key="filterAll">All</option>
-            <option value="pending" data-key="status_pending">Pending</option>
-            <option value="completed" data-key="status_completed">Completed</option>
-            <option value="rejected" data-key="status_rejected">Rejected</option>
-          </select>
-          <input type="search" id="adminOrderSearch" class="input-field admin-search" maxlength="100" aria-label="Search orders" data-placeholder-key="searchOrders" placeholder="Name, phone, order or txn ID">
-          <button type="submit" class="btn-copy" data-key="searchBtn">Search</button>
-        </form>
-        <div class="table-container">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th data-key="colCustomer">Customer</th>
-                <th data-key="colOrder">Order / Number</th>
-                <th data-key="colDate">Date</th>
-                <th data-key="colStatus">Status</th>
-              </tr>
-            </thead>
-            <tbody id="adminOrdersTableBody"></tbody>
-          </table>
-        </div>
-        <div class="pager">
-          <button type="button" class="btn-copy" id="ordersPrev" onclick="changeAdminPage('orders', -1)" aria-label="Previous page">←</button>
-          <span id="ordersPageInfo"></span>
-          <button type="button" class="btn-copy" id="ordersNext" onclick="changeAdminPage('orders', 1)" aria-label="Next page">→</button>
-        </div>
+        <button type="button" class="btn btn-ghost" id="btnAdminRefresh" onclick="loadAdminDashboardData()" data-key="refreshBtn">Refresh</button>
+      </section>
+    </main>
 
-        <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);" data-key="usersHeading">👥 Registered Users</h4>
-        <form class="admin-filters" onsubmit="handleAdminUserSearch(event)">
-          <input type="search" id="adminUserSearch" class="input-field admin-search" maxlength="100" aria-label="Search users" data-placeholder-key="searchUsers" placeholder="Name or email">
-          <button type="submit" class="btn-copy" data-key="searchBtn">Search</button>
-        </form>
-        <div class="table-container">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th data-key="colName">Name</th>
-                <th data-key="colEmail">Email</th>
-              </tr>
-            </thead>
-            <tbody id="adminUsersTableBody"></tbody>
-          </table>
-        </div>
-        <div class="pager">
-          <button type="button" class="btn-copy" id="usersPrev" onclick="changeAdminPage('users', -1)" aria-label="Previous page">←</button>
-          <span id="usersPageInfo"></span>
-          <button type="button" class="btn-copy" id="usersNext" onclick="changeAdminPage('users', 1)" aria-label="Next page">→</button>
-        </div>
-
-        <button class="btn-action btn-secondary" id="btnAdminRefresh" onclick="loadAdminDashboardData()" data-key="refreshBtn">🔄 Refresh</button>
-      </div>
-    </div>
-
-    <div id="statusMessage" role="status"></div>
+    <nav class="tabbar" id="tabbar" hidden aria-label="Main">
+      <button type="button" class="tab" id="tabBuy" onclick="navigate('buy')"><svg class="i"><use href="#i-bag"/></svg><span data-key="tabBuy">Buy</span></button>
+      <button type="button" class="tab" id="tabOrders" onclick="navigate('orders')"><svg class="i"><use href="#i-receipt"/></svg><span data-key="tabOrders">Orders</span></button>
+      <button type="button" class="tab" id="tabAdmin" onclick="navigate('admin')" hidden><svg class="i"><use href="#i-desk"/></svg><span data-key="tabAdmin">Desk</span></button>
+      <button type="button" class="tab" id="tabAccount" onclick="navigate('account')"><svg class="i"><use href="#i-user"/></svg><span data-key="tabAccount">Account</span></button>
+    </nav>
   </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script>
     // Address of the Google Apps Script web app (see README.md, "Backend setup").
@@ -541,13 +601,28 @@
     var PAYMENT_NUMBER = "0770136023";
     var ORDER_STATUSES = ["pending", "completed", "rejected"];
 
+    // Shown to customers. The server has its own price list and decides the real price.
+    var PACKAGES = [
+      { id: "GB5", gb: 5, priceTzs: 6500 },
+      { id: "GB10", gb: 10, priceTzs: 12000 },
+      { id: "GB15", gb: 15, priceTzs: 16500 },
+      { id: "GB20", gb: 20, priceTzs: 22000 },
+      { id: "GB30", gb: 30, priceTzs: 31000 },
+      { id: "GB35", gb: 35, priceTzs: 37000 },
+      { id: "GB40", gb: 40, priceTzs: 42000 }
+    ];
+
     var currentLang = "en";
+    var currentView = "viewAuth";
     var sessionToken = null;
     var currentUser = null;
     var otpEmail = "";
     var otpPurpose = "";
     var resetToken = null;
     var resendTimer = null;
+    var toastTimer = null;
+    var selectedPackageId = null;
+    var lastPlacedOrder = null;
     var lastOrders = null;
     var lastAdminData = null;
     var lastAdminUsers = null;
@@ -556,217 +631,298 @@
     // Anything that comes from users or the server is shown with textContent only.
     var translations = {
       en: {
-        brandTag: "High-Speed Digital Connectivity",
-        loginTab: "Login",
-        signupTab: "Sign Up",
-        emailLabel: "Email Address",
+        brandTag: "Halotel bundles",
+        heroAuthTitle: "Buy Halotel bundles in minutes",
+        heroAuthSub: "Log in or create an account. Pay with Mix by Yas and we load the bundle onto your line.",
+        loginTab: "Log in",
+        signupTab: "Create account",
+        emailLabel: "Email",
         passLabel: "Password",
-        createPassLabel: "Create Password",
+        createPassLabel: "Password",
         passHint: "At least 8 characters",
-        fullNameLabel: "Full Name",
+        fullNameLabel: "Full name",
         show: "Show",
         hide: "Hide",
-        forgotPass: "Forgot Password?",
-        loginBtn: "Continue →",
-        signUpBtn: "Verify Email via OTP →",
-        resetTitle: "Reset Password",
-        resetSub: "Enter your registered email address to receive an OTP code.",
-        sendOtpBtn: "Send OTP Code",
-        cancelBtn: "Cancel",
-        otpTitle: "OTP Verification",
-        otpSub: "Enter the 6-digit code sent to:",
-        verifyBtn: "Verify & Access Account",
+        forgotPass: "Forgot password?",
+        loginBtn: "Log in",
+        signUpBtn: "Create account",
+        resetTitle: "Reset your password",
+        resetSub: "Enter the email you registered with. We'll send you a 6-digit code.",
+        sendOtpBtn: "Send code",
+        cancelBtn: "Back to log in",
+        otpTitle: "Check your email",
+        otpHeroSub: "The code expires in 15 minutes.",
+        otpSub: "Enter the 6-digit code we sent to",
+        verifyBtn: "Verify",
         resendBtn: "Resend code",
         resendIn: "Resend code in {s}s",
-        backAuthBtn: "← Back",
-        otpSent: "OTP code sent to your email!",
-        otpResent: "A new code has been sent.",
-        forgotSent: "If this email is registered, a code has been sent to it.",
-        newPassTitle: "New Password",
-        newPassLabel: "New Password",
-        savePassBtn: "Save Password & Login",
-        selectPkgLabel: "Select Internet Package (Halotel Only)",
-        selectPkgPlaceholder: "-- Select Package --",
-        phoneLabel: "Halotel Recipient Phone Number",
+        backAuthBtn: "Use a different email",
+        otpSent: "Code sent. Check your inbox and spam folder.",
+        otpResent: "A new code is on its way.",
+        forgotSent: "If this email is registered, a code is on its way.",
+        newPassTitle: "Choose a new password",
+        newPassLabel: "New password",
+        savePassBtn: "Save and log in",
+        heroBuyTitle: "Hello, {name}",
+        heroBuySub: "Choose a bundle, pay with Mix by Yas, then send us the transaction ID.",
+        step1: "Choose a bundle",
+        halotelOnly: "Halotel lines only",
+        perGb: "TZS {p} per GB",
+        bestValue: "Best value",
+        step2: "Pay with Mix by Yas",
+        payAmount: "Amount",
+        payChooseFirst: "Choose a bundle first",
+        payNumber: "Send to",
+        payName: "Name",
+        copyNumber: "Copy",
+        copied: "Copied",
+        payNote: "Keep the confirmation SMS. You'll need its transaction ID below.",
+        step3: "Send your order",
+        phoneLabel: "Halotel number to receive the bundle",
         phoneHint: "Starts with 061 or 062",
-        paymentRefLabel: "Payment Transaction ID",
-        paymentRefHint: "Copy it from the confirmation SMS you received after paying.",
-        submitOrderBtn: "Submit Package Order",
-        processingOrder: "Processing order... Please wait ⏳",
-        orderPlaced: "Order {id} received ✅ We will activate your package after confirming your payment.",
-        copyNumber: "📋 Copy number",
-        copied: "✅ Copied!",
-        menuTitle: "MENU",
-        newOrder: "New Order",
-        myOrders: "My Orders",
-        adminMenu: "Admin Panel",
-        language: "Language",
+        paymentRefLabel: "Transaction ID",
+        paymentRefHint: "From the Mix by Yas confirmation SMS.",
+        submitOrderBtn: "Submit order",
+        submitOrderBtnAmount: "Submit order · {amount}",
+        processingOrder: "Sending your order…",
+        chooseBundleFirst: "Choose a bundle in step 1.",
+        doneTitle: "Order received",
+        doneHeroSub: "Keep your order ID in case you need to contact us.",
+        doneText: "We'll load the bundle onto {phone} as soon as we confirm your payment.",
+        doneOrderId: "Order ID",
+        doneBundle: "Bundle",
+        doneAmount: "Amount",
+        donePhone: "Halotel number",
+        doneRef: "Transaction ID",
+        doneStatus: "Status",
+        viewOrdersBtn: "View my orders",
+        buyAnotherBtn: "Buy another bundle",
+        tabBuy: "Buy",
+        tabOrders: "Orders",
+        tabAdmin: "Desk",
+        tabAccount: "Account",
+        myOrders: "My orders",
+        ordersSub: "Your 30 most recent orders.",
+        noOrders: "No orders yet.",
+        noOrdersCta: "Buy your first bundle",
+        loading: "Loading…",
+        account: "Account",
+        accountSub: "Your details and app settings.",
         theme: "Theme",
-        logout: "Logout",
-        backBtn: "← Back to Order",
-        noOrders: "No previous orders found.",
-        loading: "Loading...",
-        phoneShort: "Phone",
-        paymentRefShort: "Txn ID",
+        themeSystem: "Auto",
+        themeLight: "Light",
+        themeDark: "Dark",
+        logout: "Log out",
+        logoutHint: "Logs you out on all your devices.",
+        phoneShort: "Number",
+        paymentRefShort: "Txn",
         status_pending: "Pending",
         status_completed: "Completed",
         status_rejected: "Rejected",
-        statusSaved: "Status saved.",
-        adminTitle: "🛡️ Admin Control Panel",
-        statUsers: "Users",
-        statOrders: "Orders",
-        usersHeading: "👥 Registered Users",
-        ordersHeading: "📦 All Orders",
-        colName: "Name",
-        colEmail: "Email",
-        colCustomer: "Customer",
-        colOrder: "Order / Number",
-        colDate: "Date",
-        colStatus: "Status",
-        noUsers: "No users yet.",
-        refreshBtn: "🔄 Refresh",
+        statusSaved: "Order updated.",
+        adminTitle: "Orders desk",
+        adminSub: "Check each payment, then complete or reject the order.",
+        statPending: "Waiting",
+        statOrders: "All orders",
+        statUsers: "Customers",
+        deskOrders: "Orders",
+        deskUsers: "Customers",
         filterAll: "All",
-        searchBtn: "Search",
-        searchOrders: "Name, phone, order or txn ID",
-        searchUsers: "Name or email",
-        pageInfo: "Page {p} of {n} ({count})",
-        installTitle: "📱 Install on iPhone",
-        installSteps: "Tap the Share button ⬆️, then choose “Add to Home Screen”. (If you don't see it, open this page in Safari first.)",
-        installStepsInApp: "Open this page in Safari first (menu ••• → Open in Safari). Then tap Share ⬆️ → “Add to Home Screen”.",
-        paymentNoticeTitle: "⚠️ PAYMENT & INSTRUCTIONS:",
-        paymentNoticeText: "Please send the money first. Payment number is <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>). Then enter the transaction ID from your payment SMS below.<br><br>🚨 <strong>Note:</strong> These packages are for <strong>Halotel only</strong>. Ensure the phone number entered below is Halotel.",
+        searchOrders: "Search name, phone, order or transaction ID",
+        searchUsers: "Search name or email",
+        completeBtn: "Complete",
+        rejectBtn: "Reject",
+        reopenBtn: "Mark pending",
+        joined: "Joined {date}",
+        noUsers: "No customers found.",
+        noMatches: "No orders match.",
+        prevPage: "Previous",
+        nextPage: "Next",
+        pageInfoOrders: "Page {p} of {n} · {count} orders",
+        pageInfoUsers: "Page {p} of {n} · {count} customers",
+        refreshBtn: "Refresh",
+        installTitle: "Add MJ Internet to your iPhone",
+        installSteps: "Tap Share, then “Add to Home Screen”. If you don't see it, open this page in Safari first.",
+        installStepsInApp: "Open this page in Safari first (menu ••• then Open in Safari). Then tap Share and “Add to Home Screen”.",
         err_not_configured: "The app is not connected to its server yet. Please contact MJ Internet.",
         err_server_not_configured: "The app is not connected to its server yet. Please contact MJ Internet.",
         err_network: "Could not reach the server. Check your internet connection and try again.",
         err_server_error: "Something went wrong on the server. Please try again.",
         err_bad_request: "Invalid request. Please reload the page.",
         err_invalid_email: "Enter a valid email address.",
-        err_invalid_name: "Enter your full name (2-60 characters).",
+        err_invalid_name: "Enter your full name (2–60 characters).",
         err_weak_password: "Password must be at least 8 characters.",
         err_already_registered: "This email is already registered. Please log in.",
-        err_invalid_credentials: "Invalid email or password!",
-        err_locked: "Too many failed attempts. Please wait 15 minutes and try again.",
-        err_otp_invalid: "Invalid OTP code!",
-        err_otp_expired: "The code has expired. Please request a new one.",
-        err_otp_too_many: "Too many wrong codes. Please go back and start again.",
-        err_resend_wait: "Please wait a minute before requesting another code.",
-        err_email_failed: "We could not send the email. Please try again later.",
-        err_not_logged_in: "Your session has expired. Please log in again.",
-        err_reset_expired: "The reset time has expired. Please start again.",
+        err_invalid_credentials: "Email or password is wrong.",
+        err_locked: "Too many failed attempts. Wait 15 minutes and try again.",
+        err_otp_invalid: "That code is wrong. Check the email and try again.",
+        err_otp_expired: "The code has expired. Tap Resend code.",
+        err_otp_too_many: "Too many wrong codes. Go back and start again.",
+        err_resend_wait: "Wait a minute before asking for another code.",
+        err_email_failed: "We could not send the email. Try again later.",
+        err_not_logged_in: "You were logged out. Please log in again.",
+        err_reset_expired: "The reset time has run out. Please start again.",
         err_forbidden: "You do not have permission to do that.",
-        err_invalid_package: "Please select a package.",
-        err_invalid_phone: "Enter a valid Halotel number (starts with 061 or 062).",
+        err_invalid_package: "Choose a bundle in step 1.",
+        err_invalid_phone: "Enter a Halotel number that starts with 061 or 062.",
         err_invalid_payment_ref: "Enter the transaction ID from your payment SMS (letters and numbers).",
-        err_duplicate_payment_ref: "This transaction ID has already been used for another order.",
+        err_duplicate_payment_ref: "This transaction ID was already used for another order.",
         err_not_found: "Order not found.",
         err_invalid_status: "Invalid status."
       },
       sw: {
-        brandTag: "Mtandao Wenye Kasi Ya Juu",
+        brandTag: "Vifurushi vya Halotel",
+        heroAuthTitle: "Nunua vifurushi vya Halotel kwa dakika chache",
+        heroAuthSub: "Ingia au fungua akaunti. Lipa kwa Mix by Yas, nasi tunaweka kifurushi kwenye laini yako.",
         loginTab: "Ingia",
-        signupTab: "Jisajili",
-        emailLabel: "Anwani ya Barua Pepe",
+        signupTab: "Fungua akaunti",
+        emailLabel: "Barua pepe",
         passLabel: "Nenosiri",
-        createPassLabel: "Tengeneza Nenosiri",
+        createPassLabel: "Nenosiri",
         passHint: "Angalau herufi 8",
-        fullNameLabel: "Jina Kamili",
+        fullNameLabel: "Jina kamili",
         show: "Onyesha",
         hide: "Ficha",
-        forgotPass: "Umesahau Nenosiri?",
-        loginBtn: "Endelea →",
-        signUpBtn: "Thibitisha Email kwa OTP →",
-        resetTitle: "Badili Nenosiri",
-        resetSub: "Weka barua pepe yako ili kupokea kodi ya OTP.",
-        sendOtpBtn: "Tuma Kodi ya OTP",
-        cancelBtn: "Ghairi",
-        otpTitle: "Uthibitisho wa OTP",
-        otpSub: "Weka kodi ya tarakimu 6 iliyotumwa kwa:",
-        verifyBtn: "Thibitisha & Ingia",
+        forgotPass: "Umesahau nenosiri?",
+        loginBtn: "Ingia",
+        signUpBtn: "Fungua akaunti",
+        resetTitle: "Badilisha nenosiri",
+        resetSub: "Weka barua pepe uliyojisajili nayo. Tutakutumia kodi ya tarakimu 6.",
+        sendOtpBtn: "Tuma kodi",
+        cancelBtn: "Rudi kuingia",
+        otpTitle: "Angalia barua pepe yako",
+        otpHeroSub: "Kodi inaisha baada ya dakika 15.",
+        otpSub: "Weka kodi ya tarakimu 6 tuliyotuma kwa",
+        verifyBtn: "Thibitisha",
         resendBtn: "Tuma kodi tena",
         resendIn: "Tuma tena baada ya sekunde {s}",
-        backAuthBtn: "← Rudi",
-        otpSent: "Kodi ya OTP imetumwa kwenye email yako!",
-        otpResent: "Kodi mpya imetumwa.",
-        forgotSent: "Kama barua pepe hii imesajiliwa, kodi imetumwa kwake.",
-        newPassTitle: "Nenosiri Jipya",
-        newPassLabel: "Weka Nenosiri Jipya",
-        savePassBtn: "Hifadhi & Ingia",
-        selectPkgLabel: "Chagua Kifurushi cha Halotel",
-        selectPkgPlaceholder: "-- Chagua Kifurushi --",
-        phoneLabel: "Namba ya Simu ya Halotel ya Kupokea",
+        backAuthBtn: "Tumia barua pepe nyingine",
+        otpSent: "Kodi imetumwa. Angalia inbox na spam.",
+        otpResent: "Kodi mpya inakuja.",
+        forgotSent: "Kama barua pepe hii imesajiliwa, kodi inakuja.",
+        newPassTitle: "Chagua nenosiri jipya",
+        newPassLabel: "Nenosiri jipya",
+        savePassBtn: "Hifadhi na uingie",
+        heroBuyTitle: "Habari, {name}",
+        heroBuySub: "Chagua kifurushi, lipa kwa Mix by Yas, kisha tutumie namba ya muamala.",
+        step1: "Chagua kifurushi",
+        halotelOnly: "Laini za Halotel tu",
+        perGb: "TZS {p} kwa GB",
+        bestValue: "Bei nafuu zaidi",
+        step2: "Lipa kwa Mix by Yas",
+        payAmount: "Kiasi",
+        payChooseFirst: "Chagua kifurushi kwanza",
+        payNumber: "Tuma kwa",
+        payName: "Jina",
+        copyNumber: "Nakili",
+        copied: "Imenakiliwa",
+        payNote: "Hifadhi SMS ya uthibitisho. Utahitaji namba ya muamala hapa chini.",
+        step3: "Tuma oda yako",
+        phoneLabel: "Namba ya Halotel ya kupokea kifurushi",
         phoneHint: "Inaanza na 061 au 062",
-        paymentRefLabel: "Namba ya Muamala (Transaction ID)",
-        paymentRefHint: "Nakili kutoka kwenye SMS ya uthibitisho uliyopokea baada ya kulipa.",
-        submitOrderBtn: "Tuma Oda ya Kifurushi",
-        processingOrder: "Inashughulikia oda... Tafadhali subiri ⏳",
-        orderPlaced: "Oda {id} imepokelewa ✅ Tutawasha kifurushi chako baada ya kuthibitisha malipo yako.",
-        copyNumber: "📋 Nakili namba",
-        copied: "✅ Imenakiliwa!",
-        menuTitle: "MENU",
-        newOrder: "Oda Mpya",
-        myOrders: "Oda Zangu",
-        adminMenu: "Paneli ya Msimamizi",
-        language: "Lugha",
+        paymentRefLabel: "Namba ya muamala",
+        paymentRefHint: "Kutoka kwenye SMS ya uthibitisho ya Mix by Yas.",
+        submitOrderBtn: "Tuma oda",
+        submitOrderBtnAmount: "Tuma oda · {amount}",
+        processingOrder: "Inatuma oda yako…",
+        chooseBundleFirst: "Chagua kifurushi kwenye hatua ya 1.",
+        doneTitle: "Oda imepokelewa",
+        doneHeroSub: "Hifadhi namba ya oda endapo utahitaji kuwasiliana nasi.",
+        doneText: "Tutaweka kifurushi kwenye {phone} mara tu tutakapothibitisha malipo yako.",
+        doneOrderId: "Namba ya oda",
+        doneBundle: "Kifurushi",
+        doneAmount: "Kiasi",
+        donePhone: "Namba ya Halotel",
+        doneRef: "Namba ya muamala",
+        doneStatus: "Hali",
+        viewOrdersBtn: "Angalia oda zangu",
+        buyAnotherBtn: "Nunua kifurushi kingine",
+        tabBuy: "Nunua",
+        tabOrders: "Oda",
+        tabAdmin: "Dawati",
+        tabAccount: "Akaunti",
+        myOrders: "Oda zangu",
+        ordersSub: "Oda zako 30 za karibuni.",
+        noOrders: "Bado huna oda.",
+        noOrdersCta: "Nunua kifurushi chako cha kwanza",
+        loading: "Inapakia…",
+        account: "Akaunti",
+        accountSub: "Taarifa zako na mipangilio ya programu.",
         theme: "Mwonekano",
-        logout: "Toka Nje",
-        backBtn: "← Rudi kwenye Oda",
-        noOrders: "Hakuna oda zilizowekwa bado.",
-        loading: "Inapakia...",
-        phoneShort: "Simu",
+        themeSystem: "Otomatiki",
+        themeLight: "Mwanga",
+        themeDark: "Giza",
+        logout: "Toka",
+        logoutHint: "Inakutoa kwenye vifaa vyako vyote.",
+        phoneShort: "Namba",
         paymentRefShort: "Muamala",
         status_pending: "Inasubiri",
         status_completed: "Imekamilika",
         status_rejected: "Imekataliwa",
-        statusSaved: "Hali imehifadhiwa.",
-        adminTitle: "🛡️ Paneli ya Msimamizi",
-        statUsers: "Watumiaji",
-        statOrders: "Oda",
-        usersHeading: "👥 Watumiaji Waliojisajili",
-        ordersHeading: "📦 Oda Zote",
-        colName: "Jina",
-        colEmail: "Email",
-        colCustomer: "Mteja",
-        colOrder: "Oda / Namba",
-        colDate: "Tarehe",
-        colStatus: "Hali",
-        noUsers: "Hakuna watumiaji bado.",
-        refreshBtn: "🔄 Onyesha upya",
+        statusSaved: "Oda imesasishwa.",
+        adminTitle: "Dawati la oda",
+        adminSub: "Hakiki kila malipo, kisha kamilisha au kataa oda.",
+        statPending: "Zinasubiri",
+        statOrders: "Oda zote",
+        statUsers: "Wateja",
+        deskOrders: "Oda",
+        deskUsers: "Wateja",
         filterAll: "Zote",
-        searchBtn: "Tafuta",
-        searchOrders: "Jina, simu, oda au namba ya muamala",
-        searchUsers: "Jina au email",
-        pageInfo: "Ukurasa {p} kati ya {n} ({count})",
-        installTitle: "📱 Weka kwenye iPhone",
-        installSteps: "Bonyeza kitufe cha Share ⬆️, kisha chagua “Add to Home Screen”. (Kama huioni, fungua ukurasa huu kwenye Safari kwanza.)",
-        installStepsInApp: "Fungua ukurasa huu kwenye Safari kwanza (menyu ••• → Open in Safari). Kisha bonyeza Share ⬆️ → “Add to Home Screen”.",
-        paymentNoticeTitle: "⚠️ MALIPO & MAELEKEZO:",
-        paymentNoticeText: "Tafadhali tuma pesa kwanza. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>). Kisha weka namba ya muamala (transaction ID) kutoka kwenye SMS ya malipo hapa chini.<br><br>🚨 <strong>Kumbuka:</strong> Vifurushi hivi ni vya <strong>Halotel pekee</strong>. Hakikisha namba ya simu unayoweka hapa chini ni ya Halotel.",
+        searchOrders: "Tafuta jina, simu, oda au namba ya muamala",
+        searchUsers: "Tafuta jina au barua pepe",
+        completeBtn: "Kamilisha",
+        rejectBtn: "Kataa",
+        reopenBtn: "Rudisha kusubiri",
+        joined: "Alijiunga {date}",
+        noUsers: "Hakuna wateja.",
+        noMatches: "Hakuna oda zinazolingana.",
+        prevPage: "Iliyopita",
+        nextPage: "Inayofuata",
+        pageInfoOrders: "Ukurasa {p} kati ya {n} · oda {count}",
+        pageInfoUsers: "Ukurasa {p} kati ya {n} · wateja {count}",
+        refreshBtn: "Onyesha upya",
+        installTitle: "Weka MJ Internet kwenye iPhone yako",
+        installSteps: "Bonyeza Share, kisha “Add to Home Screen”. Kama huioni, fungua ukurasa huu kwenye Safari kwanza.",
+        installStepsInApp: "Fungua ukurasa huu kwenye Safari kwanza (menyu ••• kisha Open in Safari). Kisha bonyeza Share na “Add to Home Screen”.",
         err_not_configured: "Programu bado haijaunganishwa na seva. Tafadhali wasiliana na MJ Internet.",
         err_server_not_configured: "Programu bado haijaunganishwa na seva. Tafadhali wasiliana na MJ Internet.",
         err_network: "Imeshindwa kufikia seva. Angalia mtandao wako kisha ujaribu tena.",
         err_server_error: "Kuna hitilafu kwenye seva. Tafadhali jaribu tena.",
         err_bad_request: "Ombi si sahihi. Tafadhali pakia upya ukurasa.",
         err_invalid_email: "Weka barua pepe sahihi.",
-        err_invalid_name: "Weka jina lako kamili (herufi 2-60).",
+        err_invalid_name: "Weka jina lako kamili (herufi 2–60).",
         err_weak_password: "Nenosiri liwe na angalau herufi 8.",
         err_already_registered: "Barua pepe hii tayari imesajiliwa. Tafadhali ingia.",
-        err_invalid_credentials: "Barua pepe au nenosiri sio sahihi!",
+        err_invalid_credentials: "Barua pepe au nenosiri si sahihi.",
         err_locked: "Majaribio mengi yameshindwa. Subiri dakika 15 kisha ujaribu tena.",
-        err_otp_invalid: "Kodi ya OTP sio sahihi!",
-        err_otp_expired: "Kodi imeisha muda. Omba kodi mpya.",
+        err_otp_invalid: "Kodi si sahihi. Angalia barua pepe kisha ujaribu tena.",
+        err_otp_expired: "Kodi imeisha muda. Bonyeza Tuma kodi tena.",
         err_otp_too_many: "Umekosea kodi mara nyingi. Rudi nyuma uanze upya.",
         err_resend_wait: "Subiri dakika moja kabla ya kuomba kodi nyingine.",
         err_email_failed: "Imeshindwa kutuma barua pepe. Jaribu tena baadaye.",
-        err_not_logged_in: "Muda wako wa kuingia umeisha. Tafadhali ingia tena.",
+        err_not_logged_in: "Umetolewa kwenye akaunti. Tafadhali ingia tena.",
         err_reset_expired: "Muda wa kubadili nenosiri umeisha. Tafadhali anza upya.",
         err_forbidden: "Huna ruhusa ya kufanya hivyo.",
-        err_invalid_package: "Tafadhali chagua kifurushi.",
-        err_invalid_phone: "Weka namba sahihi ya Halotel (inaanza na 061 au 062).",
+        err_invalid_package: "Chagua kifurushi kwenye hatua ya 1.",
+        err_invalid_phone: "Weka namba ya Halotel inayoanza na 061 au 062.",
         err_invalid_payment_ref: "Weka namba ya muamala kutoka kwenye SMS ya malipo (herufi na namba).",
         err_duplicate_payment_ref: "Namba hii ya muamala imeshatumika kwenye oda nyingine.",
         err_not_found: "Oda haijapatikana.",
         err_invalid_status: "Hali si sahihi."
       }
+    };
+
+    // Title and subtitle shown in the gradient band for each screen.
+    var HERO = {
+      viewAuth: ["heroAuthTitle", "heroAuthSub"],
+      viewForgot: ["resetTitle", "resetSub"],
+      viewOTP: ["otpTitle", "otpHeroSub"],
+      viewNewPass: ["newPassTitle", "passHint"],
+      viewBuy: ["heroBuyTitle", "heroBuySub"],
+      viewDone: ["doneTitle", "doneHeroSub"],
+      viewOrders: ["myOrders", "ordersSub"],
+      viewAccount: ["account", "accountSub"],
+      viewAdmin: ["adminTitle", "adminSub"]
     };
 
     // ---------- Small helpers ----------
@@ -803,24 +959,33 @@
       return node;
     }
 
-    function setNotice(elementId, text, kind) {
-      var box = document.getElementById(elementId);
-      box.textContent = text || "";
-      if (kind === "error") box.style.color = "var(--error)";
-      else if (kind === "warning") box.style.color = "var(--accent)";
-      else box.style.color = "var(--success)";
+    function icon(name) {
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "i");
+      var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+      use.setAttribute("href", "#i-" + name);
+      svg.appendChild(use);
+      return svg;
     }
 
-    function displayMessage(text, kind) {
-      setNotice("statusMessage", text, kind);
+    /** Shows a short message above the tab bar. Errors stay until the next message; others fade. */
+    function notify(text, kind) {
+      var toast = document.getElementById("toast");
+      clearTimeout(toastTimer);
+      toast.textContent = text || "";
+      toast.className = "toast" + (kind === "error" ? " is-error" : kind === "success" ? " is-success" : "");
+      toast.hidden = !text;
+      if (text && kind !== "error") {
+        toastTimer = setTimeout(function () { toast.hidden = true; }, 4000);
+      }
     }
 
     function clearMessage() {
-      setNotice("statusMessage", "");
+      notify("");
     }
 
     function showRequestError(err) {
-      displayMessage(errorText(errorCode(err)), "error");
+      notify(errorText(errorCode(err)), "error");
     }
 
     function submitButton(event) {
@@ -836,20 +1001,29 @@
       );
     }
 
+    function groupDigits(n) {
+      return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     function formatTzs(amount) {
-      return "TZS " + String(amount).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return "TZS " + groupDigits(amount);
     }
 
     function formatDate(isoText) {
       var date = new Date(isoText);
       if (isNaN(date.getTime())) return String(isoText);
-      return date.toLocaleString(currentLang === "sw" ? "sw-TZ" : "en-GB");
+      return date.toLocaleString(currentLang === "sw" ? "sw-TZ" : "en-GB",
+        { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     }
 
     /** Same rule as the server: 061/062 numbers, written as 06..., 2556... or +2556... */
     function isHalotelNumber(value) {
       var phone = String(value).replace(/[\s-]/g, "").replace(/^\+?255/, "0");
       return /^06[12]\d{7}$/.test(phone);
+    }
+
+    function findPackage(id) {
+      return PACKAGES.filter(function (p) { return p.id === id; })[0] || null;
     }
 
     // ---------- Talking to the server ----------
@@ -876,36 +1050,57 @@
         });
     }
 
-    // ---------- Language, theme, drawer ----------
+    // ---------- Screens, language, theme ----------
+
+    function switchView(viewId) {
+      var views = document.querySelectorAll(".sheet > .view");
+      for (var i = 0; i < views.length; i++) views[i].hidden = views[i].id !== viewId;
+      currentView = viewId;
+      document.getElementById("app").classList.toggle("is-wide", viewId === "viewAdmin");
+      updateHero();
+      window.scrollTo(0, 0);
+    }
+
+    function updateHero() {
+      var keys = HERO[currentView];
+      var firstName = currentUser ? String(currentUser.name || currentUser.email).split(" ")[0] : "";
+      document.getElementById("heroTitle").textContent = t(keys[0]).replace("{name}", firstName);
+      document.getElementById("heroSub").textContent = keys[1] ? t(keys[1]) : "";
+    }
 
     function changeLanguage(lang) {
       currentLang = translations[lang] ? lang : "en";
       writeStore("localStorage", "mj_lang", currentLang);
       document.documentElement.lang = currentLang;
-      document.getElementById("drawerLangSelect").value = currentLang;
+      document.getElementById("langEn").setAttribute("aria-pressed", String(currentLang === "en"));
+      document.getElementById("langSw").setAttribute("aria-pressed", String(currentLang === "sw"));
 
-      var elements = document.querySelectorAll("[data-key]");
-      elements.forEach(function(node) {
+      document.querySelectorAll("[data-key]").forEach(function (node) {
         var key = node.getAttribute("data-key");
-        if (translations[currentLang][key]) {
-          node.innerHTML = translations[currentLang][key];
-        }
+        if (translations[currentLang][key]) node.innerHTML = translations[currentLang][key];
       });
-
       document.querySelectorAll("[data-placeholder-key]").forEach(function (node) {
         node.setAttribute("placeholder", t(node.getAttribute("data-placeholder-key")));
       });
 
       var resendButton = document.getElementById("btnResendOtp");
       if (!resendButton.disabled) resendButton.textContent = t("resendBtn");
+      updateHero();
+      renderPackages();
+      if (lastPlacedOrder) renderReceipt();
       if (lastOrders) renderUserOrders();
       if (lastAdminData) renderAdminOrders();
       if (lastAdminUsers) renderAdminUsers();
     }
 
+    /** theme is "system", "light" or "dark". "system" follows the phone's own setting. */
     function applyTheme(theme) {
-      document.body.classList.toggle("dark-theme", theme === "dark");
-      document.getElementById("drawerThemeSelect").value = theme;
+      if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
+      else document.documentElement.removeAttribute("data-theme");
+      ["system", "light", "dark"].forEach(function (name) {
+        var button = document.getElementById("theme" + name.charAt(0).toUpperCase() + name.slice(1));
+        button.setAttribute("aria-pressed", String(name === (theme || "system")));
+      });
     }
 
     function changeTheme(theme) {
@@ -913,50 +1108,33 @@
       writeStore("localStorage", "mj_theme", theme);
     }
 
-    function openDrawer() {
-      document.getElementById("sidebarDrawer").classList.add("open");
-      document.getElementById("drawerOverlay").classList.add("active");
-    }
-
-    function closeDrawer() {
-      document.getElementById("sidebarDrawer").classList.remove("open");
-      document.getElementById("drawerOverlay").classList.remove("active");
-    }
-
-    function navigateFromDrawer(page) {
-      closeDrawer();
+    function navigate(page) {
       clearMessage();
-      document.getElementById("menuItemNewOrder").classList.toggle("active", page === "new-order");
-      document.getElementById("menuItemMyOrders").classList.toggle("active", page === "my-orders");
-      document.getElementById("menuItemAdmin").classList.toggle("active", page === "admin");
-      if (page === 'new-order') {
-        switchView("viewDashboard");
-      } else if (page === 'my-orders') {
-        switchView("viewMyOrders");
-        loadUserOrderHistory();
-      } else if (page === 'admin') {
-        switchView("viewAdmin");
-        loadAdminDashboardData();
-      }
+      var views = { buy: "viewBuy", orders: "viewOrders", admin: "viewAdmin", account: "viewAccount" };
+      var tabs = { buy: "tabBuy", orders: "tabOrders", admin: "tabAdmin", account: "tabAccount" };
+      Object.keys(tabs).forEach(function (name) {
+        var tab = document.getElementById(tabs[name]);
+        if (name === page) tab.setAttribute("aria-current", "page");
+        else tab.removeAttribute("aria-current");
+      });
+      switchView(views[page]);
+      if (page === "orders") loadUserOrderHistory();
+      if (page === "admin") loadAdminDashboardData();
     }
 
     function switchAuthTab(type) {
       clearMessage();
-      document.getElementById("tabBtnLogin").classList.toggle("active", type === 'login');
-      document.getElementById("tabBtnReg").classList.toggle("active", type === 'register');
-      document.getElementById("formLogin").style.display = type === 'login' ? 'block' : 'none';
-      document.getElementById("formRegister").style.display = type === 'register' ? 'block' : 'none';
+      document.getElementById("tabBtnLogin").setAttribute("aria-pressed", String(type === "login"));
+      document.getElementById("tabBtnReg").setAttribute("aria-pressed", String(type === "register"));
+      document.getElementById("formLogin").hidden = type !== "login";
+      document.getElementById("formRegister").hidden = type !== "register";
     }
 
     function togglePasswordVisibility(fieldId, btn) {
       var field = document.getElementById(fieldId);
-      if (field.type === "password") {
-        field.type = "text";
-        btn.innerText = t("hide");
-      } else {
-        field.type = "password";
-        btn.innerText = t("show");
-      }
+      var showing = field.type === "password";
+      field.type = showing ? "text" : "password";
+      btn.textContent = t(showing ? "hide" : "show");
     }
 
     function openForgotView() {
@@ -969,12 +1147,25 @@
       clearMessage();
     }
 
-    function switchView(viewId) {
-      var panels = document.querySelectorAll(".view-panel");
-      for (var i = 0; i < panels.length; i++) {
-        panels[i].classList.remove("active");
+    /** Copies the payment number; if the browser refuses, selects it so the user can copy by hand. */
+    function copyPaymentNumber(button) {
+      var label = button.querySelector("span");
+      var done = function () {
+        label.textContent = t("copied");
+        setTimeout(function () { label.textContent = t("copyNumber"); }, 2000);
+      };
+      var selectNumber = function () {
+        var range = document.createRange();
+        range.selectNodeContents(document.getElementById("payNumberText"));
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(PAYMENT_NUMBER).then(done, selectNumber);
+      } else {
+        selectNumber();
       }
-      document.getElementById(viewId).classList.add("active");
     }
 
     // ---------- iPhone "Add to Home Screen" tip ----------
@@ -998,25 +1189,12 @@
     function setupInstallTip() {
       if (!isIos() || isStandalone() || readStore("localStorage", "mj_install_tip_hidden") === "1") return;
       document.getElementById("iosInstallSteps").setAttribute("data-key", isInAppBrowser() ? "installStepsInApp" : "installSteps");
-      document.getElementById("iosInstallTip").style.display = "flex";
+      document.getElementById("iosInstallTip").hidden = false;
     }
 
     function dismissInstallTip() {
-      document.getElementById("iosInstallTip").style.display = "none";
+      document.getElementById("iosInstallTip").hidden = true;
       writeStore("localStorage", "mj_install_tip_hidden", "1");
-    }
-
-    function copyPaymentNumber(button) {
-      var done = function () {
-        button.textContent = t("copied");
-        setTimeout(function () { button.textContent = t("copyNumber"); }, 2000);
-      };
-      var fallback = function () { window.prompt(t("copyNumber"), PAYMENT_NUMBER); };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(PAYMENT_NUMBER).then(done, fallback);
-      } else {
-        fallback();
-      }
     }
 
     // ---------- Sign up, login, OTP, password reset ----------
@@ -1068,7 +1246,7 @@
       document.getElementById("otpCodeInput").value = "";
       document.getElementById("otpEmailText").textContent = email;
       switchView("viewOTP");
-      displayMessage(message, "success");
+      notify(message, "success");
       startResendCountdown();
       document.getElementById("otpCodeInput").focus();
     }
@@ -1097,7 +1275,7 @@
       button.disabled = true;
       api("resendOtp", { email: otpEmail, purpose: otpPurpose })
         .then(function () {
-          displayMessage(t("otpResent"), "success");
+          notify(t("otpResent"), "success");
           startResendCountdown();
         })
         .catch(function (err) {
@@ -1110,7 +1288,7 @@
       e.preventDefault();
       var code = document.getElementById("otpCodeInput").value.trim();
       if (!/^\d{6}$/.test(code)) {
-        displayMessage(errorText("otp_invalid"), "error");
+        notify(errorText("otp_invalid"), "error");
         return;
       }
 
@@ -1164,28 +1342,27 @@
       lastOrders = null;
       lastAdminData = null;
       lastAdminUsers = null;
+      lastPlacedOrder = null;
       adminOrderQuery = { page: 0, status: "all", search: "" };
       adminUserQuery = { page: 0, search: "" };
       writeStore("localStorage", "mj_token", null);
-      closeDrawer();
-      document.getElementById("menuToggleBtn").classList.remove("active");
-      document.getElementById("menuItemAdmin").style.display = "none";
+      document.getElementById("tabbar").hidden = true;
+      document.getElementById("tabAdmin").hidden = true;
       switchView("viewAuth");
-      if (messageKey) displayMessage(t(messageKey), "warning");
+      if (messageKey) notify(t(messageKey), "error");
     }
 
     function launchDashboard(user) {
       currentUser = user;
-      document.getElementById("menuToggleBtn").classList.add("active");
-
       var displayName = user.name || user.email;
       document.getElementById("drawerUserName").textContent = displayName;
       document.getElementById("drawerUserEmail").textContent = user.email || "";
       document.getElementById("userAvatarIcon").textContent = displayName.charAt(0).toUpperCase();
 
-      // Showing the menu item is only cosmetic: the server checks admin rights on every admin request.
-      document.getElementById("menuItemAdmin").style.display = user.isAdmin ? "flex" : "none";
-      navigateFromDrawer(user.isAdmin ? "admin" : "new-order");
+      // Showing the Desk tab is only cosmetic: the server checks admin rights on every admin request.
+      document.getElementById("tabAdmin").hidden = !user.isAdmin;
+      document.getElementById("tabbar").hidden = false;
+      navigate(user.isAdmin ? "admin" : "buy");
     }
 
     function performLogout() {
@@ -1194,78 +1371,161 @@
       if (token) api("logout", { token: token }).catch(function () {});
     }
 
-    // ---------- Orders ----------
+    // ---------- Buying ----------
+
+    function renderPackages() {
+      var list = document.getElementById("packageList");
+      var best = PACKAGES.reduce(function (a, b) { return b.priceTzs / b.gb < a.priceTzs / a.gb ? b : a; });
+      list.textContent = "";
+      PACKAGES.forEach(function (pkg) {
+        var row = el("label", "pkg" + (pkg.id === selectedPackageId ? " is-selected" : ""));
+        var input = el("input");
+        input.type = "radio";
+        input.name = "package";
+        input.value = pkg.id;
+        input.checked = pkg.id === selectedPackageId;
+        input.onchange = function () { selectPackage(pkg.id); };
+        row.appendChild(input);
+        row.appendChild(el("span", "pkg-radio"));
+        var left = el("span", "pkg-left");
+        left.appendChild(el("span", "pkg-size", pkg.gb + " GB"));
+        left.appendChild(el("span", "pkg-meta", t("perGb").replace("{p}", groupDigits(Math.round(pkg.priceTzs / pkg.gb)))));
+        if (pkg === best) left.appendChild(el("span", "pkg-tag", t("bestValue")));
+        row.appendChild(left);
+        row.appendChild(el("span", "pkg-price", formatTzs(pkg.priceTzs)));
+        list.appendChild(row);
+      });
+      updatePaySummary();
+    }
+
+    function selectPackage(id) {
+      selectedPackageId = id;
+      var rows = document.querySelectorAll("#packageList .pkg");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].classList.toggle("is-selected", rows[i].querySelector("input").value === id);
+      }
+      updatePaySummary();
+    }
+
+    function updatePaySummary() {
+      var pkg = findPackage(selectedPackageId);
+      var amount = document.getElementById("payAmount");
+      amount.textContent = pkg ? formatTzs(pkg.priceTzs) : t("payChooseFirst");
+      amount.classList.toggle("is-empty", !pkg);
+      document.getElementById("btnSubmitOrder").textContent =
+        pkg ? t("submitOrderBtnAmount").replace("{amount}", formatTzs(pkg.priceTzs)) : t("submitOrderBtn");
+    }
 
     function handlePlaceOrder(e) {
       e.preventDefault();
       var form = e.target;
-      var packageId = document.getElementById("selectPackage").value;
       var phone = document.getElementById("orderPhone").value;
       var paymentRef = document.getElementById("orderPaymentRef").value.trim();
 
-      if (!isHalotelNumber(phone)) {
-        setNotice("orderStatusNotice", errorText("invalid_phone"), "error");
+      if (!selectedPackageId) {
+        notify(t("chooseBundleFirst"), "error");
         return;
       }
-      setNotice("orderStatusNotice", t("processingOrder"), "warning");
+      if (!isHalotelNumber(phone)) {
+        notify(errorText("invalid_phone"), "error");
+        return;
+      }
+      notify(t("processingOrder"));
 
       withBusy(submitButton(e), function () {
-        return api("placeOrder", { token: sessionToken, packageId: packageId, phone: phone, paymentRef: paymentRef })
+        return api("placeOrder", { token: sessionToken, packageId: selectedPackageId, phone: phone, paymentRef: paymentRef })
           .then(function (result) {
             form.reset();
-            setNotice("orderStatusNotice", t("orderPlaced").replace("{id}", result.order.orderId), "success");
+            selectedPackageId = null;
+            renderPackages();
+            lastPlacedOrder = result.order;
+            renderReceipt();
+            clearMessage();
+            switchView("viewDone");
           });
-      }).catch(function (err) {
-        setNotice("orderStatusNotice", errorText(errorCode(err)), "error");
-      });
+      }).catch(showRequestError);
     }
 
-    function statusBadge(status) {
+    function statusPill(status) {
       var known = ORDER_STATUSES.indexOf(status) !== -1;
-      return el("span", "status-badge" + (known ? " status-" + status : ""), known ? t("status_" + status) : status);
+      return el("span", "pill" + (known ? " pill-" + status : ""), known ? t("status_" + status) : status);
     }
 
-    function showPlaceholder(container, text) {
+    function detailRow(label, value) {
+      var row = el("div");
+      row.appendChild(el("dt", null, label));
+      var dd = el("dd");
+      if (value instanceof Node) dd.appendChild(value);
+      else dd.textContent = String(value);
+      row.appendChild(dd);
+      return row;
+    }
+
+    function renderReceipt() {
+      var o = lastPlacedOrder;
+      document.getElementById("doneText").textContent = t("doneText").replace("{phone}", o.phone);
+      var details = document.getElementById("doneDetails");
+      details.textContent = "";
+      details.appendChild(detailRow(t("doneOrderId"), o.orderId));
+      details.appendChild(detailRow(t("doneBundle"), o.package));
+      details.appendChild(detailRow(t("doneAmount"), formatTzs(o.priceTzs)));
+      details.appendChild(detailRow(t("donePhone"), o.phone));
+      details.appendChild(detailRow(t("doneRef"), o.paymentRef));
+      details.appendChild(detailRow(t("doneStatus"), statusPill(o.status)));
+    }
+
+    // ---------- My orders ----------
+
+    function showEmpty(container, text, withCta) {
       container.textContent = "";
-      container.appendChild(el("div", "placeholder", text));
+      var box = el("div", "empty");
+      box.appendChild(el("p", null, text));
+      if (withCta) {
+        var cta = el("button", "btn btn-sm", t("noOrdersCta"));
+        cta.type = "button";
+        cta.onclick = function () { navigate("buy"); };
+        box.appendChild(cta);
+      }
+      container.appendChild(box);
     }
 
     function loadUserOrderHistory() {
       var container = document.getElementById("historyOrdersList");
-      showPlaceholder(container, t("loading"));
+      showEmpty(container, t("loading"));
       api("myOrders", { token: sessionToken })
         .then(function (result) {
           lastOrders = result.orders;
           renderUserOrders();
         })
         .catch(function (err) {
-          showPlaceholder(container, errorText(errorCode(err)));
+          showEmpty(container, errorText(errorCode(err)));
         });
     }
 
     function renderUserOrders() {
       var container = document.getElementById("historyOrdersList");
       if (!lastOrders || lastOrders.length === 0) {
-        showPlaceholder(container, t("noOrders"));
+        showEmpty(container, t("noOrders"), true);
         return;
       }
       container.textContent = "";
       lastOrders.forEach(function (order) {
-        var card = el("div", "order-card");
+        var card = el("article", "order");
         var top = el("div", "order-top");
-        top.appendChild(el("span", "order-id", order.orderId));
-        top.appendChild(statusBadge(order.status));
+        var title = el("div", "order-title", order.package);
+        title.appendChild(el("span", null, formatTzs(order.priceTzs)));
+        top.appendChild(title);
+        top.appendChild(statusPill(order.status));
         card.appendChild(top);
-        card.appendChild(el("div", "order-desc", order.package + " (Halotel) · " + formatTzs(order.priceTzs)));
-        card.appendChild(el("div", "order-meta", t("phoneShort") + ": " + order.phone + " · " + t("paymentRefShort") + ": " + order.paymentRef));
-        card.appendChild(el("div", "order-meta", formatDate(order.createdAt)));
+        card.appendChild(el("div", "order-meta mono", order.orderId + " · " + t("phoneShort") + " " + order.phone));
+        card.appendChild(el("div", "order-meta", t("paymentRefShort") + " " + order.paymentRef + " · " + formatDate(order.createdAt)));
         container.appendChild(card);
       });
     }
 
-    // ---------- Admin panel (data comes from the server only for admin accounts) ----------
+    // ---------- Admin desk ----------
 
-    // The server sends one page at a time, so the panel stays fast with thousands of users and orders.
+    // The server sends one page at a time, so the desk stays fast with thousands of users and orders.
     var adminOrderQuery = { page: 0, status: "all", search: "" };
     var adminUserQuery = { page: 0, search: "" };
 
@@ -1293,13 +1553,26 @@
         });
     }
 
+    function showDeskTab(tab) {
+      document.getElementById("deskTabOrders").setAttribute("aria-pressed", String(tab === "orders"));
+      document.getElementById("deskTabUsers").setAttribute("aria-pressed", String(tab === "users"));
+      document.getElementById("deskOrders").hidden = tab !== "orders";
+      document.getElementById("deskUsers").hidden = tab !== "users";
+    }
+
+    function setStatusFilter(status) {
+      adminOrderQuery.status = status;
+      adminOrderQuery.page = 0;
+      document.querySelectorAll("#statusFilter button").forEach(function (button) {
+        button.setAttribute("aria-pressed", String(button.getAttribute("data-status") === status));
+      });
+      loadAdminOrders().catch(showRequestError);
+    }
+
     function handleAdminOrderSearch(e) {
       e.preventDefault();
-      adminOrderQuery = {
-        page: 0,
-        status: document.getElementById("adminStatusFilter").value,
-        search: document.getElementById("adminOrderSearch").value.trim()
-      };
+      adminOrderQuery.search = document.getElementById("adminOrderSearch").value.trim();
+      adminOrderQuery.page = 0;
       loadAdminOrders().catch(showRequestError);
     }
 
@@ -1315,106 +1588,79 @@
       (list === "orders" ? loadAdminOrders() : loadAdminUsers()).catch(showRequestError);
     }
 
-    function updatePager(prefix, page, pageSize, count) {
+    function updatePager(prefix, page, pageSize, count, infoKey) {
       var pages = Math.max(1, Math.ceil(count / pageSize));
       document.getElementById(prefix + "PageInfo").textContent =
-        t("pageInfo").replace("{p}", page + 1).replace("{n}", pages).replace("{count}", count);
+        t(infoKey).replace("{p}", page + 1).replace("{n}", pages).replace("{count}", groupDigits(count));
       document.getElementById(prefix + "Prev").disabled = page <= 0;
       document.getElementById(prefix + "Next").disabled = page + 1 >= pages;
     }
 
-    /** Builds a table row; each cell is text or an element. */
-    function tableRow(cells) {
-      var tr = el("tr");
-      cells.forEach(function (cell) {
-        var td = el("td");
-        if (cell instanceof Node) td.appendChild(cell);
-        else td.textContent = String(cell);
-        tr.appendChild(td);
-      });
-      return tr;
+    function setOrderStatus(order, status, button) {
+      withBusy(button, function () {
+        return api("adminSetStatus", { token: sessionToken, orderId: order.orderId, status: status }).then(function () {
+          notify(t("statusSaved"), "success");
+          return loadAdminOrders();  // refreshes the waiting count and the filtered list
+        });
+      }).catch(showRequestError);
     }
 
-    function emptyRow(columns, text) {
-      var tr = el("tr");
-      var td = el("td", null, text);
-      td.colSpan = columns;
-      td.style.textAlign = "center";
-      tr.appendChild(td);
-      return tr;
-    }
-
-    /** A cell with a bold first line and small grey lines under it. */
-    function stackedCell(lines) {
-      var box = el("div");
-      lines.forEach(function (line, i) {
-        box.appendChild(el("div", i === 0 ? "cell-main" : "cell-sub", line));
-      });
-      return box;
-    }
-
-    function statusSelect(order) {
-      var select = el("select", "status-select");
-      select.setAttribute("aria-label", t("colStatus") + " " + order.orderId);
-      ORDER_STATUSES.forEach(function (status) {
-        var option = el("option", null, t("status_" + status));
-        option.value = status;
-        option.selected = status === order.status;
-        select.appendChild(option);
-      });
-      select.onchange = function () {
-        var previous = order.status;
-        var chosen = select.value;
-        select.disabled = true;
-        api("adminSetStatus", { token: sessionToken, orderId: order.orderId, status: chosen })
-          .then(function () {
-            displayMessage(t("statusSaved"), "success");
-            return loadAdminOrders();  // refreshes the pending count and the filtered list
-          })
-          .catch(function (err) {
-            select.value = previous;
-            select.disabled = false;
-            showRequestError(err);
-          });
-      };
-      return select;
+    function actionButton(text, className, order, status) {
+      var button = el("button", className, text);
+      button.type = "button";
+      button.onclick = function () { setOrderStatus(order, status, button); };
+      return button;
     }
 
     function renderAdminOrders() {
       var data = lastAdminData;
-      var orders = data.orders;
-      document.getElementById("adminTotalUsers").textContent = data.totalUsers;
-      document.getElementById("adminTotalOrders").textContent = data.totalOrders;
-      document.getElementById("adminPendingOrders").textContent = data.pendingOrders;
+      document.getElementById("adminPendingOrders").textContent = groupDigits(data.pendingOrders);
+      document.getElementById("adminTotalOrders").textContent = groupDigits(data.totalOrders);
+      document.getElementById("adminTotalUsers").textContent = groupDigits(data.totalUsers);
 
-      var ordersTbody = document.getElementById("adminOrdersTableBody");
-      ordersTbody.textContent = "";
-      if (orders.length === 0) {
-        ordersTbody.appendChild(emptyRow(5, t("noOrders")));
-      }
-      orders.forEach(function (o, idx) {
-        ordersTbody.appendChild(tableRow([
-          data.matchingOrders - data.page * data.pageSize - idx,
-          stackedCell([o.name, o.email]),
-          stackedCell([o.package + " · " + formatTzs(o.priceTzs), t("phoneShort") + ": " + o.phone, t("paymentRefShort") + ": " + o.paymentRef, o.orderId]),
-          formatDate(o.createdAt),
-          statusSelect(o)
-        ]));
+      var list = document.getElementById("adminOrdersList");
+      list.textContent = "";
+      if (data.orders.length === 0) showEmpty(list, t("noMatches"));
+      data.orders.forEach(function (o) {
+        var row = el("article", "desk-row");
+        var main = el("div", "desk-main");
+        var title = el("div", "desk-title");
+        title.appendChild(el("strong", null, o.package + " · " + formatTzs(o.priceTzs)));
+        title.appendChild(statusPill(o.status));
+        main.appendChild(title);
+        main.appendChild(el("div", "desk-meta", o.name + " · " + o.email));
+        main.appendChild(el("div", "desk-meta mono", t("phoneShort") + " " + o.phone + " · " + t("paymentRefShort") + " " + o.paymentRef));
+        main.appendChild(el("div", "desk-meta muted", o.orderId + " · " + formatDate(o.createdAt)));
+        row.appendChild(main);
+
+        var actions = el("div", "desk-actions");
+        if (o.status === "pending") {
+          actions.appendChild(actionButton(t("completeBtn"), "btn btn-sm", o, "completed"));
+          actions.appendChild(actionButton(t("rejectBtn"), "btn btn-ghost btn-sm", o, "rejected"));
+        } else {
+          actions.appendChild(actionButton(t("reopenBtn"), "btn btn-ghost btn-sm", o, "pending"));
+        }
+        row.appendChild(actions);
+        list.appendChild(row);
       });
-      updatePager("orders", data.page, data.pageSize, data.matchingOrders);
+      updatePager("orders", data.page, data.pageSize, data.matchingOrders, "pageInfoOrders");
     }
 
     function renderAdminUsers() {
       var data = lastAdminUsers;
-      var usersTbody = document.getElementById("adminUsersTableBody");
-      usersTbody.textContent = "";
-      if (data.users.length === 0) {
-        usersTbody.appendChild(emptyRow(3, t("noUsers")));
-      }
-      data.users.forEach(function (u, idx) {
-        usersTbody.appendChild(tableRow([data.page * data.pageSize + idx + 1, stackedCell([u.name || "N/A"]), u.email]));
+      var list = document.getElementById("adminUsersList");
+      list.textContent = "";
+      if (data.users.length === 0) showEmpty(list, t("noUsers"));
+      data.users.forEach(function (u) {
+        var row = el("div", "user-row");
+        var who = el("div", "desk-main");
+        who.appendChild(el("strong", null, u.name || "N/A"));
+        who.appendChild(el("span", "desk-meta", u.email));
+        row.appendChild(who);
+        row.appendChild(el("span", "desk-meta muted", t("joined").replace("{date}", formatDate(u.createdAt).split(",")[0])));
+        list.appendChild(row);
       });
-      updatePager("users", data.page, data.pageSize, data.matchingUsers);
+      updatePager("users", data.page, data.pageSize, data.matchingUsers, "pageInfoUsers");
     }
 
     // ---------- Start ----------
@@ -1425,15 +1671,19 @@
       writeStore("localStorage", "mj_orders", null);
       writeStore("sessionStorage", "mj_active_user", null);
 
-      var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      applyTheme(readStore("localStorage", "mj_theme") || (prefersDark ? "dark" : "light"));
+      document.querySelectorAll("#statusFilter button").forEach(function (button) {
+        button.onclick = function () { setStatusFilter(button.getAttribute("data-status")); };
+      });
+
+      applyTheme(readStore("localStorage", "mj_theme") || "system");
       setupInstallTip();
       var browserLang = (navigator.language || "").toLowerCase().indexOf("sw") === 0 ? "sw" : "en";
       changeLanguage(readStore("localStorage", "mj_lang") || browserLang);
+      switchView("viewAuth");
 
       sessionToken = readStore("localStorage", "mj_token");
       if (sessionToken) {
-        displayMessage(t("loading"), "warning");
+        notify(t("loading"));
         api("me", { token: sessionToken })
           .then(function (result) {
             clearMessage();
