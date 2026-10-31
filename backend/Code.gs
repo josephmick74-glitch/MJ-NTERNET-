@@ -6,6 +6,10 @@
  * The web page (index.html) never sees password hashes, OTP codes or admin rights:
  * it only sends requests and shows the answers.
  *
+ * Built for thousands of users: customer requests look up single rows with the
+ * sheet's own search (TextFinder) instead of loading whole sheets, sessions are
+ * signed tokens that need no storage, and the admin panel loads one page at a time.
+ *
  * Setup steps are in README.md ("Backend setup").
  */
 
@@ -24,16 +28,19 @@ var TIME_ZONE = "Africa/Dar_es_Salaam";
 var OTP_TTL_SECONDS = 15 * 60;
 var OTP_MAX_ATTEMPTS = 5;
 var OTP_RESEND_COOLDOWN_SECONDS = 60;
-var SESSION_TTL_SECONDS = 6 * 60 * 60;  // CacheService keeps entries for at most 6 hours
+var SESSION_TTL_DAYS = 7;
 var RESET_TTL_SECONDS = 10 * 60;
 var LOGIN_MAX_FAILURES = 5;
 var LOGIN_LOCK_SECONDS = 15 * 60;
 var HASH_ROUNDS = 1000;
 var MAIL_RESERVED_FOR_ORDERS = 5;  // OTP emails stop before the daily quota runs out, so order emails still go
+var MY_ORDERS_LIMIT = 30;          // a customer sees their 30 most recent orders
+var ADMIN_PAGE_SIZE = 25;
 var ORDER_STATUSES = ["pending", "completed", "rejected"];
 
+// Column order matters: some code writes neighbouring columns in one call (see comments where used).
 var USERS_SHEET = "Users";
-var USERS_HEADERS = ["email", "name", "salt", "passwordHash", "createdAt"];
+var USERS_HEADERS = ["email", "name", "salt", "passwordHash", "sessionVersion", "createdAt"];
 var ORDERS_SHEET = "Orders";
 var ORDERS_HEADERS = ["orderId", "createdAt", "email", "name", "packageId", "package",
                       "priceTzs", "phone", "paymentRef", "status", "updatedAt"];
@@ -50,6 +57,7 @@ var ACTIONS = {
   placeOrder: placeOrder_,
   myOrders: myOrders_,
   adminData: adminData_,
+  adminUsers: adminUsers_,
   adminSetStatus: adminSetStatus_
 };
 
@@ -114,6 +122,10 @@ function register_(req) {
   return {};
 }
 
+/**
+ * Checks the password. By default this logs the user in straight away; set the script property
+ * LOGIN_OTP to "on" to also require an emailed code at every login (uses one email per login).
+ */
 function login_(req) {
   var email = cleanEmail_(req.email);
   var password = String(req.password || "");
@@ -130,8 +142,12 @@ function login_(req) {
     fail_("invalid_credentials");
   }
   cache.remove(failKey);
-  startOtp_(email, "login", user.name, {});
-  return {};
+
+  if (loginNeedsOtp_()) {
+    startOtp_(email, "login", user.name, {});
+    return { otpRequired: true };
+  }
+  return newSession_(user);
 }
 
 function forgot_(req) {
@@ -164,12 +180,12 @@ function verifyOtp_(req) {
       if (findUser_(email)) fail_("already_registered");
       appendObject_(sheet_(USERS_SHEET, USERS_HEADERS), USERS_HEADERS, {
         email: email, name: payload.name, salt: payload.salt,
-        passwordHash: payload.passwordHash, createdAt: nowIso_()
+        passwordHash: payload.passwordHash, sessionVersion: 0, createdAt: nowIso_()
       });
     });
-    return newSession_(email);
+    return newSession_(findUser_(email));
   }
-  if (purpose === "login") return newSession_(email);
+  if (purpose === "login") return newSession_(findUser_(email));
 
   // purpose === "reset": hand out a short-lived token that allows one password change.
   var resetToken = randomToken_();
@@ -177,6 +193,7 @@ function verifyOtp_(req) {
   return { resetToken: resetToken };
 }
 
+/** Sets the new password and signs the user out everywhere else. */
 function resetPassword_(req) {
   var cache = CacheService.getScriptCache();
   var resetKey = key_("reset", String(req.resetToken || ""));
@@ -188,21 +205,29 @@ function resetPassword_(req) {
     var user = findUser_(email);
     if (!user) fail_("reset_expired");
     var salt = randomToken_();
-    var saltColumn = USERS_HEADERS.indexOf("salt") + 1;  // passwordHash is the next column
-    sheet_(USERS_SHEET, USERS_HEADERS).getRange(user.row, saltColumn, 1, 2)
-      .setValues([[cell_(salt), cell_(hashPassword_(password, salt))]]);
+    var saltColumn = USERS_HEADERS.indexOf("salt") + 1;  // then passwordHash, then sessionVersion
+    sheet_(USERS_SHEET, USERS_HEADERS).getRange(user.row, saltColumn, 1, 3).setValues([[
+      cell_(salt), cell_(hashPassword_(password, salt)), (Number(user.sessionVersion) || 0) + 1
+    ]]);
   });
   cache.remove(resetKey);
   cache.remove(key_("fail", email));
-  return newSession_(email);
+  return newSession_(findUser_(email));
 }
 
 function me_(req) {
   return { user: publicUser_(requireUser_(req.token)) };
 }
 
+/** Signs the user out on every device (sessions are signed tokens, so the version number is what ends them). */
 function logout_(req) {
-  CacheService.getScriptCache().remove(key_("session", String(req.token || "")));
+  var user;
+  try { user = requireUser_(req.token); } catch (err) { return {}; }
+  withLock_(function () {
+    var current = findUser_(user.email);
+    sheet_(USERS_SHEET, USERS_HEADERS).getRange(current.row, USERS_HEADERS.indexOf("sessionVersion") + 1)
+      .setValue((Number(current.sessionVersion) || 0) + 1);
+  });
   return {};
 }
 
@@ -219,10 +244,7 @@ function placeOrder_(req) {
 
   var order = withLock_(function () {
     var sheet = sheet_(ORDERS_SHEET, ORDERS_HEADERS);
-    var refUsed = readRows_(sheet, ORDERS_HEADERS).some(function (o) {
-      return String(o.paymentRef).toUpperCase() === paymentRef;
-    });
-    if (refUsed) fail_("duplicate_payment_ref");
+    if (findRow_(sheet, ORDERS_HEADERS.indexOf("paymentRef") + 1, paymentRef)) fail_("duplicate_payment_ref");
 
     var now = nowIso_();
     var newOrder = {
@@ -238,20 +260,72 @@ function placeOrder_(req) {
   return { order: publicOrder_(order) };
 }
 
+/** The customer's most recent orders, newest first. Orders are appended in time order. */
 function myOrders_(req) {
   var user = requireUser_(req.token);
-  var orders = readRows_(sheet_(ORDERS_SHEET, ORDERS_HEADERS), ORDERS_HEADERS)
-    .filter(function (o) { return String(o.email) === user.email; });
-  return { orders: newestFirst_(orders).map(publicOrder_) };
+  var sheet = sheet_(ORDERS_SHEET, ORDERS_HEADERS);
+  var rows = findRows_(sheet, ORDERS_HEADERS.indexOf("email") + 1, user.email).slice(-MY_ORDERS_LIMIT).reverse();
+  return { orders: rows.map(function (row) { return publicOrder_(readRow_(sheet, ORDERS_HEADERS, row)); }) };
 }
 
+/**
+ * One page of orders for the admin, newest first, with optional status filter and search
+ * (name, email, phone, order ID or transaction ID). Also returns the totals for the summary.
+ */
 function adminData_(req) {
   requireAdmin_(req.token);
-  var users = readRows_(sheet_(USERS_SHEET, USERS_HEADERS), USERS_HEADERS).map(function (u) {
-    return { name: String(u.name), email: String(u.email), createdAt: String(u.createdAt) };
-  });
-  var orders = readRows_(sheet_(ORDERS_SHEET, ORDERS_HEADERS), ORDERS_HEADERS);
-  return { users: users, orders: newestFirst_(orders).map(publicOrder_) };
+  var page = cleanPage_(req.page);
+  var status = String(req.status || "all");
+  if (status !== "all" && ORDER_STATUSES.indexOf(status) === -1) fail_("invalid_status");
+  var search = cleanSearch_(req.search);
+
+  var sheet = sheet_(ORDERS_SHEET, ORDERS_HEADERS);
+  var lastRow = sheet.getLastRow();
+  var totalOrders = Math.max(0, lastRow - 1);
+  var orders, matching;
+
+  if (status === "all" && !search) {
+    // The usual view: read only the rows on this page, counting back from the newest (bottom) row.
+    var pageEnd = lastRow - page * ADMIN_PAGE_SIZE;
+    var pageStart = Math.max(2, pageEnd - ADMIN_PAGE_SIZE + 1);
+    orders = pageEnd >= 2 ? readRows_(sheet, ORDERS_HEADERS, pageStart, pageEnd - pageStart + 1).reverse() : [];
+    matching = totalOrders;
+  } else {
+    var found = readRows_(sheet, ORDERS_HEADERS).filter(function (o) {
+      return (status === "all" || String(o.status) === status) &&
+        (!search || matchesSearch_([o.name, o.email, o.phone, o.orderId, o.paymentRef], search));
+    }).reverse();
+    matching = found.length;
+    orders = found.slice(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE);
+  }
+
+  return {
+    orders: orders.map(publicOrder_),
+    page: page,
+    pageSize: ADMIN_PAGE_SIZE,
+    matchingOrders: matching,
+    totalOrders: totalOrders,
+    pendingOrders: findRows_(sheet, ORDERS_HEADERS.indexOf("status") + 1, "pending").length,
+    totalUsers: Math.max(0, sheet_(USERS_SHEET, USERS_HEADERS).getLastRow() - 1)
+  };
+}
+
+/** One page of registered users for the admin, newest first, with optional search by name or email. */
+function adminUsers_(req) {
+  requireAdmin_(req.token);
+  var page = cleanPage_(req.page);
+  var search = cleanSearch_(req.search);
+  var users = readRows_(sheet_(USERS_SHEET, USERS_HEADERS), USERS_HEADERS).filter(function (u) {
+    return !search || matchesSearch_([u.name, u.email], search);
+  }).reverse();
+  return {
+    users: users.slice(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE).map(function (u) {
+      return { name: String(u.name), email: String(u.email), createdAt: String(u.createdAt) };
+    }),
+    page: page,
+    pageSize: ADMIN_PAGE_SIZE,
+    matchingUsers: users.length
+  };
 }
 
 function adminSetStatus_(req) {
@@ -262,10 +336,10 @@ function adminSetStatus_(req) {
 
   withLock_(function () {
     var sheet = sheet_(ORDERS_SHEET, ORDERS_HEADERS);
-    var order = readRows_(sheet, ORDERS_HEADERS).filter(function (o) { return String(o.orderId) === orderId; })[0];
-    if (!order) fail_("not_found");
+    var row = findRow_(sheet, ORDERS_HEADERS.indexOf("orderId") + 1, orderId);
+    if (!row) fail_("not_found");
     var statusColumn = ORDERS_HEADERS.indexOf("status") + 1;  // updatedAt is the next column
-    sheet.getRange(order.row, statusColumn, 1, 2).setValues([[cell_(status), cell_(nowIso_())]]);
+    sheet.getRange(row, statusColumn, 1, 2).setValues([[cell_(status), cell_(nowIso_())]]);
   });
   return {};
 }
@@ -324,19 +398,35 @@ function otpEmailBody_(name, code) {
     "MJ Internet";
 }
 
+function loginNeedsOtp_() {
+  return String(PropertiesService.getScriptProperties().getProperty("LOGIN_OTP") || "").toLowerCase() === "on";
+}
+
 
 // ---------- Sessions and roles ----------
 
-function newSession_(email) {
-  var token = randomToken_();
-  CacheService.getScriptCache().put(key_("session", token), email, SESSION_TTL_SECONDS);
-  return { token: token, user: publicUser_(findUser_(email)) };
+/**
+ * A session token is "email|expiry|version|signature". The signature (HMAC with the secret PEPPER)
+ * means nobody can make or change a token, so nothing has to be stored per session.
+ * Raising the user's sessionVersion (logout, password reset) ends all their tokens.
+ */
+function newSession_(user) {
+  var payload = [encodeURIComponent(String(user.email)), Date.now() + SESSION_TTL_DAYS * 86400000,
+                 Number(user.sessionVersion) || 0].join("|");
+  return { token: payload + "|" + signSession_(payload), user: publicUser_(user) };
+}
+
+function signSession_(payload) {
+  return toHex_(Utilities.computeHmacSha256Signature("session|" + payload, pepper_()));
 }
 
 function requireUser_(token) {
-  var email = CacheService.getScriptCache().get(key_("session", String(token || "")));
-  var user = email ? findUser_(email) : null;
-  if (!user) fail_("not_logged_in");
+  var parts = String(token || "").split("|");
+  if (parts.length !== 4) fail_("not_logged_in");
+  var payload = parts.slice(0, 3).join("|");
+  if (!safeEqual_(signSession_(payload), parts[3]) || Number(parts[1]) < Date.now()) fail_("not_logged_in");
+  var user = findUser_(decodeURIComponent(parts[0]));
+  if (!user || (Number(user.sessionVersion) || 0) !== Number(parts[2])) fail_("not_logged_in");
   return user;
 }
 
@@ -371,7 +461,7 @@ function publicOrder_(o) {
 
 function cleanEmail_(value) {
   var email = String(value || "").trim().toLowerCase();
-  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail_("invalid_email");
+  if (email.length > 254 || !/^[^\s@|]+@[^\s@|]+\.[^\s@|]+$/.test(email)) fail_("invalid_email");
   return email;
 }
 
@@ -404,6 +494,18 @@ function cleanPurpose_(value) {
   return value;
 }
 
+function cleanPage_(value) {
+  return Math.min(100000, Math.max(0, Math.floor(Number(value) || 0)));
+}
+
+function cleanSearch_(value) {
+  return String(value || "").trim().toLowerCase().slice(0, 100);
+}
+
+function matchesSearch_(fields, search) {
+  return fields.some(function (f) { return String(f).toLowerCase().indexOf(search) !== -1; });
+}
+
 
 // ---------- Sheet helpers ----------
 
@@ -417,24 +519,51 @@ function sheet_(name, headers) {
   return sheet;
 }
 
-/** Reads all data rows as objects keyed by header, plus .row (the sheet row number). */
-function readRows_(sheet, headers) {
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return [];
-  return sheet.getRange(2, 1, lastRow - 1, headers.length).getValues().map(function (values, i) {
-    var row = { row: i + 2 };
+/** Reads data rows as objects keyed by header, plus .row (the sheet row number). Default: all rows. */
+function readRows_(sheet, headers, startRow, numRows) {
+  startRow = startRow || 2;
+  if (numRows === undefined) numRows = sheet.getLastRow() - startRow + 1;
+  if (numRows < 1) return [];
+  return sheet.getRange(startRow, 1, numRows, headers.length).getValues().map(function (values, i) {
+    var row = { row: startRow + i };
     headers.forEach(function (header, j) { row[header] = values[j]; });
     return row;
   });
 }
 
-function appendObject_(sheet, headers, obj) {
-  sheet.appendRow(headers.map(function (header) { return cell_(obj[header]); }));
+function readRow_(sheet, headers, row) {
+  return readRows_(sheet, headers, row, 1)[0];
+}
+
+/**
+ * Row numbers whose cell in `column` is exactly `value`. Uses the sheet's own search (TextFinder),
+ * so the rows are never loaded into the script.
+ */
+function findRows_(sheet, column, value) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2 || !value) return [];
+  return sheet.getRange(2, column, lastRow - 1, 1).createTextFinder(String(value))
+    .matchCase(true).matchEntireCell(true).findAll()
+    .map(function (range) { return range.getRow(); });
+}
+
+/** The first row number whose cell in `column` is exactly `value`, or 0. */
+function findRow_(sheet, column, value) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2 || !value) return 0;
+  var match = sheet.getRange(2, column, lastRow - 1, 1).createTextFinder(String(value))
+    .matchCase(true).matchEntireCell(true).findNext();
+  return match ? match.getRow() : 0;
 }
 
 function findUser_(email) {
-  return readRows_(sheet_(USERS_SHEET, USERS_HEADERS), USERS_HEADERS)
-    .filter(function (u) { return String(u.email) === email; })[0] || null;
+  var sheet = sheet_(USERS_SHEET, USERS_HEADERS);
+  var row = findRow_(sheet, USERS_HEADERS.indexOf("email") + 1, email);
+  return row ? readRow_(sheet, USERS_HEADERS, row) : null;
+}
+
+function appendObject_(sheet, headers, obj) {
+  sheet.appendRow(headers.map(function (header) { return cell_(obj[header]); }));
 }
 
 /**
@@ -443,13 +572,6 @@ function findUser_(email) {
  */
 function cell_(value) {
   return typeof value === "string" ? "'" + value : value;
-}
-
-function newestFirst_(rows) {
-  // Rows with the same time keep sheet order reversed (the later row is newer).
-  return rows.slice().sort(function (a, b) {
-    return String(b.createdAt).localeCompare(String(a.createdAt)) || b.row - a.row;
-  });
 }
 
 
@@ -486,6 +608,12 @@ function nowIso_() {
   return new Date().toISOString();
 }
 
+function pepper_() {
+  var pepper = PropertiesService.getScriptProperties().getProperty("PEPPER");
+  if (!pepper) fail_("server_not_configured");
+  return pepper;
+}
+
 /** Cache keys are hashed so long emails or tokens never exceed the 250-character key limit. */
 function key_(prefix, value) {
   return prefix + ":" + toHex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, value, Utilities.Charset.UTF_8));
@@ -493,8 +621,7 @@ function key_(prefix, value) {
 
 /** Salted, peppered, repeated HMAC-SHA256. PEPPER lives only in Script Properties, never in the sheet. */
 function hashPassword_(password, salt) {
-  var pepper = PropertiesService.getScriptProperties().getProperty("PEPPER");
-  if (!pepper) fail_("server_not_configured");
+  var pepper = pepper_();
   var value = salt + ":" + password;
   for (var i = 0; i < HASH_ROUNDS; i++) {
     value = toHex_(Utilities.computeHmacSha256Signature(value, pepper));

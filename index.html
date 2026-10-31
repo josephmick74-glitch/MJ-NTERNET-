@@ -231,6 +231,13 @@
     .cell-sub { font-size: 10px; color: var(--text-sub); }
     .status-select { padding: 4px 6px; border-radius: 6px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 12px; }
 
+    .admin-filters { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+    .admin-search { flex: 1; min-width: 160px; padding: 8px 12px; }
+    .admin-filters .btn-copy { margin-top: 0; }
+    .pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: -10px 0 20px; font-size: 12px; color: var(--text-sub); }
+    .pager .btn-copy { margin-top: 0; }
+    .pager .btn-copy:disabled { opacity: 0.35; cursor: default; }
+
     .install-tip { display: flex; gap: 10px; align-items: flex-start; margin: 15px 25px 0; padding: 12px; border-radius: 12px; background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.3); font-size: 12px; line-height: 1.5; }
     .install-tip-text { flex: 1; }
     .install-tip-text strong { display: block; color: var(--primary); margin-bottom: 2px; }
@@ -466,6 +473,16 @@
         </div>
 
         <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);" data-key="ordersHeading">📦 All Orders</h4>
+        <form class="admin-filters" onsubmit="handleAdminOrderSearch(event)">
+          <select id="adminStatusFilter" class="status-select" onchange="handleAdminOrderSearch(event)" aria-label="Status">
+            <option value="all" data-key="filterAll">All</option>
+            <option value="pending" data-key="status_pending">Pending</option>
+            <option value="completed" data-key="status_completed">Completed</option>
+            <option value="rejected" data-key="status_rejected">Rejected</option>
+          </select>
+          <input type="search" id="adminOrderSearch" class="input-field admin-search" maxlength="100" aria-label="Search orders" data-placeholder-key="searchOrders" placeholder="Name, phone, order or txn ID">
+          <button type="submit" class="btn-copy" data-key="searchBtn">Search</button>
+        </form>
         <div class="table-container">
           <table class="admin-table">
             <thead>
@@ -480,8 +497,17 @@
             <tbody id="adminOrdersTableBody"></tbody>
           </table>
         </div>
+        <div class="pager">
+          <button type="button" class="btn-copy" id="ordersPrev" onclick="changeAdminPage('orders', -1)" aria-label="Previous page">←</button>
+          <span id="ordersPageInfo"></span>
+          <button type="button" class="btn-copy" id="ordersNext" onclick="changeAdminPage('orders', 1)" aria-label="Next page">→</button>
+        </div>
 
         <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);" data-key="usersHeading">👥 Registered Users</h4>
+        <form class="admin-filters" onsubmit="handleAdminUserSearch(event)">
+          <input type="search" id="adminUserSearch" class="input-field admin-search" maxlength="100" aria-label="Search users" data-placeholder-key="searchUsers" placeholder="Name or email">
+          <button type="submit" class="btn-copy" data-key="searchBtn">Search</button>
+        </form>
         <div class="table-container">
           <table class="admin-table">
             <thead>
@@ -493,6 +519,11 @@
             </thead>
             <tbody id="adminUsersTableBody"></tbody>
           </table>
+        </div>
+        <div class="pager">
+          <button type="button" class="btn-copy" id="usersPrev" onclick="changeAdminPage('users', -1)" aria-label="Previous page">←</button>
+          <span id="usersPageInfo"></span>
+          <button type="button" class="btn-copy" id="usersNext" onclick="changeAdminPage('users', 1)" aria-label="Next page">→</button>
         </div>
 
         <button class="btn-action btn-secondary" id="btnAdminRefresh" onclick="loadAdminDashboardData()" data-key="refreshBtn">🔄 Refresh</button>
@@ -519,6 +550,7 @@
     var resendTimer = null;
     var lastOrders = null;
     var lastAdminData = null;
+    var lastAdminUsers = null;
 
     // These strings are written by us, so changeLanguage() may insert them as HTML.
     // Anything that comes from users or the server is shown with textContent only.
@@ -593,6 +625,11 @@
         colStatus: "Status",
         noUsers: "No users yet.",
         refreshBtn: "🔄 Refresh",
+        filterAll: "All",
+        searchBtn: "Search",
+        searchOrders: "Name, phone, order or txn ID",
+        searchUsers: "Name or email",
+        pageInfo: "Page {p} of {n} ({count})",
         installTitle: "📱 Install on iPhone",
         installSteps: "Tap the Share button ⬆️, then choose “Add to Home Screen”. (If you don't see it, open this page in Safari first.)",
         installStepsInApp: "Open this page in Safari first (menu ••• → Open in Safari). Then tap Share ⬆️ → “Add to Home Screen”.",
@@ -694,6 +731,11 @@
         colStatus: "Hali",
         noUsers: "Hakuna watumiaji bado.",
         refreshBtn: "🔄 Onyesha upya",
+        filterAll: "Zote",
+        searchBtn: "Tafuta",
+        searchOrders: "Jina, simu, oda au namba ya muamala",
+        searchUsers: "Jina au email",
+        pageInfo: "Ukurasa {p} kati ya {n} ({count})",
         installTitle: "📱 Weka kwenye iPhone",
         installSteps: "Bonyeza kitufe cha Share ⬆️, kisha chagua “Add to Home Screen”. (Kama huioni, fungua ukurasa huu kwenye Safari kwanza.)",
         installStepsInApp: "Fungua ukurasa huu kwenye Safari kwanza (menyu ••• → Open in Safari). Kisha bonyeza Share ⬆️ → “Add to Home Screen”.",
@@ -850,10 +892,15 @@
         }
       });
 
+      document.querySelectorAll("[data-placeholder-key]").forEach(function (node) {
+        node.setAttribute("placeholder", t(node.getAttribute("data-placeholder-key")));
+      });
+
       var resendButton = document.getElementById("btnResendOtp");
       if (!resendButton.disabled) resendButton.textContent = t("resendBtn");
       if (lastOrders) renderUserOrders();
-      if (lastAdminData) renderAdmin();
+      if (lastAdminData) renderAdminOrders();
+      if (lastAdminUsers) renderAdminUsers();
     }
 
     function applyTheme(theme) {
@@ -995,8 +1042,10 @@
       clearMessage();
 
       withBusy(submitButton(e), function () {
-        return api("login", { email: email, password: password }).then(function () {
-          openOtpView(email, "login", t("otpSent"));
+        return api("login", { email: email, password: password }).then(function (result) {
+          // The server sends a token straight away unless it is set to also ask for an emailed code.
+          if (result.token) startSession(result);
+          else openOtpView(email, "login", t("otpSent"));
         });
       }).catch(showRequestError);
     }
@@ -1101,7 +1150,7 @@
     // ---------- Session ----------
 
     // The token is kept in localStorage so a home-screen app stays logged in after it is closed
-    // (iPhone clears sessionStorage then). The server still ends every session after 6 hours.
+    // (iPhone clears sessionStorage then). The server still ends every session after 7 days.
     function startSession(result) {
       sessionToken = result.token;
       writeStore("localStorage", "mj_token", sessionToken);
@@ -1114,6 +1163,9 @@
       currentUser = null;
       lastOrders = null;
       lastAdminData = null;
+      lastAdminUsers = null;
+      adminOrderQuery = { page: 0, status: "all", search: "" };
+      adminUserQuery = { page: 0, search: "" };
       writeStore("localStorage", "mj_token", null);
       closeDrawer();
       document.getElementById("menuToggleBtn").classList.remove("active");
@@ -1213,14 +1265,62 @@
 
     // ---------- Admin panel (data comes from the server only for admin accounts) ----------
 
+    // The server sends one page at a time, so the panel stays fast with thousands of users and orders.
+    var adminOrderQuery = { page: 0, status: "all", search: "" };
+    var adminUserQuery = { page: 0, search: "" };
+
     function loadAdminDashboardData() {
       var button = document.getElementById("btnAdminRefresh");
       withBusy(button, function () {
-        return api("adminData", { token: sessionToken }).then(function (result) {
-          lastAdminData = result;
-          renderAdmin();
-        });
+        return Promise.all([loadAdminOrders(), loadAdminUsers()]);
       }).catch(showRequestError);
+    }
+
+    function loadAdminOrders() {
+      return api("adminData", {
+        token: sessionToken, page: adminOrderQuery.page, status: adminOrderQuery.status, search: adminOrderQuery.search
+      }).then(function (result) {
+        lastAdminData = result;
+        renderAdminOrders();
+      });
+    }
+
+    function loadAdminUsers() {
+      return api("adminUsers", { token: sessionToken, page: adminUserQuery.page, search: adminUserQuery.search })
+        .then(function (result) {
+          lastAdminUsers = result;
+          renderAdminUsers();
+        });
+    }
+
+    function handleAdminOrderSearch(e) {
+      e.preventDefault();
+      adminOrderQuery = {
+        page: 0,
+        status: document.getElementById("adminStatusFilter").value,
+        search: document.getElementById("adminOrderSearch").value.trim()
+      };
+      loadAdminOrders().catch(showRequestError);
+    }
+
+    function handleAdminUserSearch(e) {
+      e.preventDefault();
+      adminUserQuery = { page: 0, search: document.getElementById("adminUserSearch").value.trim() };
+      loadAdminUsers().catch(showRequestError);
+    }
+
+    function changeAdminPage(list, step) {
+      var query = list === "orders" ? adminOrderQuery : adminUserQuery;
+      query.page = Math.max(0, query.page + step);
+      (list === "orders" ? loadAdminOrders() : loadAdminUsers()).catch(showRequestError);
+    }
+
+    function updatePager(prefix, page, pageSize, count) {
+      var pages = Math.max(1, Math.ceil(count / pageSize));
+      document.getElementById(prefix + "PageInfo").textContent =
+        t("pageInfo").replace("{p}", page + 1).replace("{n}", pages).replace("{count}", count);
+      document.getElementById(prefix + "Prev").disabled = page <= 0;
+      document.getElementById(prefix + "Next").disabled = page + 1 >= pages;
     }
 
     /** Builds a table row; each cell is text or an element. */
@@ -1268,9 +1368,8 @@
         select.disabled = true;
         api("adminSetStatus", { token: sessionToken, orderId: order.orderId, status: chosen })
           .then(function () {
-            order.status = chosen;
-            renderAdmin();
             displayMessage(t("statusSaved"), "success");
+            return loadAdminOrders();  // refreshes the pending count and the filtered list
           })
           .catch(function (err) {
             select.value = previous;
@@ -1281,13 +1380,12 @@
       return select;
     }
 
-    function renderAdmin() {
-      var users = lastAdminData.users;
-      var orders = lastAdminData.orders;
-      document.getElementById("adminTotalUsers").textContent = users.length;
-      document.getElementById("adminTotalOrders").textContent = orders.length;
-      document.getElementById("adminPendingOrders").textContent =
-        orders.filter(function (o) { return o.status === "pending"; }).length;
+    function renderAdminOrders() {
+      var data = lastAdminData;
+      var orders = data.orders;
+      document.getElementById("adminTotalUsers").textContent = data.totalUsers;
+      document.getElementById("adminTotalOrders").textContent = data.totalOrders;
+      document.getElementById("adminPendingOrders").textContent = data.pendingOrders;
 
       var ordersTbody = document.getElementById("adminOrdersTableBody");
       ordersTbody.textContent = "";
@@ -1296,22 +1394,27 @@
       }
       orders.forEach(function (o, idx) {
         ordersTbody.appendChild(tableRow([
-          orders.length - idx,
+          data.matchingOrders - data.page * data.pageSize - idx,
           stackedCell([o.name, o.email]),
           stackedCell([o.package + " · " + formatTzs(o.priceTzs), t("phoneShort") + ": " + o.phone, t("paymentRefShort") + ": " + o.paymentRef, o.orderId]),
           formatDate(o.createdAt),
           statusSelect(o)
         ]));
       });
+      updatePager("orders", data.page, data.pageSize, data.matchingOrders);
+    }
 
+    function renderAdminUsers() {
+      var data = lastAdminUsers;
       var usersTbody = document.getElementById("adminUsersTableBody");
       usersTbody.textContent = "";
-      if (users.length === 0) {
+      if (data.users.length === 0) {
         usersTbody.appendChild(emptyRow(3, t("noUsers")));
       }
-      users.forEach(function (u, idx) {
-        usersTbody.appendChild(tableRow([idx + 1, stackedCell([u.name || "N/A"]), u.email]));
+      data.users.forEach(function (u, idx) {
+        usersTbody.appendChild(tableRow([data.page * data.pageSize + idx + 1, stackedCell([u.name || "N/A"]), u.email]));
       });
+      updatePager("users", data.page, data.pageSize, data.matchingUsers);
     }
 
     // ---------- Start ----------

@@ -21,6 +21,8 @@ Do this with the Google account that should send the emails (for example the sho
 3. **Project Settings (⚙️) → Script properties → Add script property**:
    - `ADMIN_EMAILS` = the admin email(s), comma separated, e.g. `mjriganya@gmail.com`
    - `OWNER_EMAIL` (optional) = where new-order emails go. Default: the first admin email.
+   - `LOGIN_OTP` (optional) = `on` to also email a code at **every** login. Default: off (a code is
+     emailed only at sign-up and password reset). Turning it on uses one email per login; see the limits below.
 4. Back in the editor, pick the function **`setup`** and press **Run**. Allow the permissions it asks for.
    This creates the Users and Orders tabs and a secret `PEPPER` script property.
    **Never change or delete `PEPPER`**: every existing password would stop working.
@@ -50,10 +52,17 @@ Files for this: `manifest.webmanifest` and `icons/`.
 
 ## Limits to know
 
-- A normal Gmail account can send about **100 emails per day** from Apps Script. Every sign-up, login code,
-  password reset and new order uses one. OTP emails stop when only 5 are left, so order emails still arrive.
-- A login lasts up to **6 hours**, then the customer logs in again.
+- **Size:** built and tested for 5,000 users and 20,000+ orders. Customer actions (login, order, my orders)
+  look up single rows with the sheet's own search, so they stay fast as the sheet grows. The admin panel
+  loads 25 orders or users per page, with status filter and search.
+- **Email is the real limit.** A normal Gmail account can send about **100 emails per day** from Apps Script;
+  a Google Workspace account about **1,500**. Each sign-up, password reset and new-order notice uses one
+  (and each login, if `LOGIN_OTP` is on). OTP emails stop when only 5 are left, so order notices still arrive;
+  an order is saved even if its email fails, and always shows in the admin panel.
+  With thousands of active customers, use a Google Workspace account for the script.
+- A login lasts **7 days**. Logging out, or resetting the password, signs that user out on every device.
 - After 5 wrong passwords an account is locked for 15 minutes. After 5 wrong codes the code is cancelled.
+- Google allows about 30 requests to run at the same moment per script; more simply wait a moment.
 
 ## Moving from the old version
 
