@@ -88,6 +88,7 @@ Every error the app shows carries a label such as **MJ-202**, so a customer can 
 | MJ-110 | Asked for a new code too soon | Wait a minute |
 | MJ-111 | The email could not be sent (daily limit) | Try again later |
 | MJ-112 | Password-reset time ran out | Start again from Forgot password |
+| MJ-113 | More than 6 codes asked for one email in 6 hours | Wait a few hours (stops reset codes being guessed) |
 | MJ-201 | No bundle chosen | Choose a bundle in step 1 |
 | MJ-202 | Not a Halotel number | Use a number starting 061 or 062 |
 | MJ-203 | Transaction ID missing or malformed | Copy it exactly from the SMS |
@@ -96,7 +97,7 @@ Every error the app shows carries a label such as **MJ-202**, so a customer can 
 | MJ-206 | Status not allowed (admin) | Refresh the list |
 | MJ-301 | Could not reach the server | Check the connection, try again |
 | MJ-302 | Phone is offline | Connect; the page reloads by itself |
-| MJ-303 | Request timed out (slow network) | Try again or use lite mode; a resent order is not duplicated |
+| MJ-303 | Request timed out (slow network) | Try again or turn on data saver; a resent order is not duplicated |
 | MJ-304 | Server answer could not be read | Try again in a minute |
 | MJ-305 | `API_URL` not set in index.html | Owner: finish the setup steps |
 | MJ-306 | `setup` not run in Apps Script | Owner: run `setup` |
@@ -111,9 +112,18 @@ Every error the app shows carries a label such as **MJ-202**, so a customer can 
 - **Loading** shows placeholder rows and a thin progress bar; lists already seen show at once while they refresh.
 - **Form mistakes** are flagged under the exact field, with how to fix them, before anything is sent.
 - **No internet**: a banner appears at once, nothing waits for a timeout, and data reloads when the phone is back online.
-- **Slow network**: after 5 seconds a banner offers **lite mode** (plain fonts, 10 items per list). It is also on by
+- **Slow network**: after 5 seconds a banner offers **data saver** (plain fonts, 10 items per list). It is also on by
   default when the phone asks to save data. If an order times out, pressing Submit again shows the receipt if the
   first try had arrived, instead of a duplicate.
 - **Searches with no results** (desk) suggest close spellings and the next search to try.
 - **Expired login**: the order being filled in is saved as the customer types; after logging in again they return to it.
   Logging out on purpose clears it.
+
+## Security notes
+
+- The page sends a Content-Security-Policy: it may only load itself and Google Fonts, and only talk to Apps Script.
+- It refuses to run inside another website's frame (so it cannot be overlaid to trick clicks).
+- No passwords, keys or admin logins are in the page. Admins are set in the `ADMIN_EMAILS` script property.
+- Everything typed by customers is shown as plain text, never as HTML.
+- Passwords are stored hashed; sessions are signed and end on logout, password change or after 7 days.
+- Wrong passwords lock an account for 15 minutes; email codes allow 5 guesses and at most 6 codes per 6 hours.

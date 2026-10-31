@@ -28,6 +28,8 @@ var TIME_ZONE = "Africa/Dar_es_Salaam";
 var OTP_TTL_SECONDS = 15 * 60;
 var OTP_MAX_ATTEMPTS = 5;
 var OTP_RESEND_COOLDOWN_SECONDS = 60;
+var OTP_MAX_SENDS = 6;                   // codes per email and purpose within OTP_SEND_WINDOW_SECONDS, so a
+var OTP_SEND_WINDOW_SECONDS = 6 * 60 * 60;  // reset code cannot be guessed by asking for new ones all day
 var SESSION_TTL_DAYS = 7;
 var RESET_TTL_SECONDS = 10 * 60;
 var LOGIN_MAX_FAILURES = 5;
@@ -413,9 +415,13 @@ function startOtp_(email, purpose, name, payload) {
   var previous = readJson_(cache.get(cacheKey));
   var now = Date.now();
   if (previous && now - previous.sentAt < OTP_RESEND_COOLDOWN_SECONDS * 1000) fail_("resend_wait");
+  var countKey = key_("otpcount", purpose + ":" + email);
+  var sentRecently = Number(cache.get(countKey) || 0);
+  if (sentRecently >= OTP_MAX_SENDS) fail_("otp_limit");
 
   var code = newOtpCode_();
   sendMail_(email, "MJ Internet code: " + code, otpEmailBody_(name, code), MAIL_RESERVED_FOR_ORDERS);
+  cache.put(countKey, String(sentRecently + 1), OTP_SEND_WINDOW_SECONDS);
   var entry = { code: code, attempts: 0, sentAt: now, expiresAt: now + OTP_TTL_SECONDS * 1000,
                 name: name, payload: payload };
   cache.put(cacheKey, JSON.stringify(entry), OTP_TTL_SECONDS);

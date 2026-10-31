@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Only this page, Google Fonts and the Apps Script backend may be loaded or contacted. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <title>MJ Internet</title>
   <!-- Lets phones add the portal to the home screen as an app (iPhone: Share > Add to Home Screen). -->
-  <meta name="theme-color" content="#0b3b8c">
+  <meta name="theme-color" content="#0284c7">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -15,55 +18,41 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- The fonts themselves are loaded by the script, and skipped in lite mode. -->
+  <!-- The fonts themselves are loaded by the script, and skipped in data saver mode. -->
   <style>
-    /* Layout: a phone-first app shell. A gradient brand band on top, a content sheet that overlaps it,
-       and a tab bar at the bottom. The admin desk widens to use a laptop screen. */
+    /* Layout: phone first. On phones a solid blue header, a content sheet and a bottom tab bar.
+       From 768px the tabs move into the header and pages spread out; from 1024px sign-in and
+       buying use two columns. One light theme, in the original MJ Internet colours. */
     :root {
-      --brand-1: #0b3b8c;
-      --brand-2: #0a7fc2;
-      --brand-3: #12a39b;
-      --brand-grad: linear-gradient(135deg, var(--brand-1) 0%, var(--brand-2) 60%, var(--brand-3) 100%);
+      color-scheme: light;
+      --brand: #0284c7;          /* the original MJ Internet blue */
+      --brand-dark: #0369a1;
+      --brand-soft: #e0f2fe;
       --on-brand: #ffffff;
-      --on-brand-soft: rgba(255, 255, 255, 0.78);
+      --on-brand-soft: #e0f2fe;
+      --accent: #d97706;         /* the original amber, used for payment details */
+      --accent-ink: #b45309;
+      --accent-soft: #fef3c7;
 
-      --ink: #0f1b2d;
-      --ink-2: #46566c;
-      --ink-3: #75849a;
-      --canvas: #edf2f7;
+      --ink: #0f172a;
+      --ink-2: #475569;
+      --ink-3: #64748b;
+      --canvas: #f8fafc;
       --paper: #ffffff;
-      --field: #f6f9fc;
-      --line: #d9e2ec;
-      --link: #0a6fb0;
-      --focus: rgba(10, 127, 194, 0.35);
+      --field: #f1f5f9;
+      --line: #e2e8f0;
+      --link: #0369a1;
+      --focus: rgba(2, 132, 199, 0.35);
 
-      --ok: #12804d;      --ok-bg: #e3f5eb;
-      --warn: #a46100;    --warn-bg: #fff2dc;
-      --bad: #bf3029;     --bad-bg: #fde8e6;
+      --ok: #047857;      --ok-bg: #d1fae5;
+      --warn: #b45309;    --warn-bg: #fef3c7;
+      --bad: #dc2626;     --bad-bg: #fee2e2;
 
-      --shadow: 0 1px 2px rgba(15, 27, 45, 0.06), 0 6px 20px rgba(15, 27, 45, 0.06);
+      --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.06);
       --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
       --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
       --radius: 14px;
-      --radius-sm: 10px;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --ink: #e7edf5; --ink-2: #a7b5c7; --ink-3: #7b8ba0;
-        --canvas: #0a111c; --paper: #111b2a; --field: #0d1624; --line: #223249;
-        --link: #5db7ef; --focus: rgba(93, 183, 239, 0.4);
-        --ok: #45cf8e; --ok-bg: #10291e; --warn: #f2b34c; --warn-bg: #2b2111; --bad: #ff7d74; --bad-bg: #2e1513;
-        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
-        color-scheme: dark;
-      }
-    }
-    :root[data-theme="dark"] {
-      --ink: #e7edf5; --ink-2: #a7b5c7; --ink-3: #7b8ba0;
-      --canvas: #0a111c; --paper: #111b2a; --field: #0d1624; --line: #223249;
-      --link: #5db7ef; --focus: rgba(93, 183, 239, 0.4);
-      --ok: #45cf8e; --ok-bg: #10291e; --warn: #f2b34c; --warn-bg: #2b2111; --bad: #ff7d74; --bad-bg: #2e1513;
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
-      color-scheme: dark;
+      --content: 1120px;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -84,72 +73,51 @@
     .mono { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 
     /* ---------- App shell ---------- */
-    .app {
-      max-width: 480px;
-      margin: 0 auto;
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      background: var(--canvas);
-      position: relative;
+    .app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+    .inner {
+      width: 100%; max-width: var(--content); margin: 0 auto;
+      padding-left: max(20px, env(safe-area-inset-left, 0px));
+      padding-right: max(20px, env(safe-area-inset-right, 0px));
     }
-    .app.is-wide { max-width: 1040px; }
-    @media (min-width: 640px) {
-      body { padding-block: 24px; }
-      .app { min-height: calc(100vh - 48px); min-height: calc(100dvh - 48px); border-radius: 24px; overflow: clip; box-shadow: var(--shadow); border: 1px solid var(--line); }
-    }
-
-    .band {
-      background: radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.16), transparent 55%), var(--brand-grad);
-      color: var(--on-brand);
-      padding: 18px max(20px, env(safe-area-inset-right, 0px)) 40px max(20px, env(safe-area-inset-left, 0px));
-    }
-    .band-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .brand { display: flex; align-items: center; gap: 10px; }
+    .band { background: var(--brand); color: var(--on-brand); padding-block: 18px 40px; }
+    .band-top { display: flex; align-items: center; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; margin-right: auto; }
     .mark {
-      width: 36px; height: 36px; border-radius: 10px;
+      width: 36px; height: 36px; border-radius: 10px; flex: none;
       display: grid; place-items: center;
-      background: rgba(255, 255, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: var(--on-brand); color: var(--brand);
       font: 700 15px/1 var(--font-display); letter-spacing: 0.02em;
     }
-    .brand-name { font: 700 17px/1.1 var(--font-display); }
+    .brand-name { font: 700 17px/1.1 var(--font-display); white-space: nowrap; }
     .brand-name small { display: block; font: 500 12px/1.3 var(--font-body); color: var(--on-brand-soft); letter-spacing: 0.02em; }
-    .lang-switch { display: flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.22); }
+    .topnav { display: none; gap: 4px; }
+    .topnav button { border: 0; background: none; color: var(--on-brand-soft); font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 999px; display: flex; align-items: center; gap: 6px; }
+    .topnav button .i { width: 18px; height: 18px; }
+    .topnav button:hover { background: rgba(255, 255, 255, 0.12); color: var(--on-brand); }
+    .topnav button[aria-current="page"] { background: var(--on-brand); color: var(--brand-dark); }
+    .lang-switch { display: flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); flex: none; }
     .lang-switch button { border: 0; background: none; color: var(--on-brand-soft); font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; letter-spacing: 0.04em; }
-    .lang-switch button[aria-pressed="true"] { background: var(--on-brand); color: var(--brand-1); }
+    .lang-switch button[aria-pressed="true"] { background: var(--on-brand); color: var(--brand-dark); }
     .hero { margin-top: 22px; display: grid; gap: 6px; }
     .hero h1 { font-size: 26px; line-height: 1.15; }
-    .hero p { color: var(--on-brand-soft); max-width: 36ch; }
+    .hero p { color: var(--on-brand-soft); max-width: 46ch; }
 
-    .sheet {
-      flex: 1;
-      margin-top: -20px;
-      background: var(--canvas);
-      border-radius: 20px 20px 0 0;
-      padding: 22px max(20px, env(safe-area-inset-right, 0px)) 28px max(20px, env(safe-area-inset-left, 0px));
-      position: relative;
-    }
-    .view { display: grid; gap: 18px; }
+    .sheet { flex: 1; margin-top: -20px; background: var(--canvas); border-radius: 20px 20px 0 0; padding-block: 22px 28px; position: relative; }
+    .view { display: grid; gap: 18px; min-width: 0; }
 
     /* ---------- Connection banner and progress ---------- */
-    .net {
-      position: sticky; top: 0; z-index: 8;
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px max(20px, env(safe-area-inset-right, 0px)) 10px max(20px, env(safe-area-inset-left, 0px));
-      font-size: 14px; font-weight: 600;
-    }
+    .net { position: sticky; top: 0; z-index: 8; font-size: 14px; font-weight: 600; }
+    .net .inner { display: flex; align-items: center; gap: 10px; padding-block: 10px; }
     .net-offline { background: var(--warn-bg); color: var(--warn); }
     .net-online { background: var(--ok-bg); color: var(--ok); }
     .net-slow { background: var(--paper); color: var(--ink-2); border-bottom: 1px solid var(--line); }
     .net .btn-link { margin-left: auto; white-space: nowrap; }
     .progress { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; height: 3px; z-index: 30; overflow: hidden; }
-    .progress::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: var(--brand-grad); animation: progress 1.1s ease-in-out infinite; }
+    .progress::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: var(--brand-dark); animation: progress 1.1s ease-in-out infinite; }
     @keyframes progress { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
 
     /* ---------- Controls ---------- */
-    .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; min-width: 0; }
     .stack { display: grid; gap: 14px; }
     .field { display: grid; gap: 6px; position: relative; }
     .field label, .label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
@@ -161,7 +129,7 @@
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .input::placeholder { color: var(--ink-3); }
-    .input:focus { outline: none; border-color: var(--brand-2); box-shadow: 0 0 0 4px var(--focus); }
+    .input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px var(--focus); }
     .input[aria-invalid="true"] { border-color: var(--bad); }
     .input[aria-invalid="true"]:focus { box-shadow: 0 0 0 4px var(--bad-bg); }
     .field-error { display: flex; gap: 6px; align-items: flex-start; font-size: 13px; font-weight: 600; color: var(--bad); }
@@ -175,31 +143,31 @@
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       height: 50px; padding: 0 20px; width: 100%;
       border: 0; border-radius: 12px;
-      background: var(--brand-grad); color: var(--on-brand);
+      background: var(--brand); color: var(--on-brand);
       font-weight: 600; font-size: 16px;
-      box-shadow: 0 6px 16px rgba(11, 59, 140, 0.22);
-      transition: filter 0.15s, transform 0.05s;
+      transition: background-color 0.15s, transform 0.05s;
     }
-    .btn:hover { filter: brightness(1.06); }
+    .btn:hover { background: var(--brand-dark); }
     .btn:active { transform: translateY(1px); }
-    .btn:disabled { opacity: 0.55; cursor: default; filter: none; transform: none; }
+    .btn:disabled { opacity: 0.55; cursor: default; transform: none; }
+    .btn:disabled:hover { background: var(--brand); }
     .btn.is-busy { opacity: 0.85; cursor: progress; }
     .btn.is-busy::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin 0.7s linear infinite; flex: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .btn-ghost { background: var(--paper); color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
-    .btn-ghost:hover { filter: none; background: var(--field); }
-    .btn-sm { height: 36px; padding: 0 14px; font-size: 14px; width: auto; border-radius: 10px; box-shadow: none; }
+    .btn-ghost { background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+    .btn-ghost:hover, .btn-ghost:disabled:hover { background: var(--field); }
+    .btn-sm { height: 36px; padding: 0 14px; font-size: 14px; width: auto; border-radius: 10px; }
     .btn-link { border: 0; background: none; padding: 4px 0; color: var(--link); font-weight: 600; font-size: 14px; justify-self: start; }
     .btn-row { display: grid; gap: 10px; }
 
-    .seg { display: flex; padding: 4px; gap: 4px; background: var(--field); border: 1px solid var(--line); border-radius: 12px; }
-    .seg button { flex: 1; min-width: 0; height: 38px; border: 0; background: none; border-radius: 9px; color: var(--ink-2); font-weight: 600; font-size: 14px; }
-    .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(15, 27, 45, 0.12); }
+    .seg { display: flex; padding: 4px; gap: 4px; background: var(--field); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+    .seg button { flex: 1; min-width: 0; height: 38px; padding: 0 6px; border: 0; background: none; border-radius: 9px; color: var(--ink-2); font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
 
     .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
     .switch { width: 46px; height: 28px; border-radius: 999px; border: 0; padding: 0; background: var(--line); position: relative; flex: none; }
-    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.15s; }
-    .switch[aria-checked="true"] { background: var(--brand-2); }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.15s; }
+    .switch[aria-checked="true"] { background: var(--brand); }
     .switch[aria-checked="true"]::after { transform: translateX(18px); }
 
     .pill { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; background: var(--field); color: var(--ink-2); }
@@ -208,10 +176,14 @@
     .pill-completed { background: var(--ok-bg); color: var(--ok); }
     .pill-rejected { background: var(--bad-bg); color: var(--bad); }
 
-    /* ---------- Loading, empty, error and blocked states ---------- */
-    .skeleton { height: 78px; border-radius: var(--radius); border: 1px solid var(--line); background: linear-gradient(90deg, var(--paper) 0%, var(--field) 50%, var(--paper) 100%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
-    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-    .state { text-align: center; padding: 28px 18px; display: grid; gap: 8px; justify-items: center; background: var(--paper); border: 1px dashed var(--line); border-radius: var(--radius); }
+    /* ---------- Skeletons and states ---------- */
+    .skeleton { display: grid; gap: 10px; padding: 16px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--paper); }
+    .sk { display: block; height: 12px; border-radius: 6px; background: var(--field); animation: pulse 1.2s ease-in-out infinite; }
+    .sk-title { height: 16px; }
+    .sk-30 { width: 30%; } .sk-50 { width: 50%; } .sk-70 { width: 70%; } .sk-90 { width: 90%; }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+    .stats.is-loading .stat-num { color: transparent; background: var(--field); border-radius: 6px; width: 60%; animation: pulse 1.2s ease-in-out infinite; }
+    .state { text-align: center; padding: 28px 18px; display: grid; gap: 8px; justify-items: center; background: var(--paper); border: 1px dashed var(--line); border-radius: var(--radius); grid-column: 1 / -1; }
     .state-icon { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--field); color: var(--ink-3); }
     .state-error .state-icon { background: var(--bad-bg); color: var(--bad); }
     .state-blocked .state-icon { background: var(--warn-bg); color: var(--warn); }
@@ -223,21 +195,29 @@
     .suggest { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: 14px; color: var(--ink-2); }
     .chip { height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--field); color: var(--link); font-weight: 600; font-size: 14px; }
 
-    /* ---------- Auth ---------- */
+    /* ---------- Sign in ---------- */
+    .auth-grid { display: grid; gap: 24px; }
+    .auth-panel { display: none; gap: 18px; align-content: start; }
+    .auth-point { display: flex; gap: 14px; align-items: flex-start; }
+    .auth-point .tip-icon { width: 40px; height: 40px; }
+    .auth-point strong { display: block; font-size: 16px; }
+    .auth-point span { color: var(--ink-2); font-size: 14px; }
     .otp-input { height: 60px; text-align: center; font: 700 26px/1 var(--font-body); letter-spacing: 0.4em; padding-left: 0.4em; }
     .otp-email { font-weight: 700; color: var(--ink); word-break: break-all; }
 
     .tip { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: var(--radius); background: var(--paper); border: 1px solid var(--line); }
-    .tip-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--brand-grad); color: var(--on-brand); flex: none; }
+    .tip-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-dark); flex: none; }
     .tip-icon.is-warn { background: var(--warn-bg); color: var(--warn); }
     .tip-body { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-2); }
     .tip-body strong { display: block; color: var(--ink); margin-bottom: 2px; }
     .tip-close { border: 0; background: none; color: var(--ink-3); padding: 4px; border-radius: 8px; }
 
     /* ---------- Buy ---------- */
-    .step { display: grid; gap: 12px; }
-    .step-head { display: flex; align-items: center; gap: 10px; }
-    .step-num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-grad); color: var(--on-brand); font: 700 13px/1 var(--font-body); flex: none; }
+    .buy-grid { display: grid; gap: 18px; }
+    .buy-side { display: grid; gap: 18px; align-content: start; }
+    .step { display: grid; gap: 12px; min-width: 0; }
+    .step-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--brand); color: var(--on-brand); font: 700 13px/1 var(--font-body); flex: none; }
     .step-head h2 { font-size: 18px; }
     .step-head .hint { margin-left: auto; white-space: nowrap; }
 
@@ -245,30 +225,32 @@
     .pkg-list[aria-invalid="true"] { border-color: var(--bad); }
     .pkg { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; border-top: 1px solid var(--line); position: relative; }
     .pkg:first-child { border-top: 0; }
+    .pkg:hover { background: var(--canvas); }
     .pkg input { position: absolute; opacity: 0; pointer-events: none; }
-    .pkg-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; }
-    .pkg.is-selected { background: var(--field); }
-    .pkg.is-selected .pkg-radio { border-color: var(--brand-2); }
-    .pkg.is-selected .pkg-radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--brand-grad); }
+    .pkg-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; background: var(--paper); }
+    .pkg.is-selected { background: var(--brand-soft); }
+    .pkg.is-selected .pkg-radio { border-color: var(--brand); }
+    .pkg.is-selected .pkg-radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); }
     .pkg:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: -3px; }
     .pkg-left { flex: 1; min-width: 0; display: grid; }
     .pkg-size { font: 700 17px/1.2 var(--font-display); }
     .pkg-meta { font-size: 13px; color: var(--ink-3); }
     .pkg-tag { justify-self: start; margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ok); }
-    .pkg-price { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pkg-price { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-    .pay { display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
-    .pay-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-top: 1px solid var(--line); }
-    .pay-row:first-child { border-top: 0; }
+    .pay { display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .pay-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+    .pay-row:first-child { border-top: 0; background: var(--accent-soft); }
     .pay-row > span { color: var(--ink-3); font-size: 14px; }
     .pay-row strong { text-align: right; }
-    .pay-amount { font: 700 20px/1.2 var(--font-display); }
+    .pay-amount { font: 700 20px/1.2 var(--font-display); color: var(--accent-ink); }
     .pay-amount.is-empty { font: 500 14px/1.4 var(--font-body); color: var(--ink-3); }
-    .pay-number { display: flex; align-items: center; gap: 8px; }
+    .pay-number { display: flex; align-items: center; gap: 8px; margin-left: auto; }
     .copy-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); color: var(--link); font-size: 13px; font-weight: 600; }
     .copy-btn .i { width: 16px; height: 16px; }
 
     /* ---------- Receipt and orders ---------- */
+    .receipt-wrap { display: grid; gap: 18px; width: 100%; max-width: 560px; margin: 0 auto; }
     .receipt { text-align: center; display: grid; gap: 10px; justify-items: center; padding-top: 6px; }
     .receipt-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--ok-bg); color: var(--ok); }
     .receipt-icon .i { width: 28px; height: 28px; stroke-width: 2.4; }
@@ -279,59 +261,57 @@
     .details div:first-child { border-top: 0; }
     .details dt { color: var(--ink-3); font-size: 14px; }
     .details dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
-    .next { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+    .next { display: grid; margin: 0; padding: 0; list-style: none; }
     .next li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding-bottom: 16px; position: relative; }
     .next li:last-child { padding-bottom: 0; }
     .next li::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--line); }
     .next li:last-child::before { display: none; }
     .next-dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line); background: var(--paper); color: var(--ink-3); font-size: 12px; font-weight: 700; }
     .next-dot .i { width: 16px; height: 16px; stroke-width: 2.6; }
-    .next li.is-done .next-dot { background: var(--ok); border-color: var(--ok); color: #ffffff; }
+    .next li.is-done .next-dot { background: var(--ok); border-color: var(--ok); color: var(--paper); }
     .next strong { display: block; }
     .next span { font-size: 14px; color: var(--ink-2); }
 
     .order-list { display: grid; gap: 10px; }
-    .order { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 6px; }
+    .order { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 6px; min-width: 0; }
     .order-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .order-title { font: 700 17px/1.2 var(--font-display); }
     .order-title span { font: 600 15px/1 var(--font-body); color: var(--ink-2); margin-left: 6px; }
     .order-meta { font-size: 13px; color: var(--ink-3); overflow-wrap: anywhere; }
 
     /* ---------- Account ---------- */
+    .account-grid { display: grid; gap: 18px; align-items: start; }
     .profile { display: flex; align-items: center; gap: 14px; }
-    .avatar { width: 52px; height: 52px; border-radius: 16px; background: var(--brand-grad); color: var(--on-brand); display: grid; place-items: center; font: 700 20px/1 var(--font-display); flex: none; }
+    .avatar { width: 52px; height: 52px; border-radius: 16px; background: var(--brand); color: var(--on-brand); display: grid; place-items: center; font: 700 20px/1 var(--font-display); flex: none; }
     .profile-text { min-width: 0; }
     .profile-name { font-weight: 700; font-size: 17px; overflow-wrap: anywhere; }
     .profile-email { color: var(--ink-3); font-size: 14px; overflow-wrap: anywhere; }
 
     /* ---------- Admin desk ---------- */
     .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-    .stat { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 2px; }
+    .stat { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
     .stat-num { font: 700 24px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
-    .stat-label { font-size: 12px; color: var(--ink-3); font-weight: 600; }
-    .stat-main { background: var(--brand-grad); border-color: transparent; color: var(--on-brand); }
+    .stat-label { font-size: 12px; color: var(--ink-3); font-weight: 600; overflow-wrap: anywhere; }
+    .stat-main { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
     .stat-main .stat-label { color: var(--on-brand-soft); }
-    .toolbar { display: grid; gap: 10px; }
-    .search { position: relative; }
+    .stats.is-loading .stat-main .stat-num { background: rgba(255, 255, 255, 0.25); }
+    .toolbar { display: grid; gap: 10px; min-width: 0; }
+    .search { position: relative; min-width: 0; }
     .search .i { position: absolute; left: 14px; top: 15px; color: var(--ink-3); }
     .search .input { padding-left: 42px; }
     .desk-list { display: grid; gap: 10px; }
-    .desk-row { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 12px; }
+    .desk-row { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 12px; min-width: 0; }
     .desk-main { display: grid; gap: 4px; min-width: 0; }
     .desk-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .desk-title strong { font: 700 16px/1.2 var(--font-display); }
     .desk-meta { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
     .desk-meta.muted { color: var(--ink-3); }
     .desk-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    @media (min-width: 720px) {
-      .desk-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
-      .toolbar { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
-    }
-    .user-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+    .user-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
     .user-row:first-child { border-top: 0; }
     .user-list { display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
     .user-list:has(.state, .skeleton) { background: none; border: 0; gap: 10px; }
-    .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-3); }
+    .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-3); text-align: center; }
     .pager .btn-sm .i { width: 16px; height: 16px; }
 
     /* ---------- Tab bar and messages ---------- */
@@ -341,9 +321,9 @@
       background: var(--paper); border-top: 1px solid var(--line);
       padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
     }
-    .tab { flex: 1; max-width: 120px; display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border: 0; background: none; color: var(--ink-3); font-size: 12px; font-weight: 600; border-radius: 10px; }
+    .tab { flex: 1; max-width: 120px; min-width: 0; display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border: 0; background: none; color: var(--ink-3); font-size: 12px; font-weight: 600; border-radius: 10px; }
     .tab .i { width: 22px; height: 22px; }
-    .tab[aria-current="page"] { color: var(--brand-2); }
+    .tab[aria-current="page"] { color: var(--brand); }
 
     .toast {
       position: fixed; z-index: 20;
@@ -351,14 +331,43 @@
       bottom: calc(84px + env(safe-area-inset-bottom, 0px));
       width: min(440px, calc(100% - 32px));
       padding: 12px 16px; border-radius: 12px;
-      background: var(--ink); color: var(--canvas);
+      background: var(--ink); color: var(--paper);
       font-size: 14px; font-weight: 500;
-      box-shadow: 0 10px 30px rgba(15, 27, 45, 0.25);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
     }
-    .toast.is-error { background: var(--bad); color: #ffffff; }
-    .toast.is-success { background: var(--ok); color: #ffffff; }
-    .toast-code { display: block; font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .toast.is-error { background: var(--bad); }
+    .toast.is-success { background: var(--ok); }
+    .toast-code { display: block; font-size: 12px; opacity: 0.85; margin-top: 2px; }
     .toast-code:empty { display: none; }
+
+    /* ---------- Larger screens ---------- */
+    @media (min-width: 768px) {
+      .band { padding-block: 16px 30px; }
+      .topnav:not([hidden]) { display: flex; }
+      .tabbar { display: none !important; }
+      .sheet { margin-top: 0; border-radius: 0; padding-block: 28px 40px; }
+      .hero h1 { font-size: 30px; }
+      .toast { bottom: 24px; }
+      .narrow { width: 100%; max-width: 460px; margin: 0 auto; }
+      .order-list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+      .account-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .desk-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+      .toolbar { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+      .stat-num { font-size: 28px; }
+    }
+    @media (min-width: 1024px) {
+      .auth-grid { grid-template-columns: minmax(0, 1fr) 440px; gap: 56px; align-items: start; }
+      .auth-panel { display: grid; padding-top: 8px; }
+      .auth-grid .narrow { max-width: none; }
+      .auth-form { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+      .buy-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+      .buy-side { position: sticky; top: 20px; }
+    }
+    @media (max-width: 360px) {
+      .stat { padding: 10px; }
+      .stat-num { font-size: 20px; }
+      .brand-name small { display: none; }
+    }
 
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
@@ -382,303 +391,342 @@
     <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
     <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
     <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 13l2.5-8h11L20 13v6H4v-6z"/><path d="M4 13h5l1 2h4l1-2h5"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></symbol>
   </svg>
 
   <div class="progress" id="progressBar" hidden aria-hidden="true"></div>
 
   <div class="app" id="app">
     <div class="net" id="netBanner" role="status" aria-live="polite" hidden>
-      <span id="netText"></span>
-      <button type="button" class="btn-link" id="netAction" hidden></button>
+      <div class="inner">
+        <span id="netText"></span>
+        <button type="button" class="btn-link" id="netAction" hidden></button>
+      </div>
     </div>
 
     <header class="band">
-      <div class="band-top">
-        <div class="brand">
-          <span class="mark" aria-hidden="true">MJ</span>
-          <span class="brand-name">MJ Internet<small data-key="brandTag">Halotel bundles</small></span>
+      <div class="inner">
+        <div class="band-top">
+          <div class="brand">
+            <span class="mark" aria-hidden="true">MJ</span>
+            <span class="brand-name">MJ Internet<small data-key="brandTag">Halotel bundles</small></span>
+          </div>
+          <nav class="topnav" id="topnav" hidden aria-label="Main">
+            <button type="button" data-page="buy" onclick="navigate('buy')"><svg class="i"><use href="#i-bag"/></svg><span data-key="tabBuy">Buy</span></button>
+            <button type="button" data-page="orders" onclick="navigate('orders')"><svg class="i"><use href="#i-receipt"/></svg><span data-key="tabOrders">Orders</span></button>
+            <button type="button" data-page="admin" onclick="navigate('admin')" hidden><svg class="i"><use href="#i-desk"/></svg><span data-key="tabAdmin">Desk</span></button>
+            <button type="button" data-page="account" onclick="navigate('account')"><svg class="i"><use href="#i-user"/></svg><span data-key="tabAccount">Account</span></button>
+          </nav>
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" id="langEn" onclick="changeLanguage('en')" aria-pressed="true">EN</button>
+            <button type="button" id="langSw" onclick="changeLanguage('sw')" aria-pressed="false">SW</button>
+          </div>
         </div>
-        <div class="lang-switch" role="group" aria-label="Language">
-          <button type="button" id="langEn" onclick="changeLanguage('en')" aria-pressed="true">EN</button>
-          <button type="button" id="langSw" onclick="changeLanguage('sw')" aria-pressed="false">SW</button>
+        <div class="hero">
+          <h1 id="heroTitle"></h1>
+          <p id="heroSub"></p>
         </div>
-      </div>
-      <div class="hero">
-        <h1 id="heroTitle"></h1>
-        <p id="heroSub"></p>
       </div>
     </header>
 
     <main class="sheet">
-      <!-- Shown only on iPhone/iPad when the portal is not yet on the home screen. -->
-      <div class="tip" id="iosInstallTip" hidden style="margin-bottom: 18px;">
-        <span class="tip-icon"><svg class="i"><use href="#i-share"/></svg></span>
-        <div class="tip-body">
-          <strong data-key="installTitle">Add MJ Internet to your iPhone</strong>
-          <span id="iosInstallSteps" data-key="installSteps"></span>
-        </div>
-        <button type="button" class="tip-close" onclick="dismissInstallTip()" aria-label="Close"><svg class="i"><use href="#i-close"/></svg></button>
-      </div>
-
-      <!-- ===== Log in / create account ===== -->
-      <section id="viewAuth" class="view">
-        <div class="seg" role="group">
-          <button type="button" id="tabBtnLogin" onclick="switchAuthTab('login')" aria-pressed="true" data-key="loginTab">Log in</button>
-          <button type="button" id="tabBtnReg" onclick="switchAuthTab('register')" aria-pressed="false" data-key="signupTab">Create account</button>
-        </div>
-
-        <form id="formLogin" class="stack" onsubmit="handleLoginSubmit(event)" novalidate>
-          <div class="field">
-            <label for="loginEmail" data-key="emailLabel">Email</label>
-            <input type="email" id="loginEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
-          </div>
-          <div class="field">
-            <label for="loginPass" data-key="passLabel">Password</label>
-            <div class="input-wrap">
-              <input type="password" id="loginPass" class="input" autocomplete="current-password" maxlength="128">
-              <button type="button" class="reveal" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
-            </div>
-          </div>
-          <button type="submit" class="btn" data-key="loginBtn">Log in</button>
-          <button type="button" class="btn-link" onclick="openForgotView()" data-key="forgotPass">Forgot password?</button>
-        </form>
-
-        <form id="formRegister" class="stack" onsubmit="handleRegisterSubmit(event)" novalidate hidden>
-          <div class="field">
-            <label for="regName" data-key="fullNameLabel">Full name</label>
-            <input type="text" id="regName" class="input" autocomplete="name" maxlength="60">
-          </div>
-          <div class="field">
-            <label for="regEmail" data-key="emailLabel">Email</label>
-            <input type="email" id="regEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
-          </div>
-          <div class="field">
-            <label for="regPass" data-key="createPassLabel">Password</label>
-            <div class="input-wrap">
-              <input type="password" id="regPass" class="input" autocomplete="new-password" maxlength="128">
-              <button type="button" class="reveal" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
-            </div>
-            <span class="hint" data-key="passHint">At least 8 characters</span>
-          </div>
-          <button type="submit" class="btn" data-key="signUpBtn">Create account</button>
-        </form>
-      </section>
-
-      <!-- ===== Forgot password ===== -->
-      <section id="viewForgot" class="view" hidden>
-        <form id="formForgot" class="stack" onsubmit="handleForgotSubmit(event)" novalidate>
-          <div class="field">
-            <label for="forgotEmail" data-key="emailLabel">Email</label>
-            <input type="email" id="forgotEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
-          </div>
-          <button type="submit" class="btn" data-key="sendOtpBtn">Send code</button>
-          <button type="button" class="btn btn-ghost" onclick="backToAuth()" data-key="cancelBtn">Back to log in</button>
-        </form>
-      </section>
-
-      <!-- ===== Email code ===== -->
-      <section id="viewOTP" class="view" hidden>
-        <p class="hint"><span data-key="otpSub">Enter the 6-digit code we sent to</span> <span class="otp-email" id="otpEmailText"></span></p>
-        <form id="formOtp" class="stack" onsubmit="handleVerifyOtp(event)" novalidate>
-          <div class="field">
-            <input type="text" id="otpCodeInput" class="input otp-input" maxlength="6" inputmode="numeric" autocomplete="one-time-code" aria-label="6-digit code" placeholder="••••••">
-          </div>
-          <button type="submit" class="btn" data-key="verifyBtn">Verify</button>
-        </form>
-        <div class="btn-row">
-          <button type="button" class="btn btn-ghost" id="btnResendOtp" onclick="handleResendOtp()">Resend code</button>
-          <button type="button" class="btn-link" onclick="cancelOtp()" data-key="backAuthBtn">Use a different email</button>
-        </div>
-      </section>
-
-      <!-- ===== New password ===== -->
-      <section id="viewNewPass" class="view" hidden>
-        <form id="formNewPass" class="stack" onsubmit="handleNewPassSubmit(event)" novalidate>
-          <div class="field">
-            <label for="resetNewPass" data-key="newPassLabel">New password</label>
-            <div class="input-wrap">
-              <input type="password" id="resetNewPass" class="input" autocomplete="new-password" maxlength="128">
-              <button type="button" class="reveal" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
-            </div>
-            <span class="hint" data-key="passHint">At least 8 characters</span>
-          </div>
-          <button type="submit" class="btn" data-key="savePassBtn">Save and log in</button>
-        </form>
-      </section>
-
-      <!-- ===== Buy a bundle ===== -->
-      <section id="viewBuy" class="view" hidden>
-        <form id="formOrder" class="view" onsubmit="handlePlaceOrder(event)" novalidate>
-          <div class="step">
-            <div class="step-head">
-              <span class="step-num">1</span>
-              <h2 data-key="step1">Choose a bundle</h2>
-              <span class="hint" data-key="halotelOnly">Halotel lines only</span>
-            </div>
-            <!-- Prices shown here are for display; the server decides the real price. -->
-            <div class="pkg-list" id="packageList" role="radiogroup" aria-label="Bundle" tabindex="-1"></div>
-          </div>
-
-          <div class="step">
-            <div class="step-head">
-              <span class="step-num">2</span>
-              <h2 data-key="step2">Pay with Mix by Yas</h2>
-            </div>
-            <div class="pay">
-              <div class="pay-row"><span data-key="payAmount">Amount</span><strong class="pay-amount is-empty" id="payAmount"></strong></div>
-              <div class="pay-row">
-                <span data-key="payNumber">Send to</span>
-                <span class="pay-number">
-                  <strong class="mono" id="payNumberText">0770 136 023</strong>
-                  <button type="button" class="copy-btn" onclick="copyPaymentNumber(this)"><svg class="i"><use href="#i-copy"/></svg><span data-key="copyNumber">Copy</span></button>
-                </span>
-              </div>
-              <div class="pay-row"><span data-key="payName">Name</span><strong>Michael Joseph Liganya</strong></div>
-            </div>
-            <p class="hint" data-key="payNote">Keep the confirmation SMS. You'll need its transaction ID below.</p>
-          </div>
-
-          <div class="step">
-            <div class="step-head">
-              <span class="step-num">3</span>
-              <h2 data-key="step3">Send your order</h2>
-            </div>
-            <div class="field">
-              <label for="orderPhone" data-key="phoneLabel">Halotel number to receive the bundle</label>
-              <input type="tel" id="orderPhone" class="input mono" placeholder="062X XXX XXX" inputmode="tel" autocomplete="tel" maxlength="16">
-              <span class="hint" data-key="phoneHint">Starts with 061 or 062</span>
-            </div>
-            <div class="field">
-              <label for="orderPaymentRef" data-key="paymentRefLabel">Transaction ID</label>
-              <input type="text" id="orderPaymentRef" class="input mono" placeholder="8FG21XKQ0P" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40">
-              <span class="hint" data-key="paymentRefHint">From the Mix by Yas confirmation SMS.</span>
-            </div>
-            <button type="submit" class="btn" id="btnSubmitOrder">Submit order</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- ===== Order received ===== -->
-      <section id="viewDone" class="view" hidden>
-        <div class="receipt">
-          <span class="receipt-icon"><svg class="i"><use href="#i-check"/></svg></span>
-          <h2 data-key="doneTitle">Order received</h2>
-          <p id="doneText"></p>
-        </div>
-        <div class="card stack">
-          <h3 style="font-size: 16px;" data-key="nextTitle">What happens next</h3>
-          <ol class="next" id="doneNext"></ol>
-        </div>
-        <dl class="details" id="doneDetails"></dl>
-        <div class="btn-row">
-          <button type="button" class="btn" onclick="navigate('orders')" data-key="viewOrdersBtn">View my orders</button>
-          <button type="button" class="btn btn-ghost" onclick="navigate('buy')" data-key="buyAnotherBtn">Buy another bundle</button>
-        </div>
-      </section>
-
-      <!-- ===== My orders ===== -->
-      <section id="viewOrders" class="view" hidden>
-        <div class="order-list" id="historyOrdersList"></div>
-      </section>
-
-      <!-- ===== Account ===== -->
-      <section id="viewAccount" class="view" hidden>
-        <div class="card profile">
-          <span class="avatar" id="userAvatarIcon"></span>
-          <div class="profile-text">
-            <div class="profile-name" id="drawerUserName"></div>
-            <div class="profile-email" id="drawerUserEmail"></div>
-          </div>
-        </div>
-        <div class="tip" id="storageTip" hidden>
-          <span class="tip-icon is-warn"><svg class="i"><use href="#i-lock"/></svg></span>
+      <div class="inner sheet-inner">
+        <!-- Shown only on iPhone/iPad when the portal is not yet on the home screen. -->
+        <div class="tip" id="iosInstallTip" hidden style="margin-bottom: 18px;">
+          <span class="tip-icon"><svg class="i"><use href="#i-share"/></svg></span>
           <div class="tip-body">
-            <strong data-key="storageTitle">Your browser is blocking saved data</strong>
-            <span data-key="storageWhy"></span>
+            <strong data-key="installTitle">Add MJ Internet to your iPhone</strong>
+            <span id="iosInstallSteps" data-key="installSteps"></span>
           </div>
+          <button type="button" class="tip-close" onclick="dismissInstallTip()" aria-label="Close"><svg class="i"><use href="#i-close"/></svg></button>
         </div>
-        <div class="card stack">
-          <div class="field">
-            <span class="label" data-key="theme">Theme</span>
-            <div class="seg" role="group" aria-label="Theme">
-              <button type="button" id="themeSystem" onclick="changeTheme('system')" aria-pressed="true" data-key="themeSystem">Auto</button>
-              <button type="button" id="themeLight" onclick="changeTheme('light')" aria-pressed="false" data-key="themeLight">Light</button>
-              <button type="button" id="themeDark" onclick="changeTheme('dark')" aria-pressed="false" data-key="themeDark">Dark</button>
-            </div>
-          </div>
-          <div class="switch-row">
-            <div>
-              <div class="label" id="liteLabel" data-key="liteLabel">Lite mode</div>
-              <div class="hint" data-key="liteHint">Uses less data: plain fonts and shorter lists. Good on slow connections.</div>
-            </div>
-            <button type="button" class="switch" id="liteToggle" role="switch" aria-checked="false" aria-labelledby="liteLabel" onclick="setLiteMode(!liteMode)"></button>
-          </div>
-        </div>
-        <div class="stack">
-          <button type="button" class="btn btn-ghost" onclick="performLogout()"><svg class="i"><use href="#i-logout"/></svg><span data-key="logout">Log out</span></button>
-          <p class="hint" style="text-align: center;" data-key="logoutHint">Logs you out on all your devices.</p>
-        </div>
-      </section>
 
-      <!-- ===== Admin desk (data comes from the server only for admin accounts) ===== -->
-      <section id="viewAdmin" class="view" hidden>
-        <div id="deskBlocked" hidden></div>
-        <div id="deskContent" class="view">
-          <div class="stats">
-            <div class="stat stat-main"><span class="stat-num" id="adminPendingOrders">–</span><span class="stat-label" data-key="statPending">Waiting</span></div>
-            <div class="stat"><span class="stat-num" id="adminTotalOrders">–</span><span class="stat-label" data-key="statOrders">All orders</span></div>
-            <div class="stat"><span class="stat-num" id="adminTotalUsers">–</span><span class="stat-label" data-key="statUsers">Customers</span></div>
-          </div>
+        <!-- ===== Opening a saved login ===== -->
+        <section id="viewBoot" class="view" hidden aria-busy="true" aria-label="Loading">
+          <div class="skeleton"><span class="sk sk-title sk-50"></span><span class="sk sk-90"></span><span class="sk sk-70"></span></div>
+          <div class="skeleton"><span class="sk sk-title sk-30"></span><span class="sk sk-90"></span><span class="sk sk-50"></span></div>
+          <div class="skeleton"><span class="sk sk-title sk-50"></span><span class="sk sk-70"></span></div>
+        </section>
 
-          <div class="seg" role="group" style="max-width: 320px;">
-            <button type="button" id="deskTabOrders" onclick="showDeskTab('orders')" aria-pressed="true" data-key="deskOrders">Orders</button>
-            <button type="button" id="deskTabUsers" onclick="showDeskTab('users')" aria-pressed="false" data-key="deskUsers">Customers</button>
-          </div>
-
-          <div id="deskOrders" class="view">
-            <div class="toolbar">
-              <div class="seg" role="group" aria-label="Status" id="statusFilter">
-                <button type="button" data-status="all" aria-pressed="true" data-key="filterAll">All</button>
-                <button type="button" data-status="pending" aria-pressed="false" data-key="status_pending">Pending</button>
-                <button type="button" data-status="completed" aria-pressed="false" data-key="status_completed">Completed</button>
-                <button type="button" data-status="rejected" aria-pressed="false" data-key="status_rejected">Rejected</button>
+        <!-- ===== Log in / create account ===== -->
+        <section id="viewAuth" class="view">
+          <div class="auth-grid">
+            <div class="auth-panel">
+              <div class="auth-point">
+                <span class="tip-icon"><svg class="i"><use href="#i-bag"/></svg></span>
+                <div><strong data-key="pointBundlesTitle">Bundles from 5 GB to 40 GB</strong><span data-key="pointBundlesText">Every bundle shows its price per GB, so the best value is easy to spot.</span></div>
               </div>
-              <form class="search" onsubmit="handleAdminOrderSearch(event)">
-                <svg class="i"><use href="#i-search"/></svg>
-                <input type="search" id="adminOrderSearch" class="input" maxlength="100" aria-label="Search orders" data-placeholder-key="searchOrders" placeholder="Search name, phone, order or transaction ID">
+              <div class="auth-point">
+                <span class="tip-icon"><svg class="i"><use href="#i-phone"/></svg></span>
+                <div><strong data-key="pointPayTitle">Pay with Mix by Yas</strong><span data-key="pointPayText">Send the money, then enter the transaction ID from your SMS.</span></div>
+              </div>
+              <div class="auth-point">
+                <span class="tip-icon"><svg class="i"><use href="#i-receipt"/></svg></span>
+                <div><strong data-key="pointTrackTitle">Follow every order</strong><span data-key="pointTrackText">My orders shows when your bundle has been loaded.</span></div>
+              </div>
+            </div>
+
+            <div class="narrow auth-form stack">
+              <div class="seg" role="group">
+                <button type="button" id="tabBtnLogin" onclick="switchAuthTab('login')" aria-pressed="true" data-key="loginTab">Log in</button>
+                <button type="button" id="tabBtnReg" onclick="switchAuthTab('register')" aria-pressed="false" data-key="signupTab">Create account</button>
+              </div>
+
+              <form id="formLogin" class="stack" onsubmit="handleLoginSubmit(event)" novalidate>
+                <div class="field">
+                  <label for="loginEmail" data-key="emailLabel">Email</label>
+                  <input type="email" id="loginEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
+                </div>
+                <div class="field">
+                  <label for="loginPass" data-key="passLabel">Password</label>
+                  <div class="input-wrap">
+                    <input type="password" id="loginPass" class="input" autocomplete="current-password" maxlength="128">
+                    <button type="button" class="reveal" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
+                  </div>
+                </div>
+                <button type="submit" class="btn" data-key="loginBtn">Log in</button>
+                <button type="button" class="btn-link" onclick="openForgotView()" data-key="forgotPass">Forgot password?</button>
+              </form>
+
+              <form id="formRegister" class="stack" onsubmit="handleRegisterSubmit(event)" novalidate hidden>
+                <div class="field">
+                  <label for="regName" data-key="fullNameLabel">Full name</label>
+                  <input type="text" id="regName" class="input" autocomplete="name" maxlength="60">
+                </div>
+                <div class="field">
+                  <label for="regEmail" data-key="emailLabel">Email</label>
+                  <input type="email" id="regEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
+                </div>
+                <div class="field">
+                  <label for="regPass" data-key="createPassLabel">Password</label>
+                  <div class="input-wrap">
+                    <input type="password" id="regPass" class="input" autocomplete="new-password" maxlength="128">
+                    <button type="button" class="reveal" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
+                  </div>
+                  <span class="hint" data-key="passHint">At least 8 characters</span>
+                </div>
+                <button type="submit" class="btn" data-key="signUpBtn">Create account</button>
               </form>
             </div>
-            <div class="desk-list" id="adminOrdersList"></div>
-            <div class="pager">
-              <button type="button" class="btn btn-ghost btn-sm" id="ordersPrev" onclick="changeAdminPage('orders', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
-              <span id="ordersPageInfo"></span>
-              <button type="button" class="btn btn-ghost btn-sm" id="ordersNext" onclick="changeAdminPage('orders', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
-            </div>
           </div>
+        </section>
 
-          <div id="deskUsers" class="view" hidden>
-            <form class="search" onsubmit="handleAdminUserSearch(event)">
-              <svg class="i"><use href="#i-search"/></svg>
-              <input type="search" id="adminUserSearch" class="input" maxlength="100" aria-label="Search customers" data-placeholder-key="searchUsers" placeholder="Search name or email">
+        <!-- ===== Forgot password ===== -->
+        <section id="viewForgot" class="view" hidden>
+          <form id="formForgot" class="stack narrow" onsubmit="handleForgotSubmit(event)" novalidate>
+            <div class="field">
+              <label for="forgotEmail" data-key="emailLabel">Email</label>
+              <input type="email" id="forgotEmail" class="input" placeholder="name@example.com" autocomplete="email" maxlength="254">
+            </div>
+            <button type="submit" class="btn" data-key="sendOtpBtn">Send code</button>
+            <button type="button" class="btn btn-ghost" onclick="backToAuth()" data-key="cancelBtn">Back to log in</button>
+          </form>
+        </section>
+
+        <!-- ===== Email code ===== -->
+        <section id="viewOTP" class="view" hidden>
+          <div class="narrow stack">
+            <p class="hint"><span data-key="otpSub">Enter the 6-digit code we sent to</span> <span class="otp-email" id="otpEmailText"></span></p>
+            <form id="formOtp" class="stack" onsubmit="handleVerifyOtp(event)" novalidate>
+              <div class="field">
+                <input type="text" id="otpCodeInput" class="input otp-input" maxlength="6" inputmode="numeric" autocomplete="one-time-code" aria-label="6-digit code" placeholder="••••••">
+              </div>
+              <button type="submit" class="btn" data-key="verifyBtn">Verify</button>
             </form>
-            <div class="user-list" id="adminUsersList"></div>
-            <div class="pager">
-              <button type="button" class="btn btn-ghost btn-sm" id="usersPrev" onclick="changeAdminPage('users', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
-              <span id="usersPageInfo"></span>
-              <button type="button" class="btn btn-ghost btn-sm" id="usersNext" onclick="changeAdminPage('users', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
+            <div class="btn-row">
+              <button type="button" class="btn btn-ghost" id="btnResendOtp" onclick="handleResendOtp()">Resend code</button>
+              <button type="button" class="btn-link" onclick="cancelOtp()" data-key="backAuthBtn">Use a different email</button>
             </div>
           </div>
+        </section>
 
-          <button type="button" class="btn btn-ghost" id="btnAdminRefresh" onclick="loadAdminDashboardData()" data-key="refreshBtn">Refresh</button>
-        </div>
-      </section>
+        <!-- ===== New password ===== -->
+        <section id="viewNewPass" class="view" hidden>
+          <form id="formNewPass" class="stack narrow" onsubmit="handleNewPassSubmit(event)" novalidate>
+            <div class="field">
+              <label for="resetNewPass" data-key="newPassLabel">New password</label>
+              <div class="input-wrap">
+                <input type="password" id="resetNewPass" class="input" autocomplete="new-password" maxlength="128">
+                <button type="button" class="reveal" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
+              </div>
+              <span class="hint" data-key="passHint">At least 8 characters</span>
+            </div>
+            <button type="submit" class="btn" data-key="savePassBtn">Save and log in</button>
+          </form>
+        </section>
+
+        <!-- ===== Buy a bundle ===== -->
+        <section id="viewBuy" class="view" hidden>
+          <form id="formOrder" class="buy-grid" onsubmit="handlePlaceOrder(event)" novalidate>
+            <div class="step">
+              <div class="step-head">
+                <span class="step-num">1</span>
+                <h2 data-key="step1">Choose a bundle</h2>
+                <span class="hint" data-key="halotelOnly">Halotel lines only</span>
+              </div>
+              <!-- Prices shown here are for display; the server decides the real price. -->
+              <div class="pkg-list" id="packageList" role="radiogroup" aria-label="Bundle" tabindex="-1"></div>
+            </div>
+
+            <div class="buy-side">
+              <div class="step">
+                <div class="step-head">
+                  <span class="step-num">2</span>
+                  <h2 data-key="step2">Pay with Mix by Yas</h2>
+                </div>
+                <div class="pay">
+                  <div class="pay-row"><span data-key="payAmount">Amount</span><strong class="pay-amount is-empty" id="payAmount"></strong></div>
+                  <div class="pay-row">
+                    <span data-key="payNumber">Send to</span>
+                    <span class="pay-number">
+                      <strong class="mono" id="payNumberText">0770 136 023</strong>
+                      <button type="button" class="copy-btn" onclick="copyPaymentNumber(this)"><svg class="i"><use href="#i-copy"/></svg><span data-key="copyNumber">Copy</span></button>
+                    </span>
+                  </div>
+                  <div class="pay-row"><span data-key="payName">Name</span><strong>Michael Joseph Liganya</strong></div>
+                </div>
+                <p class="hint" data-key="payNote">Keep the confirmation SMS. You'll need its transaction ID below.</p>
+              </div>
+
+              <div class="step">
+                <div class="step-head">
+                  <span class="step-num">3</span>
+                  <h2 data-key="step3">Send your order</h2>
+                </div>
+                <div class="field">
+                  <label for="orderPhone" data-key="phoneLabel">Halotel number to receive the bundle</label>
+                  <input type="tel" id="orderPhone" class="input mono" placeholder="062X XXX XXX" inputmode="tel" autocomplete="tel" maxlength="16">
+                  <span class="hint" data-key="phoneHint">Starts with 061 or 062</span>
+                </div>
+                <div class="field">
+                  <label for="orderPaymentRef" data-key="paymentRefLabel">Transaction ID</label>
+                  <input type="text" id="orderPaymentRef" class="input mono" placeholder="8FG21XKQ0P" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40">
+                  <span class="hint" data-key="paymentRefHint">From the Mix by Yas confirmation SMS.</span>
+                </div>
+                <button type="submit" class="btn" id="btnSubmitOrder">Submit order</button>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- ===== Order received ===== -->
+        <section id="viewDone" class="view" hidden>
+          <div class="receipt-wrap">
+            <div class="receipt">
+              <span class="receipt-icon"><svg class="i"><use href="#i-check"/></svg></span>
+              <h2 data-key="doneTitle">Order received</h2>
+              <p id="doneText"></p>
+            </div>
+            <div class="card stack">
+              <h3 style="font-size: 16px;" data-key="nextTitle">What happens next</h3>
+              <ol class="next" id="doneNext"></ol>
+            </div>
+            <dl class="details" id="doneDetails"></dl>
+            <div class="btn-row">
+              <button type="button" class="btn" onclick="navigate('orders')" data-key="viewOrdersBtn">View my orders</button>
+              <button type="button" class="btn btn-ghost" onclick="navigate('buy')" data-key="buyAnotherBtn">Buy another bundle</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== My orders ===== -->
+        <section id="viewOrders" class="view" hidden>
+          <div class="order-list" id="historyOrdersList"></div>
+        </section>
+
+        <!-- ===== Account ===== -->
+        <section id="viewAccount" class="view" hidden>
+          <div class="account-grid">
+            <div class="stack">
+              <div class="card profile">
+                <span class="avatar" id="userAvatarIcon"></span>
+                <div class="profile-text">
+                  <div class="profile-name" id="drawerUserName"></div>
+                  <div class="profile-email" id="drawerUserEmail"></div>
+                </div>
+              </div>
+              <div class="tip" id="storageTip" hidden>
+                <span class="tip-icon is-warn"><svg class="i"><use href="#i-lock"/></svg></span>
+                <div class="tip-body">
+                  <strong data-key="storageTitle">Your browser is blocking saved data</strong>
+                  <span data-key="storageWhy"></span>
+                </div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="card switch-row">
+                <div>
+                  <div class="label" id="liteLabel" data-key="liteLabel">Data saver</div>
+                  <div class="hint" data-key="liteHint">Uses less data: plain fonts and shorter lists. Good on slow connections.</div>
+                </div>
+                <button type="button" class="switch" id="liteToggle" role="switch" aria-checked="false" aria-labelledby="liteLabel" onclick="setLiteMode(!liteMode)"></button>
+              </div>
+              <button type="button" class="btn btn-ghost" onclick="performLogout()"><svg class="i"><use href="#i-logout"/></svg><span data-key="logout">Log out</span></button>
+              <p class="hint" style="text-align: center;" data-key="logoutHint">Logs you out on all your devices.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== Admin desk (data comes from the server only for admin accounts) ===== -->
+        <section id="viewAdmin" class="view" hidden>
+          <div id="deskBlocked" hidden></div>
+          <div id="deskContent" class="view">
+            <div class="stats is-loading" id="deskStats">
+              <div class="stat stat-main"><span class="stat-num" id="adminPendingOrders">0</span><span class="stat-label" data-key="statPending">Waiting</span></div>
+              <div class="stat"><span class="stat-num" id="adminTotalOrders">0</span><span class="stat-label" data-key="statOrders">All orders</span></div>
+              <div class="stat"><span class="stat-num" id="adminTotalUsers">0</span><span class="stat-label" data-key="statUsers">Customers</span></div>
+            </div>
+
+            <div class="seg" role="group" style="max-width: 320px;">
+              <button type="button" id="deskTabOrders" onclick="showDeskTab('orders')" aria-pressed="true" data-key="deskOrders">Orders</button>
+              <button type="button" id="deskTabUsers" onclick="showDeskTab('users')" aria-pressed="false" data-key="deskUsers">Customers</button>
+            </div>
+
+            <div id="deskOrders" class="view">
+              <div class="toolbar">
+                <div class="seg" role="group" aria-label="Status" id="statusFilter">
+                  <button type="button" data-status="all" aria-pressed="true" data-key="filterAll">All</button>
+                  <button type="button" data-status="pending" aria-pressed="false" data-key="status_pending">Pending</button>
+                  <button type="button" data-status="completed" aria-pressed="false" data-key="status_completed">Completed</button>
+                  <button type="button" data-status="rejected" aria-pressed="false" data-key="status_rejected">Rejected</button>
+                </div>
+                <form class="search" onsubmit="handleAdminOrderSearch(event)">
+                  <svg class="i"><use href="#i-search"/></svg>
+                  <input type="search" id="adminOrderSearch" class="input" maxlength="100" aria-label="Search orders" data-placeholder-key="searchOrders" placeholder="Search name, phone, order or transaction ID">
+                </form>
+              </div>
+              <div class="desk-list" id="adminOrdersList"></div>
+              <div class="pager">
+                <button type="button" class="btn btn-ghost btn-sm" id="ordersPrev" onclick="changeAdminPage('orders', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
+                <span id="ordersPageInfo"></span>
+                <button type="button" class="btn btn-ghost btn-sm" id="ordersNext" onclick="changeAdminPage('orders', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
+              </div>
+            </div>
+
+            <div id="deskUsers" class="view" hidden>
+              <form class="search" onsubmit="handleAdminUserSearch(event)">
+                <svg class="i"><use href="#i-search"/></svg>
+                <input type="search" id="adminUserSearch" class="input" maxlength="100" aria-label="Search customers" data-placeholder-key="searchUsers" placeholder="Search name or email">
+              </form>
+              <div class="user-list" id="adminUsersList"></div>
+              <div class="pager">
+                <button type="button" class="btn btn-ghost btn-sm" id="usersPrev" onclick="changeAdminPage('users', -1)"><svg class="i"><use href="#i-left"/></svg><span data-key="prevPage">Previous</span></button>
+                <span id="usersPageInfo"></span>
+                <button type="button" class="btn btn-ghost btn-sm" id="usersNext" onclick="changeAdminPage('users', 1)"><span data-key="nextPage">Next</span><svg class="i"><use href="#i-right"/></svg></button>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-ghost" id="btnAdminRefresh" onclick="loadAdminDashboardData()" data-key="refreshBtn">Refresh</button>
+          </div>
+        </section>
+      </div>
     </main>
 
     <nav class="tabbar" id="tabbar" hidden aria-label="Main">
-      <button type="button" class="tab" id="tabBuy" onclick="navigate('buy')"><svg class="i"><use href="#i-bag"/></svg><span data-key="tabBuy">Buy</span></button>
-      <button type="button" class="tab" id="tabOrders" onclick="navigate('orders')"><svg class="i"><use href="#i-receipt"/></svg><span data-key="tabOrders">Orders</span></button>
-      <button type="button" class="tab" id="tabAdmin" onclick="navigate('admin')" hidden><svg class="i"><use href="#i-desk"/></svg><span data-key="tabAdmin">Desk</span></button>
-      <button type="button" class="tab" id="tabAccount" onclick="navigate('account')"><svg class="i"><use href="#i-user"/></svg><span data-key="tabAccount">Account</span></button>
+      <button type="button" class="tab" id="tabBuy" data-page="buy" onclick="navigate('buy')"><svg class="i"><use href="#i-bag"/></svg><span data-key="tabBuy">Buy</span></button>
+      <button type="button" class="tab" id="tabOrders" data-page="orders" onclick="navigate('orders')"><svg class="i"><use href="#i-receipt"/></svg><span data-key="tabOrders">Orders</span></button>
+      <button type="button" class="tab" id="tabAdmin" data-page="admin" onclick="navigate('admin')" hidden><svg class="i"><use href="#i-desk"/></svg><span data-key="tabAdmin">Desk</span></button>
+      <button type="button" class="tab" id="tabAccount" data-page="account" onclick="navigate('account')"><svg class="i"><use href="#i-user"/></svg><span data-key="tabAccount">Account</span></button>
     </nav>
   </div>
 
@@ -687,9 +735,12 @@
   <script>
     // Address of the Google Apps Script web app (see README.md, "Backend setup").
     var API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+    // The real site refuses to run inside another site's frame, so nobody can lay it under a fake page
+    // and trick clicks. (The design preview sets this to true because its host shows it in a frame.)
+    var ALLOW_FRAMING = false;
     var REQUEST_TIMEOUT_MS = 30000;
     var PROGRESS_DELAY_MS = 300;   // show the progress bar only when a request takes longer than this
-    var SLOW_AFTER_MS = 5000;      // after this long, say the connection is slow and offer lite mode
+    var SLOW_AFTER_MS = 5000;      // after this long, say the connection is slow and offer data saver
     var RESEND_WAIT_SECONDS = 60;
     var PAYMENT_NUMBER = "0770136023";
     var ORDER_STATUSES = ["pending", "completed", "rejected"];
@@ -713,7 +764,7 @@
       weak_password: "MJ-103", required_password: "MJ-103",
       already_registered: "MJ-104", invalid_credentials: "MJ-105", locked: "MJ-106",
       otp_invalid: "MJ-107", required_code: "MJ-107", otp_expired: "MJ-108", otp_too_many: "MJ-109",
-      resend_wait: "MJ-110", email_failed: "MJ-111", reset_expired: "MJ-112",
+      resend_wait: "MJ-110", email_failed: "MJ-111", reset_expired: "MJ-112", otp_limit: "MJ-113",
       invalid_package: "MJ-201", invalid_phone: "MJ-202", required_phone: "MJ-202",
       invalid_payment_ref: "MJ-203", required_ref: "MJ-203", duplicate_payment_ref: "MJ-204",
       not_found: "MJ-205", invalid_status: "MJ-206",
@@ -763,6 +814,13 @@
         brandTag: "Halotel bundles",
         heroAuthTitle: "Buy Halotel bundles in minutes",
         heroAuthSub: "Log in or create an account. Pay with Mix by Yas and we load the bundle onto your line.",
+        pointBundlesTitle: "Bundles from 5 GB to 40 GB",
+        pointBundlesText: "Every bundle shows its price per GB, so the best value is easy to spot.",
+        pointPayTitle: "Pay with Mix by Yas",
+        pointPayText: "Send the money, then enter the transaction ID from your SMS.",
+        pointTrackTitle: "Follow every order",
+        pointTrackText: "My orders shows when your bundle has been loaded.",
+        bootTitle: "Opening your account…",
         loginTab: "Log in",
         signupTab: "Create account",
         emailLabel: "Email",
@@ -816,7 +874,6 @@
         paymentRefHint: "From the Mix by Yas confirmation SMS.",
         submitOrderBtn: "Submit order",
         submitOrderBtnAmount: "Submit order · {amount}",
-        processingOrder: "Sending your order…",
         orderTimeout: "The connection timed out, so we can't tell if your order arrived. Tap Submit again. If it did arrive, we'll show your receipt, not a second order.",
         orderRecovered: "Good news: your first try did arrive. Here is your receipt.",
         draftRestored: "We kept the order you were filling in. Check it and submit.",
@@ -851,13 +908,9 @@
         tryAgain: "Try again",
         account: "Account",
         accountSub: "Your details and app settings.",
-        theme: "Theme",
-        themeSystem: "Auto",
-        themeLight: "Light",
-        themeDark: "Dark",
-        liteLabel: "Lite mode",
+        liteLabel: "Data saver",
         liteHint: "Uses less data: plain fonts and shorter lists. Good on slow connections.",
-        liteOn: "Lite mode is on. Lists are shorter and fonts are plain to save data.",
+        liteOn: "Data saver is on. Lists are shorter and fonts are plain to save data.",
         storageTitle: "Your browser is blocking saved data",
         storageWhy: "We use it to keep you logged in and to save orders you haven't sent. Without it you'll log in every time. To fix it, allow site data for this page in your browser settings.",
         logout: "Log out",
@@ -915,8 +968,11 @@
         netOffline: "You're offline. Check your mobile data or Wi-Fi. We'll reload as soon as you're back.",
         netBack: "You're back online.",
         netSlow: "Slow connection. Still working…",
-        useLite: "Use lite mode",
+        useLite: "Use data saver",
         errorRef: "Error {code}",
+        framedTitle: "Open MJ Internet in its own tab",
+        framedText: "For your safety this page doesn't run inside other websites.",
+        framedLink: "Open MJ Internet",
         installTitle: "Add MJ Internet to your iPhone",
         installSteps: "Tap Share, then “Add to Home Screen”. If you don't see it, open this page in Safari first.",
         installStepsInApp: "Open this page in Safari first (menu ••• then Open in Safari). Then tap Share and “Add to Home Screen”.",
@@ -930,7 +986,7 @@
         err_server_not_configured: "The server isn't set up yet. Please tell MJ Internet.",
         err_network: "We couldn't reach the server. Check your connection and try again.",
         err_offline: "You're offline, so this wasn't sent. Connect to the internet and try again.",
-        err_timeout: "The connection is too slow and the request timed out. Try again, or turn on lite mode.",
+        err_timeout: "The connection is too slow and the request timed out. Try again, or turn on data saver.",
         err_bad_response: "The server sent an answer we couldn't read. Try again in a minute.",
         err_server_error: "Something failed on our server. Try again in a minute.",
         err_bad_request: "The app sent a request the server didn't understand. Reload the page and try again.",
@@ -943,6 +999,7 @@
         err_otp_invalid: "That code is wrong. Use the newest code from the email.",
         err_otp_expired: "The code has expired. Tap Resend code to get a new one.",
         err_otp_too_many: "Too many wrong codes, so this one is cancelled. Tap Resend code.",
+        err_otp_limit: "Too many codes were asked for this email. To keep the account safe, wait a few hours and try again.",
         err_resend_wait: "Wait a minute before asking for another code.",
         err_email_failed: "We couldn't send the email right now. Try again later.",
         err_not_logged_in: "Your login has expired. Log in again to continue.",
@@ -959,6 +1016,13 @@
         brandTag: "Vifurushi vya Halotel",
         heroAuthTitle: "Nunua vifurushi vya Halotel kwa dakika chache",
         heroAuthSub: "Ingia au fungua akaunti. Lipa kwa Mix by Yas, nasi tunaweka kifurushi kwenye laini yako.",
+        pointBundlesTitle: "Vifurushi vya GB 5 hadi GB 40",
+        pointBundlesText: "Kila kifurushi kinaonyesha bei kwa GB, hivyo ni rahisi kuona chenye bei nafuu.",
+        pointPayTitle: "Lipa kwa Mix by Yas",
+        pointPayText: "Tuma pesa, kisha weka namba ya muamala kutoka kwenye SMS yako.",
+        pointTrackTitle: "Fuatilia kila oda",
+        pointTrackText: "Oda zangu inaonyesha kifurushi chako kikishawekwa.",
+        bootTitle: "Inafungua akaunti yako…",
         loginTab: "Ingia",
         signupTab: "Fungua akaunti",
         emailLabel: "Barua pepe",
@@ -1012,7 +1076,6 @@
         paymentRefHint: "Kutoka kwenye SMS ya uthibitisho ya Mix by Yas.",
         submitOrderBtn: "Tuma oda",
         submitOrderBtnAmount: "Tuma oda · {amount}",
-        processingOrder: "Inatuma oda yako…",
         orderTimeout: "Muunganisho umechelewa, hatujui kama oda yako imefika. Bonyeza Tuma tena. Kama ilifika, tutakuonyesha risiti, si oda ya pili.",
         orderRecovered: "Habari njema: jaribio lako la kwanza lilifika. Hii hapa risiti yako.",
         draftRestored: "Tumehifadhi oda uliyokuwa ukijaza. Ihakiki kisha uitume.",
@@ -1047,13 +1110,9 @@
         tryAgain: "Jaribu tena",
         account: "Akaunti",
         accountSub: "Taarifa zako na mipangilio ya programu.",
-        theme: "Mwonekano",
-        themeSystem: "Otomatiki",
-        themeLight: "Mwanga",
-        themeDark: "Giza",
-        liteLabel: "Hali nyepesi",
+        liteLabel: "Kuokoa data",
         liteHint: "Inatumia data kidogo: herufi za kawaida na orodha fupi. Nzuri kwa mtandao wa polepole.",
-        liteOn: "Hali nyepesi imewashwa. Orodha ni fupi na herufi ni za kawaida ili kuokoa data.",
+        liteOn: "Kuokoa data kumewashwa. Orodha ni fupi na herufi ni za kawaida ili kuokoa data.",
         storageTitle: "Kivinjari chako kinazuia kuhifadhi taarifa",
         storageWhy: "Tunazitumia kukuweka ndani ya akaunti na kuhifadhi oda ambazo hujatuma. Bila hivyo utaingia kila mara. Ili kurekebisha, ruhusu site data kwa ukurasa huu kwenye mipangilio ya kivinjari.",
         logout: "Toka",
@@ -1111,8 +1170,11 @@
         netOffline: "Huna mtandao. Angalia data au Wi-Fi yako. Tutapakia upya mara mtandao ukirudi.",
         netBack: "Mtandao umerudi.",
         netSlow: "Mtandao uko polepole. Bado tunashughulikia…",
-        useLite: "Tumia hali nyepesi",
+        useLite: "Tumia kuokoa data",
         errorRef: "Hitilafu {code}",
+        framedTitle: "Fungua MJ Internet kwenye kichupo chake",
+        framedText: "Kwa usalama wako ukurasa huu haufanyi kazi ndani ya tovuti nyingine.",
+        framedLink: "Fungua MJ Internet",
         installTitle: "Weka MJ Internet kwenye iPhone yako",
         installSteps: "Bonyeza Share, kisha “Add to Home Screen”. Kama huioni, fungua ukurasa huu kwenye Safari kwanza.",
         installStepsInApp: "Fungua ukurasa huu kwenye Safari kwanza (menyu ••• kisha Open in Safari). Kisha bonyeza Share na “Add to Home Screen”.",
@@ -1126,7 +1188,7 @@
         err_server_not_configured: "Seva bado haijaandaliwa. Tafadhali iambie MJ Internet.",
         err_network: "Hatukuweza kufikia seva. Angalia mtandao wako kisha ujaribu tena.",
         err_offline: "Huna mtandao, kwa hiyo hii haikutumwa. Unganisha intaneti kisha ujaribu tena.",
-        err_timeout: "Mtandao uko polepole sana na ombi limechelewa. Jaribu tena, au washa hali nyepesi.",
+        err_timeout: "Mtandao uko polepole sana na ombi limechelewa. Jaribu tena, au washa kuokoa data.",
         err_bad_response: "Seva imetuma jibu tusiloweza kusoma. Jaribu tena baada ya dakika moja.",
         err_server_error: "Kuna hitilafu kwenye seva yetu. Jaribu tena baada ya dakika moja.",
         err_bad_request: "Programu imetuma ombi ambalo seva haikulielewa. Pakia upya ukurasa kisha ujaribu tena.",
@@ -1139,6 +1201,7 @@
         err_otp_invalid: "Kodi si sahihi. Tumia kodi mpya zaidi kutoka kwenye barua pepe.",
         err_otp_expired: "Kodi imeisha muda. Bonyeza Tuma kodi tena upate mpya.",
         err_otp_too_many: "Umekosea kodi mara nyingi, kwa hiyo imefutwa. Bonyeza Tuma kodi tena.",
+        err_otp_limit: "Kodi nyingi zimeombwa kwa barua pepe hii. Kwa usalama wa akaunti, subiri saa chache kisha ujaribu tena.",
         err_resend_wait: "Subiri dakika moja kabla ya kuomba kodi nyingine.",
         err_email_failed: "Hatukuweza kutuma barua pepe sasa hivi. Jaribu tena baadaye.",
         err_not_logged_in: "Muda wako wa kuingia umeisha. Ingia tena kuendelea.",
@@ -1153,8 +1216,9 @@
       }
     };
 
-    // Title and subtitle shown in the gradient band for each screen.
+    // Title and subtitle shown in the blue header for each screen.
     var HERO = {
+      viewBoot: ["bootTitle", null],
       viewAuth: ["heroAuthTitle", "heroAuthSub"],
       viewForgot: ["resetTitle", "resetSub"],
       viewOTP: ["otpTitle", "otpHeroSub"],
@@ -1452,7 +1516,8 @@
       requestStarted();
 
       // No custom headers: the browser then sends text/plain, which Apps Script accepts without a CORS preflight.
-      return fetch(API_URL, { method: "POST", body: JSON.stringify(body), signal: controller.signal })
+      // credentials "omit": no Google cookies are sent with the request.
+      return fetch(API_URL, { method: "POST", body: JSON.stringify(body), signal: controller.signal, credentials: "omit" })
         .then(function (res) {
           return res.json().then(null, function () { return { ok: false, error: "bad_response" }; });
         }, function () {
@@ -1531,7 +1596,7 @@
       }
     }
 
-    // ---------- Lite mode ----------
+    // ---------- Data saver ----------
 
     function connectionIsSlow() {
       var c = navigator.connection;
@@ -1559,13 +1624,12 @@
       return liteMode ? 10 : 25;
     }
 
-    // ---------- Screens, language, theme ----------
+    // ---------- Screens and language ----------
 
     function switchView(viewId) {
-      var views = document.querySelectorAll(".sheet > .view");
+      var views = document.querySelectorAll(".sheet-inner > .view");
       for (var i = 0; i < views.length; i++) views[i].hidden = views[i].id !== viewId;
       currentView = viewId;
-      $("app").classList.toggle("is-wide", viewId === "viewAdmin");
       updateHero();
       window.scrollTo(0, 0);
     }
@@ -1602,30 +1666,23 @@
       if (lastAdminUsers) renderAdminUsers();
     }
 
-    /** theme is "system", "light" or "dark". "system" follows the phone's own setting. */
-    function applyTheme(theme) {
-      if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
-      else document.documentElement.removeAttribute("data-theme");
-      ["system", "light", "dark"].forEach(function (name) {
-        var button = $("theme" + name.charAt(0).toUpperCase() + name.slice(1));
-        button.setAttribute("aria-pressed", String(name === (theme || "system")));
-      });
+    /** Shows or hides the Desk entry in both menus (bottom tabs on phones, top menu on larger screens). */
+    function showAdminMenu(visible) {
+      document.querySelectorAll('[data-page="admin"]').forEach(function (button) { button.hidden = !visible; });
     }
 
-    function changeTheme(theme) {
-      applyTheme(theme);
-      writeStore("localStorage", "mj_theme", theme);
+    function showMenus(visible) {
+      $("tabbar").hidden = !visible;
+      $("topnav").hidden = !visible;
     }
 
     function navigate(page) {
       clearMessage();
       currentPage = page;
       var views = { buy: "viewBuy", orders: "viewOrders", admin: "viewAdmin", account: "viewAccount" };
-      var tabs = { buy: "tabBuy", orders: "tabOrders", admin: "tabAdmin", account: "tabAccount" };
-      Object.keys(tabs).forEach(function (name) {
-        var tab = $(tabs[name]);
-        if (name === page) tab.setAttribute("aria-current", "page");
-        else tab.removeAttribute("aria-current");
+      document.querySelectorAll("[data-page]").forEach(function (button) {
+        if (button.getAttribute("data-page") === page) button.setAttribute("aria-current", "page");
+        else button.removeAttribute("aria-current");
       });
       switchView(views[page]);
       if (page === "orders") loadUserOrderHistory();
@@ -1737,6 +1794,7 @@
       withBusy(submitButton(e), function () {
         return api("login", { email: email, password: password }).then(function (result) {
           // The server sends a token straight away unless it is set to also ask for an emailed code.
+          $("loginPass").value = "";
           if (result.token) startSession(result);
           else openOtpView(email, "login", t("otpSent", { email: email }));
         });
@@ -1815,6 +1873,7 @@
             resetToken = result.resetToken;
             switchView("viewNewPass");
           } else {
+            $("regPass").value = "";
             startSession(result, otpPurpose === "register" ? t("welcomeNew", { name: result.user.name.split(" ")[0] }) : null);
           }
         });
@@ -1836,6 +1895,7 @@
       withBusy(submitButton(e), function () {
         return api("resetPassword", { resetToken: resetToken, password: newPassword }).then(function (result) {
           resetToken = null;
+          $("resetNewPass").value = "";
           startSession(result, t("passwordChanged"));
         });
       }).catch(function (err) { handleFormError("formNewPass", err); });
@@ -1862,8 +1922,9 @@
       adminOrderQuery = { page: 0, status: "all", search: "" };
       adminUserQuery = { page: 0, search: "" };
       writeStore("localStorage", "mj_token", null);
-      $("tabbar").hidden = true;
-      $("tabAdmin").hidden = true;
+      showMenus(false);
+      showAdminMenu(false);
+      $("deskStats").classList.add("is-loading");
       switchView("viewAuth");
     }
 
@@ -1890,9 +1951,9 @@
       $("drawerUserEmail").textContent = user.email || "";
       $("userAvatarIcon").textContent = displayName.charAt(0).toUpperCase();
 
-      // Showing the Desk tab is only cosmetic: the server checks admin rights on every admin request.
-      $("tabAdmin").hidden = !user.isAdmin;
-      $("tabbar").hidden = false;
+      // Showing the Desk menu is only cosmetic: the server checks admin rights on every admin request.
+      showAdminMenu(!!user.isAdmin);
+      showMenus(true);
 
       var restored = restoreOrderDraft(user);
       restoreDeskState(user);
@@ -1911,6 +1972,10 @@
       // Logging out on purpose also forgets unsent work, so nothing is left on a shared phone.
       clearOrderDraft();
       writeStore("localStorage", "mj_desk", null);
+      writeStore("localStorage", "mj_resume", null);
+      $("formOrder").reset();
+      selectedPackageId = null;
+      renderPackages();
       endSession();
       if (token) api("logout", { token: token }).catch(function () {});
     }
@@ -1937,8 +2002,8 @@
       if (!draft) return false;
       selectedPackageId = findPackage(draft.packageId) ? draft.packageId : null;
       renderPackages();
-      $("orderPhone").value = draft.phone || "";
-      $("orderPaymentRef").value = draft.paymentRef || "";
+      $("orderPhone").value = String(draft.phone || "").slice(0, 16);
+      $("orderPaymentRef").value = String(draft.paymentRef || "").slice(0, 40);
       return true;
     }
 
@@ -1949,7 +2014,8 @@
     function restoreDeskState(user) {
       var saved = readJson(readStore("localStorage", "mj_desk"));
       if (!saved || saved.email !== user.email || !saved.query) return;
-      adminOrderQuery = { page: saved.query.page || 0, status: saved.query.status || "all", search: saved.query.search || "" };
+      var status = ORDER_STATUSES.indexOf(saved.query.status) !== -1 ? saved.query.status : "all";
+      adminOrderQuery = { page: Math.max(0, Number(saved.query.page) || 0), status: status, search: String(saved.query.search || "").slice(0, 100) };
       $("adminOrderSearch").value = adminOrderQuery.search;
       markStatusFilter(adminOrderQuery.status);
     }
@@ -2096,15 +2162,18 @@
       details.appendChild(detailRow(t("doneStatus"), statusPill(o.status)));
     }
 
-    // ---------- Loading, empty, error and blocked states ----------
+    // ---------- Skeletons, empty, error and blocked states ----------
 
-    /** Grey placeholder rows shown while a list loads, so the screen keeps its shape. */
+    /** Placeholder rows shaped like the real ones (a title and two lines), so the screen keeps its shape. */
     function showSkeleton(container, rows) {
       container.textContent = "";
       container.setAttribute("aria-busy", "true");
       for (var i = 0; i < rows; i++) {
         var row = el("div", "skeleton");
         row.setAttribute("aria-hidden", "true");
+        row.appendChild(el("span", "sk sk-title sk-50"));
+        row.appendChild(el("span", "sk sk-90"));
+        row.appendChild(el("span", "sk sk-70"));
         container.appendChild(row);
       }
     }
@@ -2203,7 +2272,10 @@
 
     function loadAdminOrders() {
       var list = $("adminOrdersList");
-      if (!lastAdminData) showSkeleton(list, 4);
+      if (!lastAdminData) {
+        showSkeleton(list, 4);
+        $("deskStats").classList.add("is-loading");
+      }
       saveDeskState();
       return api("adminData", {
         token: sessionToken, page: adminOrderQuery.page, pageSize: pageSize(),
@@ -2234,7 +2306,7 @@
 
     /** A customer account opened the desk: explain why it is closed and give a way back. */
     function showForbidden() {
-      $("tabAdmin").hidden = true;
+      showAdminMenu(false);
       $("deskContent").hidden = true;
       var blocked = $("deskBlocked");
       blocked.hidden = false;
@@ -2361,6 +2433,7 @@
 
     function renderAdminOrders() {
       var data = lastAdminData;
+      $("deskStats").classList.remove("is-loading");
       $("adminPendingOrders").textContent = groupDigits(data.pendingOrders);
       $("adminTotalOrders").textContent = groupDigits(data.totalOrders);
       $("adminTotalUsers").textContent = groupDigits(data.totalUsers);
@@ -2433,7 +2506,29 @@
 
     // ---------- Start ----------
 
+    function isFramed() {
+      try { return window.top !== window.self; } catch (e) { return true; }
+    }
+
+    /** Inside another site's frame: show only a link that opens the real page in its own tab. */
+    function refuseFraming() {
+      var box = el("div", "state state-blocked");
+      box.style.margin = "40px auto";
+      box.style.maxWidth = "420px";
+      box.appendChild(el("p", "state-title", t("framedTitle")));
+      box.appendChild(el("p", "state-why", t("framedText")));
+      var link = el("a", "btn btn-sm", t("framedLink"));
+      link.href = location.href;
+      link.target = "_top";
+      link.rel = "noopener";
+      box.appendChild(link);
+      document.body.textContent = "";
+      document.body.appendChild(box);
+    }
+
     window.onload = function() {
+      if (isFramed() && !ALLOW_FRAMING) return refuseFraming();
+
       // Older versions kept accounts (with plain-text passwords) and orders in this browser. Remove them.
       writeStore("localStorage", "mj_users", null);
       writeStore("localStorage", "mj_orders", null);
@@ -2455,19 +2550,24 @@
       window.addEventListener("offline", showOffline);
       window.addEventListener("online", handleBackOnline);
 
-      applyTheme(readStore("localStorage", "mj_theme") || "system");
       setupInstallTip();
       var browserLang = (navigator.language || "").toLowerCase().indexOf("sw") === 0 ? "sw" : "en";
       changeLanguage(readStore("localStorage", "mj_lang") || browserLang);
-      switchView("viewAuth");
       if (!isOnline()) showOffline();
 
       sessionToken = readStore("localStorage", "mj_token");
-      if (sessionToken) {
-        api("me", { token: sessionToken })
-          .then(function (result) { launchDashboard(result.user); })
-          .catch(function (err) { if (errorCode(err) !== "not_logged_in") notifyError(err); });
+      if (!sessionToken) {
+        switchView("viewAuth");
+        return;
       }
+      // A saved login: show a skeleton of the app (not the login form) while it is checked.
+      switchView("viewBoot");
+      api("me", { token: sessionToken })
+        .then(function (result) { launchDashboard(result.user); })
+        .catch(function (err) {
+          if (currentView === "viewBoot") switchView("viewAuth");
+          if (errorCode(err) !== "not_logged_in") notifyError(err);
+        });
     };
   </script>
 </body>
