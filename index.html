@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MJ Internet - Portal</title>
+  <title>MJ Internet Market - Portal</title>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script type="text/javascript">
     (function() {
@@ -12,15 +12,15 @@
   </script>
   <style>
     :root {
-      --bg-color: #f8fafc;
+      --bg-color: #f1f5f9;
       --card-bg: #ffffff;
-      --card-border: #e2e8f0;
+      --card-border: #cbd5e1;
       --primary: #0284c7;
       --primary-hover: #0369a1;
       --accent: #d97706;
       --text-main: #0f172a;
       --text-sub: #64748b;
-      --input-bg: #f1f5f9;
+      --input-bg: #f8fafc;
       --success: #10b981;
       --error: #ef4444;
       --sidebar-bg: #ffffff;
@@ -31,12 +31,12 @@
       --bg-color: #0f172a;
       --card-bg: #1e293b;
       --card-border: #334155;
-      --primary: #0284c7;
-      --primary-hover: #0369a1;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
       --accent: #f59e0b;
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
-      --input-bg: #0f172a;
+      --input-bg: #090d16;
       --sidebar-bg: #1e293b;
       --shadow-color: rgba(0, 0, 0, 0.4);
     }
@@ -57,26 +57,27 @@
       justify-content: center; 
       align-items: center; 
       min-height: 100vh; 
-      padding: 15px; 
+      padding: 0px; 
       position: relative;
       touch-action: pan-x pan-y;
     }
 
     .app-card { 
       background-color: var(--card-bg); 
-      border: 1px solid var(--card-border); 
-      border-radius: 20px; 
+      border: none; 
+      border-radius: 0px; 
       width: 100%; 
-      max-width: 520px; 
-      box-shadow: 0 15px 35px var(--shadow-color); 
+      max-width: 100%; 
+      min-height: 100vh;
+      box-shadow: none; 
       overflow: hidden; 
       position: relative; 
-      min-height: 500px; 
     }
     
     .brand-header { 
-      padding: 35px 25px 20px; 
+      padding: 45px 25px 22px; 
       text-align: center; 
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(139, 92, 246, 0.08));
       border-bottom: 1px solid var(--card-border); 
       position: relative;
     }
@@ -86,12 +87,13 @@
       font-weight: 900; 
       letter-spacing: 2px; 
       text-transform: uppercase; 
-      background: linear-gradient(135deg, #0284c7 0%, #8b5cf6 50%, #ec4899 100%);
+      background: linear-gradient(135deg, #0284c7 0%, #8b5cf6 40%, #ec4899 80%, #f59e0b 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       display: inline-block;
+      text-shadow: 0 2px 10px rgba(2, 132, 199, 0.15);
     }
-    .brand-tag { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+    .brand-tag { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 6px; }
 
     .menu-toggle-btn { 
       position: absolute;
@@ -163,14 +165,14 @@
     .tab-btn { flex: 1; padding: 10px; border: none; background: none; color: var(--text-sub); font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; }
     .tab-btn.active { background: var(--primary); color: #ffffff; }
 
-    .content-body { padding: 25px; }
+    .content-body { padding: 25px; max-width: 600px; margin: 0 auto; }
     .form-group { margin-bottom: 18px; position: relative; }
     .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; text-transform: uppercase; }
     .input-field { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
     .input-field:focus { border-color: var(--primary); }
 
     .btn-pwd-toggle { position: absolute; right: 14px; top: 35px; background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; }
-    .btn-action { width: 100%; padding: 14px; background: var(--primary); color: #ffffff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .btn-action { width: 100%; padding: 14px; background: var(--primary); color: #ffffff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25); }
     .btn-action:hover { background: var(--primary-hover); }
 
     .link-forgot { display: block; text-align: right; font-size: 12px; color: var(--accent); margin-top: -8px; margin-bottom: 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
@@ -187,7 +189,7 @@
       border: 1px dashed var(--accent);
       border-radius: 12px;
       padding: 14px;
-      margin-bottom: 18px;
+      margin: 18px 0;
       font-size: 12px;
       line-height: 1.5;
       color: var(--text-main);
@@ -196,7 +198,25 @@
       color: var(--accent);
     }
 
-    /* Admin Table Styling */
+    .copy-phone-tag {
+      background: var(--card-bg);
+      color: var(--primary);
+      border: 1px solid var(--card-border);
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      margin-left: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .copy-phone-tag:hover {
+      background: var(--input-bg);
+    }
+
     .admin-stats { display: flex; gap: 10px; margin-bottom: 15px; }
     .stat-card { flex: 1; background: var(--input-bg); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center; }
     .stat-num { font-size: 20px; font-weight: 800; color: var(--primary); }
@@ -205,8 +225,43 @@
     .table-container { width: 100%; overflow-x: auto; margin-bottom: 20px; border-radius: 10px; border: 1px solid var(--card-border); }
     .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
     .admin-table th { background: var(--input-bg); padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-sub); text-transform: uppercase; font-size: 10px; }
-    .admin-table td { padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-main); }
+    .admin-table td { padding: 10px; border-bottom: 1px solid var(--card-border); color: var(--text-main); vertical-align: middle; }
     .admin-table tr:last-child td { border-bottom: none; }
+
+    .btn-copy-row {
+      background: var(--card-bg);
+      color: var(--primary);
+      border: 1px solid var(--card-border);
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .btn-copy-row:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-copy-all-client {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-copy-all-client:hover {
+      background: var(--primary-hover);
+    }
   </style>
 </head>
 <body>
@@ -261,7 +316,7 @@
 
     <div class="brand-header">
       <button class="menu-toggle-btn" id="menuToggleBtn" onclick="openDrawer()">☰</button>
-      <div class="brand-logo">MJ INTERNET</div>
+      <div class="brand-logo">MJ INTERNET MARKET</div>
       <div class="brand-tag" data-key="brandTag">High-Speed Digital Connectivity</div>
     </div>
 
@@ -296,8 +351,8 @@
             <input type="email" id="regEmail" class="input-field" placeholder="name@example.com" required>
           </div>
           <div class="form-group">
-            <label data-key="createPassLabel">Create Password</label>
-            <input type="password" id="regPass" class="input-field" placeholder="••••••••" required>
+            <label data-key="createPassLabel">Create Password (At least 8 chars, Uppercase, Lowercase & Number)</label>
+            <input type="password" id="regPass" class="input-field" placeholder="Mfano: Mj123456" required>
             <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
           </div>
           <button type="submit" class="btn-action" data-key="signUpBtn">Verify Email via OTP →</button>
@@ -337,8 +392,8 @@
         <h3 style="text-align: center; color: var(--primary); margin-bottom: 8px;" data-key="newPassTitle">New Password</h3>
         <form onsubmit="handleNewPassSubmit(event)">
           <div class="form-group">
-            <label data-key="newPassLabel">New Password</label>
-            <input type="password" id="resetNewPass" class="input-field" placeholder="••••••••" required>
+            <label data-key="newPassLabel">New Password (At least 8 chars, Uppercase, Lowercase & Number)</label>
+            <input type="password" id="resetNewPass" class="input-field" placeholder="Mfano: Mj123456" required>
             <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
           </div>
           <button type="submit" class="btn-action" data-key="savePassBtn">Save Password & Login</button>
@@ -346,32 +401,31 @@
       </div>
     </div>
 
+    <!-- DASHBOARD VIEW -->
     <div id="viewDashboard" class="view-panel">
       <div class="content-body">
         <div id="dashSectionOrder">
           
-          <div class="payment-notice-box">
-            <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);" data-key="paymentNoticeTitle">⚠️ HATUA YA 3: MALIPO & MAELEKEZO:</div>
-            <div data-key="paymentNoticeText">Hatua ya 3: Tafadhali tuma pesa kabla ya ku-confirm taarifa zako. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu unayoweka hapa chini ni ya <strong>Tigo</strong> iliyosajiliwa na namba yako ya NIDA.</div>
-          </div>
-
           <form onsubmit="handlePlaceOrder(event)">
-            <!-- DATA YA KWANZA: MAJINA FULL -->
             <div class="form-group">
               <label data-key="fullNameInputLabel">1. Majina Buu (Full Name)</label>
               <input type="text" id="dataFullName" class="input-field" placeholder="Weka Majina Yako Kamili" required>
             </div>
             
-            <!-- DATA YA PILI: NAMBA YA SIMU YA TIGO -->
             <div class="form-group">
               <label data-key="tigoPhoneLabel">2. Namba ya Simu (Tigo Only)</label>
               <input type="tel" id="dataTigoPhone" class="input-field" placeholder="065XXXXXXXX / 071XXXXXXXX" required>
             </div>
 
-            <!-- DATA YA TATU: NAMBA YA NIDA -->
             <div class="form-group">
               <label data-key="nidaLabel">3. Namba ya NIDA (Iliyosajilia Namba Hiyo)</label>
               <input type="text" id="dataNidaNumber" class="input-field" placeholder="19XXXXXXXXXXXXXXXXXX" required>
+            </div>
+
+            <!-- MAELEKEZO YA MALIPO YAMEHAMISHWA HAPA: BAADA YA MTU KUJAZA TAARIFA ZAKE -->
+            <div class="payment-notice-box">
+              <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);" data-key="paymentNoticeTitle">⚠️ HATUA YA 1: MALIPO & MAELEKEZO:</div>
+              <div data-key="paymentNoticeText">Tafadhali tuma pesa kabla ya ku-confirm taarifa zako. Namba ya kupokelea malipo ni <strong>0770136023</strong> <button type="button" class="copy-phone-tag" onclick="copyTextToClipboard('0770136023', this)">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu utakayoweka hapa chini ni ya <strong>Tigo</strong> iliyosajiliwa na namba yako ya NIDA.</div>
             </div>
 
             <button type="submit" class="btn-action" id="btnSubmitOrder" data-key="submitOrderBtn">Wasilisha Taarifa & Thibitisha Malipo</button>
@@ -391,7 +445,7 @@
 
     <!-- VIEW ADMIN PANEL -->
     <div id="viewAdmin" class="view-panel">
-      <div class="content-body">
+      <div class="content-body" style="max-width: 100%;">
         <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 18px; font-weight: 800;">🛡️ Admin Control Panel</h3>
         
         <div class="admin-stats">
@@ -405,7 +459,30 @@
           </div>
         </div>
 
-        <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);">👥 Watumiaji Waliojisajili (Registered Users)</h4>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0 8px;">
+          <h4 style="font-size: 14px; color: var(--text-main);">📦 Taarifa Zote Zilizowasilishwa (Submitted Data)</h4>
+          <button class="btn-copy-row" onclick="copyAllAdminData()">📋 Copy All Data</button>
+        </div>
+        
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Majina (Full Name)</th>
+                <th>Namba ya Tigo</th>
+                <th>Namba ya NIDA</th>
+                <th>Copy Client (Pamoja)</th>
+              </tr>
+            </thead>
+            <tbody id="adminOrdersTableBody">
+              <tr><td colspan="5" style="text-align:center;">Hakuna taarifa zilizowekwa bado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 20px;"></div>
+        <h4 style="margin: 10px 0 8px; font-size: 14px; color: var(--text-main);">👥 Watumiaji Waliojisajili (Registered Users)</h4>
         <div class="table-container">
           <table class="admin-table">
             <thead>
@@ -413,32 +490,16 @@
                 <th>#</th>
                 <th>Jina (Name)</th>
                 <th>Email</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="adminUsersTableBody">
-              <tr><td colspan="3" style="text-align:center;">Hakuna watumiaji bado.</td></tr>
+              <tr><td colspan="4" style="text-align:center;">Hakuna watumiaji bado.</td></tr>
             </tbody>
           </table>
         </div>
 
-        <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);">📦 Taarifa Zote Zilizowasilishwa (Submitted Data)</h4>
-        <div class="table-container">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Mteja (Customer)</th>
-                <th>Taarifa (Full Name | Tigo | NIDA)</th>
-                <th>Tarehe</th>
-              </tr>
-            </thead>
-            <tbody id="adminOrdersTableBody">
-              <tr><td colspan="4" style="text-align:center;">Hakuna taarifa zilizowekwa bado.</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <button class="btn-action" onclick="clearAllOrdersAdmin()" style="background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 10px;">🗑️ Futa Taarifa Zote (Clear Data)</button>
+        <button class="btn-action" onclick="clearAllOrdersAdmin()" style="background: rgba(239, 68, 68, 0.15); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.3); margin-top: 10px;">🗑️ Futa Taarifa Zote (Clear Data)</button>
       </div>
     </div>
 
@@ -450,8 +511,8 @@
     var tempUserSession = null;
     var authMode = ""; 
     var currentLang = "en";
+    var currentActiveView = "viewAuth";
 
-    // ADMIN CREDENTIALS
     var ADMIN_EMAIL = "admin@mjinternet.com";
     var ADMIN_PASS = "admin123";
 
@@ -464,7 +525,7 @@
         signupTab: "Sign Up",
         emailLabel: "Email Address",
         passLabel: "Password",
-        createPassLabel: "Create Password",
+        createPassLabel: "Create Password (8+ chars: Uppercase, Lowercase & Number)",
         fullNameLabel: "Full Name",
         show: "Show",
         hide: "Hide",
@@ -478,7 +539,7 @@
         otpSub: "Enter the 6-digit code sent to your email:",
         verifyBtn: "Verify & Access Account",
         newPassTitle: "New Password",
-        newPassLabel: "New Password",
+        newPassLabel: "New Password (8+ chars: Uppercase, Lowercase & Number)",
         savePassBtn: "Save Password & Login",
         fullNameInputLabel: "1. Full Name",
         tigoPhoneLabel: "2. Tigo Phone Number",
@@ -492,8 +553,8 @@
         logout: "Logout",
         backBtn: "← Back to Form",
         noOrders: "No previous submissions found.",
-        paymentNoticeTitle: "⚠️ STEP 3: PAYMENT & INSTRUCTIONS:",
-        paymentNoticeText: "Step 3: Please send money before confirming your details. Payment number is <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Note:</strong> Ensure the phone number entered below is <strong>Tigo</strong> and registered under your NIDA number."
+        paymentNoticeTitle: "⚠️ STEP 1: PAYMENT & INSTRUCTIONS:",
+        paymentNoticeText: "Please send money before confirming your details. Payment number is <strong>0770136023</strong> <button type=\"button\" class=\"copy-phone-tag\" onclick=\"copyTextToClipboard('0770136023', this)\">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Note:</strong> Ensure the phone number entered below is <strong>Tigo</strong> and registered under your NIDA number."
       },
       sw: {
         brandTag: "Mtandao Wenye Kasi Ya Juu",
@@ -501,7 +562,7 @@
         signupTab: "Jisajili",
         emailLabel: "Anwani ya Barua Pepe",
         passLabel: "Nenosiri",
-        createPassLabel: "Tengeneza Nenosiri",
+        createPassLabel: "Tengeneza Nenosiri (Angalau herufi 8: Kubwa, Ndogo na Namba)",
         fullNameLabel: "Jina Kamili",
         show: "Onyesha",
         hide: "Ficha",
@@ -515,7 +576,7 @@
         otpSub: "Weka kodi ya tarakimu 6 iliyotumwa kwenye email yako:",
         verifyBtn: "Thibitisha & Ingia",
         newPassTitle: "Nenosiri Jipya",
-        newPassLabel: "Weka Nenosiri Jipya",
+        newPassLabel: "Weka Nenosiri Jipya (Angalau herufi 8: Kubwa, Ndogo na Namba)",
         savePassBtn: "Hifadhi & Ingia",
         fullNameInputLabel: "1. Majina Buu (Full Name)",
         tigoPhoneLabel: "2. Namba ya Simu ya Tigo",
@@ -529,10 +590,79 @@
         logout: "Toka Nje",
         backBtn: "← Rudi kwenye Fomu",
         noOrders: "Hakuna taarifa zilizowasilishwa bado.",
-        paymentNoticeTitle: "⚠️ HATUA YA 3: MALIPO & MAELEKEZO:",
-        paymentNoticeText: "Hatua ya 3: Tafadhali tuma pesa kabla ya ku-confirm taarifa zako. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu unayoweka hapa chini ni ya <strong>Tigo</strong> iliyosajiliwa na namba yako ya NIDA."
+        paymentNoticeTitle: "⚠️ HATUA YA 1: MALIPO & MAELEKEZO:",
+        paymentNoticeText: "Tafadhali tuma pesa kabla ya ku-confirm taarifa zako. Namba ya kupokelea malipo ni <strong>0770136023</strong> <button type=\"button\" class=\"copy-phone-tag\" onclick=\"copyTextToClipboard('0770136023', this)\">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu utakayoweka hapa chini ni ya <strong>Tigo</strong> iliyosajiliwa na namba yako ya NIDA."
       }
     };
+
+    function copyTextToClipboard(text, btnElement) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          successCopyAction(btnElement);
+        }).catch(function() {
+          fallbackCopyText(text, btnElement);
+        });
+      } else {
+        fallbackCopyText(text, btnElement);
+      }
+    }
+
+    function fallbackCopyText(text, btnElement) {
+      var textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.setAttribute('readonly', '');
+      textArea.style.position = "absolute";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      
+      if (navigator.userAgent.match(/ipad|iphone|ipod/i)) {
+        var range = document.createRange();
+        range.selectNodeContents(textArea);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        textArea.setSelectionRange(0, 999999);
+      } else {
+        textArea.select();
+      }
+
+      try {
+        var successful = document.execCommand('copy');
+        if (successful) {
+          successCopyAction(btnElement);
+        }
+      } catch (err) {
+        console.error('Fallback Copy Error', err);
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function successCopyAction(btnElement) {
+      if (btnElement) {
+        var originalHTML = btnElement.innerHTML;
+        btnElement.innerHTML = "📋 Copied";
+        setTimeout(function() {
+          btnElement.innerHTML = originalHTML;
+        }, 2000);
+      }
+    }
+
+    function copyAllAdminData() {
+      var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
+      if (orders.length === 0) {
+        return;
+      }
+      var allText = "";
+      orders.forEach(function(o, i) {
+        allText += (i+1) + ". Majina: " + o.fullName + " | Tigo: " + o.phone + " | NIDA: " + o.nida + " | Tarehe: " + o.date + "\n";
+      });
+      copyTextToClipboard(allText, null);
+    }
+
+    function isValidPassword(password) {
+      var regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+      return regex.test(password);
+    }
 
     function changeLanguage(lang) {
       currentLang = lang;
@@ -568,7 +698,7 @@
 
     function navigateFromDrawer(page) {
       closeDrawer();
-      var activeUser = JSON.parse(sessionStorage.getItem("mj_active_user") || "{}");
+      var activeUser = JSON.parse(localStorage.getItem("mj_active_user") || "{}");
       if (page === 'new-order') {
         switchView("viewDashboard");
       } else if (page === 'my-orders') {
@@ -617,13 +747,31 @@
       document.getElementById("statusMessage").innerText = "";
     }
 
-    function switchView(viewId) {
+    function switchView(viewId, pushToHistory = true) {
       var panels = document.querySelectorAll(".view-panel");
       for (var i = 0; i < panels.length; i++) {
         panels[i].classList.remove("active");
       }
       document.getElementById(viewId).classList.add("active");
+      currentActiveView = viewId;
+
+      if (pushToHistory) {
+        history.pushState({ viewId: viewId }, "", "#" + viewId);
+      }
     }
+
+    window.onpopstate = function(event) {
+      if (event.state && event.state.viewId) {
+        switchView(event.state.viewId, false);
+      } else {
+        var activeUser = localStorage.getItem("mj_active_user");
+        if (activeUser) {
+          switchView("viewDashboard", false);
+        } else {
+          switchView("viewAuth", false);
+        }
+      }
+    };
 
     function dispatchOTP(userObj, mode) {
       authMode = mode;
@@ -642,7 +790,7 @@
         otp_code: currentOTP,
         code: currentOTP,
         time: "15 Minutes",
-        company_name: "MJ Internet"
+        company_name: "MJ Internet Market"
       };
 
       try {
@@ -663,6 +811,13 @@
       var email = document.getElementById("regEmail").value.trim().toLowerCase();
       var pass = document.getElementById("regPass").value;
 
+      if (!isValidPassword(pass)) {
+        displayMessage(currentLang === 'sw' ? 
+          "Nenosiri lazima liwe na angalau herufi 8, likiwa na herufi kubwa, ndogo na namba! (Mfano: Mj123456)" : 
+          "Password must be at least 8 characters with Uppercase, Lowercase & Number! (e.g. Mj123456)", true, false);
+        return;
+      }
+
       dispatchOTP({ name: name, email: email, pass: pass, role: 'user' }, 'register');
     }
 
@@ -671,15 +826,13 @@
       var email = document.getElementById("loginEmail").value.trim().toLowerCase();
       var pass = document.getElementById("loginPass").value;
 
-      // 1. ANGALIA KAMA NI ADMIN
       if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
         var adminUser = { name: "System Admin", email: ADMIN_EMAIL, role: "admin" };
-        sessionStorage.setItem("mj_active_user", JSON.stringify(adminUser));
+        localStorage.setItem("mj_active_user", JSON.stringify(adminUser));
         launchDashboard(adminUser);
         return;
       }
 
-      // 2. KAMA SIO ADMIN, ANGALIA WATEJA WA KAWAIDA
       var localUsers = JSON.parse(localStorage.getItem("mj_users") || "[]");
       var matchedUser = localUsers.find(function(u){ return u.email === email && u.pass === pass; });
 
@@ -688,7 +841,8 @@
         return;
       }
 
-      dispatchOTP(matchedUser, 'login');
+      localStorage.setItem("mj_active_user", JSON.stringify(matchedUser));
+      launchDashboard(matchedUser);
     }
 
     function handleForgotSubmit(e) {
@@ -720,11 +874,7 @@
             localStorage.setItem("mj_users", JSON.stringify(localUsers));
           }
 
-          sessionStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
-          launchDashboard(tempUserSession);
-
-        } else if (authMode === 'login') {
-          sessionStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
+          localStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
           launchDashboard(tempUserSession);
 
         } else if (authMode === 'reset') {
@@ -738,6 +888,14 @@
     function handleNewPassSubmit(e) {
       e.preventDefault();
       var newPassword = document.getElementById("resetNewPass").value;
+
+      if (!isValidPassword(newPassword)) {
+        displayMessage(currentLang === 'sw' ? 
+          "Nenosiri jipya lazima liwe na angalau herufi 8, likiwa na herufi kubwa, ndogo na namba! (Mfano: Mj123456)" : 
+          "New password must be at least 8 characters with Uppercase, Lowercase & Number! (e.g. Mj123456)", true, false);
+        return;
+      }
+
       tempUserSession.pass = newPassword;
 
       var localUsers = JSON.parse(localStorage.getItem("mj_users") || "[]");
@@ -747,7 +905,7 @@
         localStorage.setItem("mj_users", JSON.stringify(localUsers));
       }
 
-      sessionStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
+      localStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
       launchDashboard(tempUserSession);
     }
 
@@ -759,7 +917,6 @@
       document.getElementById("drawerUserEmail").innerText = user.email || "";
       document.getElementById("userAvatarIcon").innerText = displayName.charAt(0).toUpperCase();
 
-      // Ikiwa mtumiaji ni Admin, fungua View Admin moja kwa moja
       if (user.role === 'admin') {
         document.getElementById("menuItemAdmin").style.display = "flex";
         switchView("viewAdmin");
@@ -776,7 +933,7 @@
       var fullName = document.getElementById("dataFullName").value.trim();
       var phone = document.getElementById("dataTigoPhone").value.trim();
       var nida = document.getElementById("dataNidaNumber").value.trim();
-      var activeUser = JSON.parse(sessionStorage.getItem("mj_active_user") || "{}");
+      var activeUser = JSON.parse(localStorage.getItem("mj_active_user") || "{}");
 
       var submitBtn = document.getElementById("btnSubmitOrder");
       var notice = document.getElementById("orderStatusNotice");
@@ -820,8 +977,9 @@
         var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
         orders.push({
           email: activeUser.email || "N/A",
-          name: fullName,
-          desc: descText,
+          fullName: fullName,
+          phone: phone,
+          nida: nida,
           date: new Date().toLocaleString()
         });
         localStorage.setItem("mj_orders", JSON.stringify(orders));
@@ -866,16 +1024,16 @@
 
       container.innerHTML = "";
       filtered.reverse().forEach(function(item, index) {
+        var displayText = "Jina: " + item.fullName + " | Tigo: " + item.phone + " | NIDA: " + item.nida;
         container.innerHTML += 
           '<div class="order-card">' +
             '<div style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">' + (currentLang === 'sw' ? 'Taarifa #' : 'Submission #') + (filtered.length - index) + '</div>' +
-            '<div style="font-size:13px; color:var(--text-main); margin-bottom:6px;">' + item.desc + '</div>' +
+            '<div style="font-size:13px; color:var(--text-main); margin-bottom:6px;">' + displayText + '</div>' +
             '<div style="font-size:11px; color:var(--text-sub);">' + item.date + '</div>' +
           '</div>';
       });
     }
 
-    // FUNCTION YA KUPAKIA DATA KWENYE ADMIN DASHBOARD
     function loadAdminDashboardData() {
       var users = JSON.parse(localStorage.getItem("mj_users") || "[]");
       var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
@@ -883,35 +1041,43 @@
       document.getElementById("adminTotalUsers").innerText = users.length;
       document.getElementById("adminTotalOrders").innerText = orders.length;
 
-      // 1. JAZA JEDWALI LA USERS
       var usersTbody = document.getElementById("adminUsersTableBody");
       if (users.length === 0) {
-        usersTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Hakuna watumiaji bado.</td></tr>';
+        usersTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hakuna watumiaji bado.</td></tr>';
       } else {
         usersTbody.innerHTML = "";
         users.forEach(function(u, idx) {
+          var userRowText = "Name: " + (u.name || 'N/A') + " | Email: " + u.email;
           usersTbody.innerHTML += 
             '<tr>' +
               '<td>' + (idx + 1) + '</td>' +
               '<td><b>' + (u.name || 'N/A') + '</b></td>' +
               '<td>' + u.email + '</td>' +
+              '<td><button class="btn-copy-row" onclick="copyTextToClipboard(\'' + userRowText + '\', this)">📋 Copy</button></td>' +
             '</tr>';
         });
       }
 
-      // 2. JAZA JEDWALI LA ORDERS/DATA
       var ordersTbody = document.getElementById("adminOrdersTableBody");
       if (orders.length === 0) {
-        ordersTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hakuna taarifa zilizowekwa bado.</td></tr>';
+        ordersTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Hakuna taarifa zilizowekwa bado.</td></tr>';
       } else {
         ordersTbody.innerHTML = "";
         orders.slice().reverse().forEach(function(o, idx) {
+          var fName = o.fullName || (o.desc ? o.desc.split('|')[0] : 'N/A');
+          var tPhone = o.phone || (o.desc ? o.desc.split('|')[1] : 'N/A');
+          var nNum = o.nida || (o.desc ? o.desc.split('|')[2] : 'N/A');
+          
+          // Maandishi ya mteja mzima yatakayokopiwa kwa pamoja
+          var fullClientText = "Majina: " + fName.trim() + " | Tigo: " + tPhone.trim() + " | NIDA: " + nNum.trim() + " | Tarehe: " + o.date;
+
           ordersTbody.innerHTML += 
             '<tr>' +
               '<td>' + (orders.length - idx) + '</td>' +
-              '<td><b>' + (o.name || 'N/A') + '</b><br><span style="font-size:10px; color:var(--text-sub);">' + o.email + '</span></td>' +
-              '<td>' + o.desc + '</td>' +
-              '<td>' + o.date + '</td>' +
+              '<td>' + fName + '</td>' +
+              '<td>' + tPhone + '</td>' +
+              '<td>' + nNum + '</td>' +
+              '<td><button class="btn-copy-all-client" onclick="copyTextToClipboard(\'' + fullClientText + '\', this)">📋 Copy All</button></td>' +
             '</tr>';
         });
       }
@@ -925,15 +1091,18 @@
     }
 
     function performLogout() {
+      localStorage.removeItem("mj_active_user");
       sessionStorage.removeItem("mj_active_user");
       location.reload();
     }
 
     window.onload = function() {
       changeLanguage('en');
-      var activeUser = sessionStorage.getItem("mj_active_user");
+      var activeUser = localStorage.getItem("mj_active_user");
       if (activeUser) {
         launchDashboard(JSON.parse(activeUser));
+      } else {
+        history.replaceState({ viewId: "viewAuth" }, "", "#viewAuth");
       }
     };
   </script>
