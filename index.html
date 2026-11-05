@@ -75,25 +75,55 @@
     }
     
     .brand-header { 
-      padding: 45px 25px 22px; 
+      padding: 40px 20px 22px; 
       text-align: center; 
-      background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(139, 92, 246, 0.08));
+      background: radial-gradient(circle at center, rgba(2, 132, 199, 0.15) 0%, rgba(15, 23, 42, 0.03) 100%);
       border-bottom: 1px solid var(--card-border); 
       position: relative;
     }
 
+    .brand-logo-wrapper {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      font-size: 26px;
+      animation: pulseWifi 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseWifi {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+
     .brand-logo { 
-      font-size: 28px; 
+      font-size: 24px; 
       font-weight: 900; 
-      letter-spacing: 2px; 
+      letter-spacing: 2.5px; 
       text-transform: uppercase; 
-      background: linear-gradient(135deg, #0284c7 0%, #8b5cf6 40%, #ec4899 80%, #f59e0b 100%);
+      background: linear-gradient(90deg, #0284c7 0%, #38bdf8 30%, #8b5cf6 70%, #ec4899 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       display: inline-block;
-      text-shadow: 0 2px 10px rgba(2, 132, 199, 0.15);
+      filter: drop-shadow(0 2px 8px rgba(2, 132, 199, 0.3));
     }
-    .brand-tag { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 6px; }
+
+    .brand-tag { 
+      font-size: 11px; 
+      color: var(--accent); 
+      font-weight: 700; 
+      letter-spacing: 1.5px; 
+      text-transform: uppercase; 
+      margin-top: 6px; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
 
     .menu-toggle-btn { 
       position: absolute;
@@ -171,7 +201,23 @@
     .input-field { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
     .input-field:focus { border-color: var(--primary); }
 
-    .btn-pwd-toggle { position: absolute; right: 14px; top: 35px; background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; }
+    /* Ukubwa na nafasi sahihi ya kitufe cha kuonyesha/kuficha nenosiri ndani ya input */
+    .password-wrapper { position: relative; width: 100%; }
+    .password-wrapper .input-field { padding-right: 65px; }
+    .btn-pwd-toggle { 
+      position: absolute; 
+      right: 12px; 
+      top: 50%; 
+      transform: translateY(-50%); 
+      background: none; 
+      border: none; 
+      color: var(--primary); 
+      font-size: 12px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      padding: 4px 6px;
+    }
+
     .btn-action { width: 100%; padding: 14px; background: var(--primary); color: #ffffff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25); }
     .btn-action:hover { background: var(--primary-hover); }
 
@@ -185,17 +231,28 @@
     .order-card { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; margin-bottom: 12px; }
 
     .payment-notice-box {
-      background: rgba(217, 119, 6, 0.08);
-      border: 1px dashed var(--accent);
+      background: rgba(2, 132, 199, 0.06);
+      border: 1.5px dashed var(--primary);
       border-radius: 12px;
-      padding: 14px;
+      padding: 16px;
       margin: 18px 0;
-      font-size: 12px;
-      line-height: 1.5;
+      font-size: 13px;
+      line-height: 1.6;
       color: var(--text-main);
     }
     .payment-notice-box strong {
-      color: var(--accent);
+      color: var(--primary);
+    }
+
+    .bundle-badge {
+      background: linear-gradient(135deg, #0284c7, #8b5cf6);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 4px;
     }
 
     .copy-phone-tag {
@@ -314,10 +371,14 @@
       </button>
     </div>
 
+    <!-- HEADER NA BRANDING YA MTANDAO -->
     <div class="brand-header">
       <button class="menu-toggle-btn" id="menuToggleBtn" onclick="openDrawer()">☰</button>
-      <div class="brand-logo">MJ INTERNET MARKET</div>
-      <div class="brand-tag" data-key="brandTag">High-Speed Digital Connectivity</div>
+      <div class="brand-logo-wrapper">
+        <span class="brand-icon">📡</span>
+        <div class="brand-logo">MJ INTERNET MARKET</div>
+      </div>
+      <div class="brand-tag" data-key="brandTag">⚡ High-Speed Digital Connectivity 🌐</div>
     </div>
 
     <div id="viewAuth" class="view-panel active">
@@ -334,8 +395,10 @@
           </div>
           <div class="form-group">
             <label data-key="passLabel">Password</label>
-            <input type="password" id="loginPass" class="input-field" placeholder="••••••••" required>
-            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
+            <div class="password-wrapper">
+              <input type="password" id="loginPass" class="input-field" placeholder="••••••••" required>
+              <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('loginPass', this)" data-key="show">Show</button>
+            </div>
           </div>
           <a class="link-forgot" onclick="openForgotView()" data-key="forgotPass">Forgot Password?</a>
           <button type="submit" class="btn-action" data-key="loginBtn">Continue →</button>
@@ -352,8 +415,10 @@
           </div>
           <div class="form-group">
             <label data-key="createPassLabel">Create Password (At least 8 chars, Uppercase, Lowercase & Number)</label>
-            <input type="password" id="regPass" class="input-field" placeholder="Mfano: Mj123456" required>
-            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
+            <div class="password-wrapper">
+              <input type="password" id="regPass" class="input-field" placeholder="Mfano: Mj123456" required>
+              <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('regPass', this)" data-key="show">Show</button>
+            </div>
           </div>
           <button type="submit" class="btn-action" data-key="signUpBtn">Verify Email via OTP →</button>
         </form>
@@ -393,8 +458,10 @@
         <form onsubmit="handleNewPassSubmit(event)">
           <div class="form-group">
             <label data-key="newPassLabel">New Password (At least 8 chars, Uppercase, Lowercase & Number)</label>
-            <input type="password" id="resetNewPass" class="input-field" placeholder="Mfano: Mj123456" required>
-            <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
+            <div class="password-wrapper">
+              <input type="password" id="resetNewPass" class="input-field" placeholder="Mfano: Mj123456" required>
+              <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('resetNewPass', this)" data-key="show">Show</button>
+            </div>
           </div>
           <button type="submit" class="btn-action" data-key="savePassBtn">Save Password & Login</button>
         </form>
@@ -413,8 +480,8 @@
             </div>
             
             <div class="form-group">
-              <label data-key="tigoPhoneLabel">2. Namba ya Simu (Tigo Only)</label>
-              <input type="tel" id="dataTigoPhone" class="input-field" placeholder="065XXXXXXXX / 071XXXXXXXX" required>
+              <label data-key="yasPhoneLabel">2. Namba ya Simu ya Yas</label>
+              <input type="tel" id="dataYasPhone" class="input-field" placeholder="065XXXXXXXX / 071XXXXXXXX" required>
             </div>
 
             <div class="form-group">
@@ -422,13 +489,20 @@
               <input type="text" id="dataNidaNumber" class="input-field" placeholder="19XXXXXXXXXXXXXXXXXX" required>
             </div>
 
-            <!-- MAELEKEZO YA MALIPO YAMEHAMISHWA HAPA: BAADA YA MTU KUJAZA TAARIFA ZAKE -->
+            <!-- MAELEKEZO YA MALIPO NA KIFURUSHI CHA KWANZA -->
             <div class="payment-notice-box">
-              <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);" data-key="paymentNoticeTitle">⚠️ HATUA YA 1: MALIPO & MAELEKEZO:</div>
-              <div data-key="paymentNoticeText">Tafadhali tuma pesa kabla ya ku-confirm taarifa zako. Namba ya kupokelea malipo ni <strong>0770136023</strong> <button type="button" class="copy-phone-tag" onclick="copyTextToClipboard('0770136023', this)">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu utakayoweka hapa chini ni ya <strong>Tigo</strong> iliyosajiliwa na namba yako ya NIDA.</div>
+              <div style="font-weight: 700; margin-bottom: 6px; color: var(--primary);" data-key="paymentNoticeTitle">💳 HATUA YA MALIPO & KIFURUSHI:</div>
+              <div data-key="paymentNoticeText">
+                Tafadhali tuma <strong>Tsh 15,000/=</strong> kabla ya ku-confirm taarifa zako.<br>
+                Namba ya kupokelea malipo ni <strong>0770136023</strong> <button type="button" class="copy-phone-tag" onclick="copyTextToClipboard('0770136023', this)">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>
+                🎁 <strong>Kifurushi cha Mara ya Kwanza:</strong><br>
+                Ukilipia utapata <span class="bundle-badge">5 GB Data</span> + <span class="bundle-badge">500 Dkk</span> + <span class="bundle-badge">100 SMS</span>.<br><br>
+                🔄 <em>Baada ya kujiunga mara ya kwanza, utapata uwezo wa kuchagua na kununua kifurushi chochote utakachotaka kwenye menu kuanzia mara inayofuata.</em><br><br>
+                🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu ni ya <strong>Yas</strong> iliyosajiliwa kwa NIDA yako.
+              </div>
             </div>
 
-            <button type="submit" class="btn-action" id="btnSubmitOrder" data-key="submitOrderBtn">Wasilisha Taarifa & Thibitisha Malipo</button>
+            <button type="submit" class="btn-action" id="btnSubmitOrder" data-key="submitOrderBtn">Wasilisha Taarifa & Thibitisha Malipo (Tsh 15,000)</button>
           </form>
           <div id="orderStatusNotice" style="margin-top: 12px; font-size: 13px; text-align: center; font-weight: 700;"></div>
         </div>
@@ -470,7 +544,7 @@
               <tr>
                 <th>#</th>
                 <th>Majina (Full Name)</th>
-                <th>Namba ya Tigo</th>
+                <th>Namba ya Yas</th>
                 <th>Namba ya NIDA</th>
                 <th>Copy Client (Pamoja)</th>
               </tr>
@@ -520,7 +594,7 @@
 
     var translations = {
       en: {
-        brandTag: "High-Speed Digital Connectivity",
+        brandTag: "⚡ High-Speed Digital Connectivity 🌐",
         loginTab: "Login",
         signupTab: "Sign Up",
         emailLabel: "Email Address",
@@ -542,9 +616,9 @@
         newPassLabel: "New Password (8+ chars: Uppercase, Lowercase & Number)",
         savePassBtn: "Save Password & Login",
         fullNameInputLabel: "1. Full Name",
-        tigoPhoneLabel: "2. Tigo Phone Number",
+        yasPhoneLabel: "2. Yas Phone Number",
         nidaLabel: "3. NIDA Number (Used for Registration)",
-        submitOrderBtn: "Submit Information & Confirm Payment",
+        submitOrderBtn: "Submit Information & Confirm Payment (Tsh 15,000)",
         menuTitle: "MENU",
         newOrder: "Fill Information",
         myOrders: "My Submissions",
@@ -553,11 +627,11 @@
         logout: "Logout",
         backBtn: "← Back to Form",
         noOrders: "No previous submissions found.",
-        paymentNoticeTitle: "⚠️ STEP 1: PAYMENT & INSTRUCTIONS:",
-        paymentNoticeText: "Please send money before confirming your details. Payment number is <strong>0770136023</strong> <button type=\"button\" class=\"copy-phone-tag\" onclick=\"copyTextToClipboard('0770136023', this)\">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Note:</strong> Ensure the phone number entered below is <strong>Tigo</strong> and registered under your NIDA number."
+        paymentNoticeTitle: "💳 PAYMENT & FIRST BUNDLE INSTRUCTIONS:",
+        paymentNoticeText: "Please send <strong>Tsh 15,000/=</strong> before confirming details. Payment number is <strong>0770136023</strong> <button type=\"button\" class=\"copy-phone-tag\" onclick=\"copyTextToClipboard('0770136023', this)\">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🎁 <strong>First Purchase Package:</strong><br>You will receive <span class=\"bundle-badge\">5 GB Data</span> + <span class=\"bundle-badge\">500 Mins</span> + <span class=\"bundle-badge\">100 SMS</span>.<br><br>🔄 <em>After your first subscription, you will be able to select any package of your choice from the menu.</em><br><br>🚨 <strong>Note:</strong> Ensure phone number is <strong>Yas</strong> registered under your NIDA."
       },
       sw: {
-        brandTag: "Mtandao Wenye Kasi Ya Juu",
+        brandTag: "⚡ Mtandao Wenye Kasi Ya Juu 🌐",
         loginTab: "Ingia",
         signupTab: "Jisajili",
         emailLabel: "Anwani ya Barua Pepe",
@@ -579,9 +653,9 @@
         newPassLabel: "Weka Nenosiri Jipya (Angalau herufi 8: Kubwa, Ndogo na Namba)",
         savePassBtn: "Hifadhi & Ingia",
         fullNameInputLabel: "1. Majina Buu (Full Name)",
-        tigoPhoneLabel: "2. Namba ya Simu ya Tigo",
+        yasPhoneLabel: "2. Namba ya Simu ya Yas",
         nidaLabel: "3. Namba ya NIDA (Iliyosajilia Namba Hiyo)",
-        submitOrderBtn: "Wasilisha Taarifa & Thibitisha Malipo",
+        submitOrderBtn: "Wasilisha Taarifa & Thibitisha Malipo (Tsh 15,000)",
         menuTitle: "MENU",
         newOrder: "Jaza Taarifa",
         myOrders: "Taarifa Zangu",
@@ -590,8 +664,8 @@
         logout: "Toka Nje",
         backBtn: "← Rudi kwenye Fomu",
         noOrders: "Hakuna taarifa zilizowasilishwa bado.",
-        paymentNoticeTitle: "⚠️ HATUA YA 1: MALIPO & MAELEKEZO:",
-        paymentNoticeText: "Tafadhali tuma pesa kabla ya ku-confirm taarifa zako. Namba ya kupokelea malipo ni <strong>0770136023</strong> <button type=\"button\" class=\"copy-phone-tag\" onclick=\"copyTextToClipboard('0770136023', this)\">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu utakayoweka hapa chini ni ya <strong>Tigo</strong> iliyosajiliwa na namba yako ya NIDA."
+        paymentNoticeTitle: "💳 HATUA YA MALIPO & KIFURUSHI:",
+        paymentNoticeText: "Tafadhali tuma <strong>Tsh 15,000/=</strong> kabla ya ku-confirm taarifa zako.<br>Namba ya kupokelea malipo ni <strong>0770136023</strong> <button type=\"button\" class=\"copy-phone-tag\" onclick=\"copyTextToClipboard('0770136023', this)\">📋 Copy</button> (Mix by Yas - <strong>Michael Joseph Liganya</strong>).<br><br>🎁 <strong>Kifurushi cha Mara ya Kwanza:</strong><br>Ukilipia utapata <span class=\"bundle-badge\">5 GB Data</span> + <span class=\"bundle-badge\">500 Dkk</span> + <span class=\"bundle-badge\">100 SMS</span>.<br><br>🔄 <em>Baada ya kujiunga mara ya kwanza, utapata uwezo wa kuchagua na kununua kifurushi chochote utakachotaka kwenye menu kuanzia mara inayofuata.</em><br><br>🚨 <strong>Kumbuka:</strong> Hakikisha namba ya simu ni ya <strong>Yas</strong> iliyosajiliwa kwa NIDA yako."
       }
     };
 
@@ -654,7 +728,7 @@
       }
       var allText = "";
       orders.forEach(function(o, i) {
-        allText += (i+1) + ". Majina: " + o.fullName + " | Tigo: " + o.phone + " | NIDA: " + o.nida + " | Tarehe: " + o.date + "\n";
+        allText += (i+1) + ". Majina: " + o.fullName + " | Yas: " + o.phone + " | NIDA: " + o.nida + " | Tarehe: " + o.date + "\n";
       });
       copyTextToClipboard(allText, null);
     }
@@ -931,7 +1005,7 @@
     function handlePlaceOrder(e) {
       e.preventDefault();
       var fullName = document.getElementById("dataFullName").value.trim();
-      var phone = document.getElementById("dataTigoPhone").value.trim();
+      var phone = document.getElementById("dataYasPhone").value.trim();
       var nida = document.getElementById("dataNidaNumber").value.trim();
       var activeUser = JSON.parse(localStorage.getItem("mj_active_user") || "{}");
 
@@ -942,7 +1016,7 @@
       notice.style.color = "var(--accent)";
       notice.innerText = currentLang === 'sw' ? "Inashughulikia taarifa... Tafadhali subiri ⏳" : "Processing Data... Please wait ⏳";
 
-      var descText = "Full Name: " + fullName + " | Tigo: " + phone + " | NIDA: " + nida;
+      var descText = "Full Name: " + fullName + " | Yas: " + phone + " | NIDA: " + nida + " | Amount: Tsh 15,000 (5GB + 500Min + 100SMS)";
 
       var orderPayload = {
         to_email: "mjriganya@gmail.com",
@@ -950,10 +1024,10 @@
         to_name: "Admin",
         name: fullName || activeUser.name || "Customer Name",
         desc: descText,
-        package: "NIDA & Tigo Submission",
+        package: "NIDA & Yas Submission (Tsh 15,000 Package)",
         phone: phone,
         order_id: "DATA-" + Math.floor(1000 + Math.random() * 9000),
-        message: "Taarifa Mpya Zimefika!\nMajina Buu: " + fullName + "\nEmail: " + activeUser.email + "\nNamba ya Tigo: " + phone + "\nNamba ya NIDA: " + nida + "\nMalipo yametumwa kwenda: 0770136023 (Michael Joseph Liganya - Mix by Yas)",
+        message: "Taarifa Mpya Zimefika!\nMajina Buu: " + fullName + "\nEmail: " + activeUser.email + "\nNamba ya Yas: " + phone + "\nNamba ya NIDA: " + nida + "\nKiasi: Tsh 15,000 (5GB + 500 Dkk + 100 SMS)\nMalipo yametumwa kwenda: 0770136023 (Michael Joseph Liganya - Mix by Yas)",
         date: new Date().toLocaleString()
       };
 
@@ -966,7 +1040,8 @@
             name: fullName,
             email: activeUser.email || "N/A",
             phone: phone,
-            nida: nida
+            nida: nida,
+            amount: "15,000"
           })
         });
       } catch(err) {
@@ -980,6 +1055,8 @@
           fullName: fullName,
           phone: phone,
           nida: nida,
+          amount: "15,000",
+          bundle: "5GB + 500Min + 100SMS",
           date: new Date().toLocaleString()
         });
         localStorage.setItem("mj_orders", JSON.stringify(orders));
@@ -992,7 +1069,7 @@
           notice.style.color = "var(--success)";
           notice.innerText = currentLang === 'sw' ? "Taarifa Zimepokelewa Kufanikiwa! ✅" : "Data Received Successfully! ✅";
           document.getElementById("dataFullName").value = "";
-          document.getElementById("dataTigoPhone").value = "";
+          document.getElementById("dataYasPhone").value = "";
           document.getElementById("dataNidaNumber").value = "";
           submitBtn.disabled = false;
           loadUserOrderHistory(activeUser.email);
@@ -1024,11 +1101,12 @@
 
       container.innerHTML = "";
       filtered.reverse().forEach(function(item, index) {
-        var displayText = "Jina: " + item.fullName + " | Tigo: " + item.phone + " | NIDA: " + item.nida;
+        var displayText = "Jina: " + item.fullName + " | Yas: " + item.phone + " | NIDA: " + item.nida;
         container.innerHTML += 
           '<div class="order-card">' +
             '<div style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">' + (currentLang === 'sw' ? 'Taarifa #' : 'Submission #') + (filtered.length - index) + '</div>' +
             '<div style="font-size:13px; color:var(--text-main); margin-bottom:6px;">' + displayText + '</div>' +
+            '<div style="font-size:11px; color:var(--accent); font-weight:bold; margin-bottom:4px;">Kifurushi: 5GB + 500Min + 100SMS (Tsh 15,000)</div>' +
             '<div style="font-size:11px; color:var(--text-sub);">' + item.date + '</div>' +
           '</div>';
       });
@@ -1068,8 +1146,7 @@
           var tPhone = o.phone || (o.desc ? o.desc.split('|')[1] : 'N/A');
           var nNum = o.nida || (o.desc ? o.desc.split('|')[2] : 'N/A');
           
-          // Maandishi ya mteja mzima yatakayokopiwa kwa pamoja
-          var fullClientText = "Majina: " + fName.trim() + " | Tigo: " + tPhone.trim() + " | NIDA: " + nNum.trim() + " | Tarehe: " + o.date;
+          var fullClientText = "Majina: " + fName.trim() + " | Yas: " + tPhone.trim() + " | NIDA: " + nNum.trim() + " | Kiasi: Tsh 15,000 (5GB+500Min+100SMS) | Tarehe: " + o.date;
 
           ordersTbody.innerHTML += 
             '<tr>' +
