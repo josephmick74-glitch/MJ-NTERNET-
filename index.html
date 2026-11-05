@@ -75,7 +75,7 @@
     }
     
     .brand-header { 
-      padding: 40px 20px 22px; 
+      padding: 60px 20px 25px; 
       text-align: center; 
       background: radial-gradient(circle at center, rgba(2, 132, 199, 0.15) 0%, rgba(15, 23, 42, 0.03) 100%);
       border-bottom: 1px solid var(--card-border); 
@@ -127,7 +127,7 @@
 
     .menu-toggle-btn { 
       position: absolute;
-      top: 15px;
+      top: 12px;
       right: 15px;
       background: var(--input-bg); 
       border: 1px solid var(--card-border); 
@@ -142,7 +142,7 @@
       justify-content: center;
       z-index: 10;
     }
-    .menu-toggle-btn.active { display: flex; }
+    .menu-toggle-btn.active { display: flex !important; }
 
     .sidebar-drawer { 
       position: absolute; 
@@ -201,7 +201,6 @@
     .input-field { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
     .input-field:focus { border-color: var(--primary); }
 
-    /* Ukubwa na nafasi sahihi ya kitufe cha kuonyesha/kuficha nenosiri ndani ya input */
     .password-wrapper { position: relative; width: 100%; }
     .password-wrapper .input-field { padding-right: 65px; }
     .btn-pwd-toggle { 
@@ -318,6 +317,38 @@
     }
     .btn-copy-all-client:hover {
       background: var(--primary-hover);
+    }
+
+    .btn-confirm-admin {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      font-size: 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-confirm-admin:hover {
+      opacity: 0.9;
+    }
+
+    .status-pending {
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .status-confirmed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -543,10 +574,10 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Majina (Full Name)</th>
-                <th>Namba ya Yas</th>
-                <th>Namba ya NIDA</th>
-                <th>Copy Client (Pamoja)</th>
+                <th>Majina</th>
+                <th>Yas / NIDA</th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="adminOrdersTableBody">
@@ -728,7 +759,7 @@
       }
       var allText = "";
       orders.forEach(function(o, i) {
-        allText += (i+1) + ". Majina: " + o.fullName + " | Yas: " + o.phone + " | NIDA: " + o.nida + " | Tarehe: " + o.date + "\n";
+        allText += (i+1) + ". Majina: " + o.fullName + " | Yas: " + o.phone + " | NIDA: " + o.nida + " | Status: " + (o.status || 'Pending') + " | Tarehe: " + o.date + "\n";
       });
       copyTextToClipboard(allText, null);
     }
@@ -901,6 +932,7 @@
       var pass = document.getElementById("loginPass").value;
 
       if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
+        document.getElementById("statusMessage").innerText = "";
         var adminUser = { name: "System Admin", email: ADMIN_EMAIL, role: "admin" };
         localStorage.setItem("mj_active_user", JSON.stringify(adminUser));
         launchDashboard(adminUser);
@@ -915,6 +947,7 @@
         return;
       }
 
+      document.getElementById("statusMessage").innerText = "";
       localStorage.setItem("mj_active_user", JSON.stringify(matchedUser));
       launchDashboard(matchedUser);
     }
@@ -979,12 +1012,17 @@
         localStorage.setItem("mj_users", JSON.stringify(localUsers));
       }
 
+      document.getElementById("statusMessage").innerText = "";
       localStorage.setItem("mj_active_user", JSON.stringify(tempUserSession));
       launchDashboard(tempUserSession);
     }
 
     function launchDashboard(user) {
-      document.getElementById("menuToggleBtn").classList.add("active");
+      var menuBtn = document.getElementById("menuToggleBtn");
+      if (menuBtn) {
+        menuBtn.classList.add("active");
+        menuBtn.style.display = "flex";
+      }
 
       var displayName = user.name || user.email;
       document.getElementById("drawerUserName").innerText = displayName;
@@ -1050,15 +1088,18 @@
 
       var saveOrderLocally = function() {
         var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
-        orders.push({
-          email: activeUser.email || "N/A",
+        var newOrderObj = {
+          id: "ORD-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+          email: (activeUser.email || "N/A").toLowerCase().trim(),
           fullName: fullName,
           phone: phone,
           nida: nida,
           amount: "15,000",
           bundle: "5GB + 500Min + 100SMS",
+          status: "Pending",
           date: new Date().toLocaleString()
-        });
+        };
+        orders.push(newOrderObj);
         localStorage.setItem("mj_orders", JSON.stringify(orders));
       };
 
@@ -1091,7 +1132,10 @@
 
     function loadUserOrderHistory(email) {
       var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
-      var filtered = orders.filter(function(o){ return o.email === email; });
+      var targetEmail = (email || "").toLowerCase().trim();
+      var filtered = orders.filter(function(o){ 
+        return (o.email || "").toLowerCase().trim() === targetEmail; 
+      });
       var container = document.getElementById("historyOrdersList");
 
       if (filtered.length === 0) {
@@ -1100,11 +1144,18 @@
       }
 
       container.innerHTML = "";
-      filtered.reverse().forEach(function(item, index) {
+      filtered.slice().reverse().forEach(function(item, index) {
         var displayText = "Jina: " + item.fullName + " | Yas: " + item.phone + " | NIDA: " + item.nida;
+        var statusBadge = (item.status === 'Confirmed') ? 
+          '<span class="status-confirmed">✅ Confirmed</span>' : 
+          '<span class="status-pending">⏳ Pending</span>';
+
         container.innerHTML += 
           '<div class="order-card">' +
-            '<div style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">' + (currentLang === 'sw' ? 'Taarifa #' : 'Submission #') + (filtered.length - index) + '</div>' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+              '<span style="font-weight:700; color:var(--primary); font-size:14px;">' + (currentLang === 'sw' ? 'Taarifa #' : 'Submission #') + (filtered.length - index) + '</span>' +
+              statusBadge +
+            '</div>' +
             '<div style="font-size:13px; color:var(--text-main); margin-bottom:6px;">' + displayText + '</div>' +
             '<div style="font-size:11px; color:var(--accent); font-weight:bold; margin-bottom:4px;">Kifurushi: 5GB + 500Min + 100SMS (Tsh 15,000)</div>' +
             '<div style="font-size:11px; color:var(--text-sub);">' + item.date + '</div>' +
@@ -1142,21 +1193,48 @@
       } else {
         ordersTbody.innerHTML = "";
         orders.slice().reverse().forEach(function(o, idx) {
-          var fName = o.fullName || (o.desc ? o.desc.split('|')[0] : 'N/A');
-          var tPhone = o.phone || (o.desc ? o.desc.split('|')[1] : 'N/A');
-          var nNum = o.nida || (o.desc ? o.desc.split('|')[2] : 'N/A');
+          var fName = o.fullName || 'N/A';
+          var tPhone = o.phone || 'N/A';
+          var nNum = o.nida || 'N/A';
+          var currentStatus = o.status || 'Pending';
+          var uniqueId = o.id || ('ORD-' + idx);
+
+          var statusDisplay = (currentStatus === 'Confirmed') ? 
+            '<span class="status-confirmed">Confirmed</span>' : 
+            '<span class="status-pending">Pending</span>';
+
+          var actionBtn = (currentStatus === 'Confirmed') ? 
+            '<span style="font-size:11px; color:var(--success); font-weight:bold;">Done ✅</span>' : 
+            '<button class="btn-confirm-admin" type="button" onclick="adminConfirmOrder(\'' + uniqueId + '\')">Confirm ✅</button>';
           
-          var fullClientText = "Majina: " + fName.trim() + " | Yas: " + tPhone.trim() + " | NIDA: " + nNum.trim() + " | Kiasi: Tsh 15,000 (5GB+500Min+100SMS) | Tarehe: " + o.date;
+          var fullClientText = "Majina: " + fName.trim() + " | Yas: " + tPhone.trim() + " | NIDA: " + nNum.trim() + " | Status: " + currentStatus + " | Tarehe: " + o.date;
 
           ordersTbody.innerHTML += 
             '<tr>' +
               '<td>' + (orders.length - idx) + '</td>' +
-              '<td>' + fName + '</td>' +
-              '<td>' + tPhone + '</td>' +
-              '<td>' + nNum + '</td>' +
-              '<td><button class="btn-copy-all-client" onclick="copyTextToClipboard(\'' + fullClientText + '\', this)">📋 Copy All</button></td>' +
+              '<td>' + fName + '<br><button class="btn-copy-row" style="margin-top:3px;" onclick="copyTextToClipboard(\'' + fullClientText + '\', this)">📋 Copy</button></td>' +
+              '<td>' + tPhone + '<br>' + nNum + '</td>' +
+              '<td>' + statusDisplay + '</td>' +
+              '<td>' + actionBtn + '</td>' +
             '</tr>';
         });
+      }
+    }
+
+    function adminConfirmOrder(orderId) {
+      var orders = JSON.parse(localStorage.getItem("mj_orders") || "[]");
+      var orderObj = orders.find(function(item) { return item.id === orderId; });
+      if (orderObj) {
+        orderObj.status = 'Confirmed';
+        localStorage.setItem("mj_orders", JSON.stringify(orders));
+        loadAdminDashboardData();
+      } else {
+        var index = orders.length - 1 - parseInt(orderId.replace('ORD-', ''));
+        if (!isNaN(index) && orders[index]) {
+          orders[index].status = 'Confirmed';
+          localStorage.setItem("mj_orders", JSON.stringify(orders));
+          loadAdminDashboardData();
+        }
       }
     }
 
@@ -1170,14 +1248,28 @@
     function performLogout() {
       localStorage.removeItem("mj_active_user");
       sessionStorage.removeItem("mj_active_user");
-      location.reload();
+      var menuBtn = document.getElementById("menuToggleBtn");
+      if (menuBtn) {
+        menuBtn.classList.remove("active");
+        menuBtn.style.display = "none";
+      }
+      closeDrawer();
+      switchView("viewAuth");
+      document.getElementById("loginEmail").value = "";
+      document.getElementById("loginPass").value = "";
+      document.getElementById("statusMessage").innerText = "";
     }
 
     window.onload = function() {
       changeLanguage('en');
       var activeUser = localStorage.getItem("mj_active_user");
       if (activeUser) {
-        launchDashboard(JSON.parse(activeUser));
+        try {
+          launchDashboard(JSON.parse(activeUser));
+        } catch(e) {
+          localStorage.removeItem("mj_active_user");
+          switchView("viewAuth", false);
+        }
       } else {
         history.replaceState({ viewId: "viewAuth" }, "", "#viewAuth");
       }
