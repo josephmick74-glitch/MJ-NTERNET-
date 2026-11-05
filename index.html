@@ -75,7 +75,7 @@
     }
     
     .brand-header { 
-      padding: 40px 20px 22px; 
+      padding: 60px 20px 25px; /* Nimeongeza nafasi ya juu ili logo ishuke chini vizuri */
       text-align: center; 
       background: radial-gradient(circle at center, rgba(2, 132, 199, 0.15) 0%, rgba(15, 23, 42, 0.03) 100%);
       border-bottom: 1px solid var(--card-border); 
@@ -125,9 +125,10 @@
       gap: 5px;
     }
 
+    /* Kitufe cha Menu kimewekwa pembeni juu bila kushikana na Logo */
     .menu-toggle-btn { 
       position: absolute;
-      top: 15px;
+      top: 12px;
       right: 15px;
       background: var(--input-bg); 
       border: 1px solid var(--card-border); 
@@ -201,7 +202,6 @@
     .input-field { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
     .input-field:focus { border-color: var(--primary); }
 
-    /* Ukubwa na nafasi sahihi ya kitufe cha kuonyesha/kuficha nenosiri ndani ya input */
     .password-wrapper { position: relative; width: 100%; }
     .password-wrapper .input-field { padding-right: 65px; }
     .btn-pwd-toggle { 
@@ -371,7 +371,7 @@
       </button>
     </div>
 
-    <!-- HEADER NA BRANDING YA MTANDAO -->
+    <!-- HEADER NA BRANDING YA MTANDAO (MENU BUTTON IMEJITENGA JUU KABISA) -->
     <div class="brand-header">
       <button class="menu-toggle-btn" id="menuToggleBtn" onclick="openDrawer()">☰</button>
       <div class="brand-logo-wrapper">
