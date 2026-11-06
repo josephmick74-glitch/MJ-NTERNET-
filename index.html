@@ -7,7 +7,7 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script type="text/javascript">
     (function() {
-      try { emailjs.init("ATabisUuqfv1WPDd4"); } catch(e){}
+      try { emailjs.init("WPXE8IBbSPQLALao4"); } catch(e){}
     })();
   </script>
   <style>
@@ -886,6 +886,11 @@
       switchView("viewOTP");
       displayMessage(currentLang === 'sw' ? "Inatuma kodi ya OTP kwenye email yako..." : "Sending OTP code to your email...", false, true);
 
+      // Hesabu muda wa kuisha (dakika 15 mbele)
+      var now = new Date();
+      now.setMinutes(now.getMinutes() + 15);
+      var expirationTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
       var templateParams = {
         to_email: userObj.email,
         email: userObj.email,
@@ -894,18 +899,21 @@
         otp: currentOTP,
         otp_code: currentOTP,
         code: currentOTP,
-        time: "15 Minutes",
+        time: expirationTime,
         company_name: "MJ Internet Market"
       };
 
       try {
-        emailjs.send('service_mcglc5w', 'template_z90eazj', templateParams)
-        .then(function() {
+        emailjs.send('service_tnavcce', 'template_1vxeek6', templateParams)
+        .then(function(response) {
+          console.log('SUCCESS!', response.status, response.text);
           displayMessage(currentLang === 'sw' ? "Kodi ya OTP imetumwa kwenye email yako!" : "OTP code sent to your email!", false, false);
         }).catch(function(err) {
+          console.error('FAILED...', err);
           displayMessage(currentLang === 'sw' ? "Kodi ya OTP imetumwa kwenye email yako!" : "OTP code sent to your email!", false, false);
         });
       } catch(e){
+        console.error('ERROR...', e);
         displayMessage(currentLang === 'sw' ? "Kodi ya OTP imetumwa kwenye email yako!" : "OTP code sent to your email!", false, false);
       }
     }
@@ -1103,7 +1111,7 @@
         localStorage.setItem("mj_orders", JSON.stringify(orders));
       };
 
-      emailjs.send('service_mcglc5w', 'template_gcdy00e', orderPayload)
+      emailjs.send('service_tnavcce', 'template_1vxeek6', orderPayload)
         .then(function() {
           saveOrderLocally();
 
